@@ -1,0 +1,3388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Primespheres — Find work worth showing up for.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        /* ============================================================
+           COMPLETE STYLESHEET — Primespheres
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ----- HEADER ----- */
+        header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        header nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #0f172a;
+        }
+        .logo img {
+            height: 36px;
+            width: auto;
+        }
+        .logo .brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .logo .brand-name:hover {
+            color: #2563eb;
+        }
+        .logo .heritage-badge {
+            font-size: 11px;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: #f1f5f9;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            color: #334155;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        .nav-links a:hover {
+            color: #0f172a;
+        }
+        .nav-links .nav-highlight {
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .nav-links .nav-highlight:hover {
+            color: #1d4ed8;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white !important;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8 !important;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: #0f172a !important;
+            border: 2px solid #e2e8f0;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-secondary:hover {
+            border-color: #2563eb;
+            color: #2563eb !important;
+        }
+        .btn-success {
+            background: #22c55e;
+            color: white !important;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-success:hover {
+            background: #16a34a !important;
+        }
+        .btn-warning {
+            background: #f59e0b;
+            color: white !important;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-warning:hover {
+            background: #d97706 !important;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white !important;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-danger:hover {
+            background: #dc2626 !important;
+        }
+        .btn-large {
+            padding: 16px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 6px;
+        }
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* ----- PAGE CONTAINER ----- */
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================================
+           HERO (Homepage)
+           ============================================================ */
+        .hero {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        .hero .heritage-tag {
+            display: inline-block;
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 16px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+        .hero h1 {
+            font-size: 52px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+        .hero .subtitle {
+            font-size: 20px;
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+        .search-form {
+            display: flex;
+            gap: 12px;
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+        }
+        .search-form input,
+        .search-form select {
+            flex: 1;
+            padding: 14px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .search-form input:focus,
+        .search-form select:focus {
+            outline: 2px solid #2563eb;
+        }
+        .btn-search {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-search:hover {
+            background: #1d4ed8;
+        }
+        .trust-badges {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .trust-badges span {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+        }
+
+        /* ----- FEATURES ----- */
+        .features {
+            padding: 60px 0;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        .feature-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+        .feature-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: #0f172a;
+        }
+        .feature-card p {
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+        .feature-card.highlight {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+        }
+        .feature-card.highlight h3,
+        .feature-card.highlight p {
+            color: white;
+        }
+        .feature-card.highlight .feature-link {
+            color: white;
+            font-weight: 600;
+        }
+        .feature-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* ----- JOBS SECTION ----- */
+        .jobs-section {
+            padding: 60px 0;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .section-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .section-header .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .view-all {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .job-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+        .job-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        }
+        .job-card.featured {
+            border-left: 4px solid #f59e0b;
+        }
+        .job-card.harvested {
+            border-left: 4px solid #22c55e;
+        }
+        .job-card .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .job-type {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .job-type.remote {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        .job-type.hybrid {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .job-type.on-site {
+            background: #fecaca;
+            color: #dc2626;
+        }
+        .job-type.harvested {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .featured-badge {
+            font-size: 12px;
+            background: #fef3c7;
+            color: #d97706;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .harvested-badge {
+            font-size: 12px;
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .admit-badge {
+            font-size: 11px;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        .freshness-badge {
+            font-size: 11px;
+            color: #22c55e;
+            font-weight: 500;
+        }
+        .job-card h3 {
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+        .job-card h3 a {
+            color: #0f172a;
+            text-decoration: none;
+        }
+        .job-card h3 a:hover {
+            color: #2563eb;
+        }
+        .job-card .company {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .job-card .company a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .job-card .company a:hover {
+            text-decoration: underline;
+        }
+        .job-card .description {
+            color: #475569;
+            font-size: 14px;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .job-card .job-source {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+        .job-card .job-source a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .job-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .job-footer .time {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .btn-apply {
+            background: #2563eb;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-apply:hover {
+            background: #1d4ed8;
+        }
+        .btn-harvest {
+            background: #22c55e;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-harvest:hover {
+            background: #16a34a;
+        }
+
+        /* ----- COMPANIES HIRING ----- */
+        .companies-section {
+            padding: 60px 0;
+            background: white;
+        }
+        .companies-section h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .companies-section .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        .company-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .company-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .company-card:hover {
+            transform: translateY(-2px);
+            border-color: #2563eb;
+        }
+        .company-card .company-icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .company-card .company-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .company-card .company-roles {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* ----- STATS ----- */
+        .stats {
+            background: white;
+            padding: 60px 0;
+            border-top: 1px solid #e2e8f0;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+            text-align: center;
+        }
+        .stat-number {
+            display: block;
+            font-size: 36px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .stat-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* ----- CTA SECTION ----- */
+        .cta-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        .cta-section p {
+            color: #94a3b8;
+            font-size: 18px;
+            margin-bottom: 32px;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ============================================================
+           DASHBOARDS
+           ============================================================ */
+        .dashboard-page {
+            padding: 40px 0;
+            background: #f8fafc;
+            min-height: calc(100vh - 200px);
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .dashboard-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .dashboard-header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 8px 16px 8px 20px;
+            border-radius: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        .dashboard-header .user-info .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .dashboard-header .user-info .role-tag {
+            font-size: 12px;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .role-tag.owner {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .role-tag.manager {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        .role-tag.business-partner {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .role-tag.harvester {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+        .role-tag.employee {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .dashboard-stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .dashboard-stat-card .number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .dashboard-stat-card .label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .dashboard-stat-card .icon {
+            font-size: 24px;
+            float: right;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+        }
+        .dashboard-card h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dashboard-card h3 a {
+            font-size: 14px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .dash-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .dash-item:last-child {
+            border-bottom: none;
+        }
+        .dash-item .dash-item-title {
+            font-weight: 500;
+        }
+        .dash-item .dash-item-sub {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .dash-item .dash-item-status {
+            font-size: 12px;
+            padding: 2px 12px;
+            border-radius: 12px;
+        }
+        .dash-item .dash-item-status.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .dash-item .dash-item-status.approved {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .dash-item .dash-item-status.rejected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .dash-item .dash-item-status.active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .dash-item .dash-item-status.closed {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+        .dash-item .dash-item-status.hired {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .dash-item .dash-item-status.seen {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        .dash-item .dash-item-status.shortlisted {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .dash-item .dash-item-status.scheduled {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: #94a3b8;
+        }
+        .empty-state .empty-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        /* ----- JOB FORM ----- */
+        .job-posting-form {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        .job-posting-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .job-posting-form .full-width {
+            grid-column: 1 / -1;
+        }
+        .job-posting-form .form-group {
+            margin-bottom: 12px;
+        }
+        .job-posting-form label {
+            font-weight: 600;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .job-posting-form input,
+        .job-posting-form select,
+        .job-posting-form textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .job-posting-form input:focus,
+        .job-posting-form select:focus,
+        .job-posting-form textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        /* ----- APPLICATION TRACKER ----- */
+        .tracker-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 8px;
+            position: relative;
+        }
+        .tracker-steps::before {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 30px;
+            right: 30px;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: 0;
+        }
+        .tracker-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 11px;
+            color: #94a3b8;
+            position: relative;
+            z-index: 1;
+            gap: 4px;
+            cursor: default;
+        }
+        .tracker-step .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .tracker-step.completed .step-icon {
+            background: #22c55e;
+            color: white;
+        }
+        .tracker-step.active .step-icon {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+        .tracker-step.completed .step-label,
+        .tracker-step.active .step-label {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        /* ----- HEADHUNTER / BUSINESS PARTNER ----- */
+        .referral-code {
+            background: #f8fafc;
+            padding: 16px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            border: 2px dashed #2563eb;
+        }
+        .referral-code .code {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2563eb;
+            letter-spacing: 2px;
+            font-family: monospace;
+        }
+        .referral-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+        .referral-stat {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .referral-stat .number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .referral-stat .label {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* ============================================================
+           OTHER PAGES
+           ============================================================ */
+        .apply4me-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        .apply4me-hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .apply4me-badge {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .apply4me-hero h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+        .apply4me-hero .subtitle {
+            font-size: 20px;
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+        .feature-badges {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            text-align: left;
+        }
+        .feature-badges span {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 18px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            font-size: 14px;
+            color: #e2e8f0;
+        }
+        .small-text {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        .social-proof {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .social-proof span {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+        }
+
+        .problem-section {
+            padding: 60px 0;
+            background: white;
+        }
+        .problem-section h2 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 40px;
+        }
+        .problem-section .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 30px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-emoji {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .stat-card .stat-label {
+            color: #64748b;
+        }
+        .source {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .how-it-works {
+            padding: 60px 0;
+            background: #f8fafc;
+        }
+        .how-it-works h2 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .how-it-works .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        .step-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .step-card:hover {
+            transform: translateY(-4px);
+        }
+        .step-number {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #2563eb;
+            background: #dbeafe;
+            padding: 4px 16px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+        .step-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        .step-card ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            margin-bottom: 16px;
+        }
+        .step-card ul li {
+            padding: 4px 0;
+            color: #475569;
+            font-size: 14px;
+        }
+        .step-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .metrics-bar {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .metrics-bar span {
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .pricing-section {
+            padding: 60px 0;
+            background: white;
+        }
+        .pricing-section h2 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .pricing-section .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .pricing-card {
+            background: #f8fafc;
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+        .pricing-card.featured {
+            border: 2px solid #2563eb;
+            background: white;
+        }
+        .pricing-card.featured .plan-badge {
+            background: #2563eb;
+            color: white;
+        }
+        .plan-badge {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            background: #e2e8f0;
+            padding: 4px 16px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .pricing-card .price {
+            font-size: 36px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .pricing-card .price span {
+            font-size: 16px;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+        .price-usd {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+        .pricing-card ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            margin: 16px 0 24px;
+        }
+        .pricing-card ul li {
+            padding: 6px 0;
+            font-size: 14px;
+            color: #475569;
+        }
+        .pricing-card ul li:before {
+            content: "✅ ";
+        }
+        .pricing-note {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 30px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .testimonials {
+            padding: 60px 0;
+            background: #f8fafc;
+        }
+        .testimonials h2 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 40px;
+        }
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .testimonial-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .stars {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        .testimonial-card blockquote {
+            font-size: 16px;
+            color: #1e293b;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+        .testimonial-card .author {
+            border-top: 1px solid #f1f5f9;
+            padding-top: 16px;
+        }
+        .testimonial-card .author strong {
+            display: block;
+            color: #0f172a;
+        }
+        .testimonial-card .author span {
+            display: block;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .plan-tag {
+            display: inline-block;
+            font-size: 12px;
+            background: #dbeafe;
+            color: #2563eb;
+            padding: 2px 12px;
+            border-radius: 12px;
+            margin-top: 4px;
+        }
+
+        .lead-form-section {
+            padding: 60px 0;
+            background: white;
+        }
+        .lead-form-wrapper {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .lead-form-wrapper h2 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        .lead-form-wrapper p {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        .lead-form .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .lead-form .full-width {
+            grid-column: 1 / -1;
+        }
+        .lead-form .btn-primary {
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .final-cta {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+        .final-cta h2 {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        .final-cta p {
+            color: #94a3b8;
+            font-size: 18px;
+            margin-bottom: 32px;
+        }
+        .cta-note {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .post-job-page {
+            padding: 60px 0;
+        }
+        .post-job-page h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .post-job-page > .container > p {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 40px;
+        }
+        .post-job-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .package-grid {
+            display: grid;
+            gap: 16px;
+        }
+        .package-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .package-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+        .package-card.featured {
+            border: 2px solid #2563eb;
+            background: white;
+        }
+        .package-card h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .package-card .price {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+        .package-card ul {
+            list-style: none;
+            padding: 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .package-card ul li {
+            padding: 4px 0;
+        }
+        .package-card .featured-badge-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            background: #2563eb;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        .post-job-form .form-group {
+            margin-bottom: 16px;
+        }
+        .post-job-form .btn-primary {
+            width: 100%;
+            padding: 14px;
+        }
+        .salary-range {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .salary-range input {
+            flex: 1;
+        }
+
+        .auth-page {
+            padding: 80px 0;
+            background: #f8fafc;
+            min-height: calc(100vh - 200px);
+            display: flex;
+            align-items: center;
+        }
+        .auth-wrapper {
+            max-width: 440px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+        .auth-wrapper h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .auth-wrapper p {
+            color: #64748b;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .auth-form .form-group {
+            margin-bottom: 16px;
+        }
+        .auth-form .btn-primary {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+        }
+        .auth-switch {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .auth-switch a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        .social-login {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .social-login a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+            flex: 1;
+            cursor: pointer;
+        }
+        .social-login a:hover {
+            background: #f8fafc;
+        }
+        .divider {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin: 16px 0;
+            position: relative;
+        }
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #e2e8f0;
+        }
+        .divider::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: #e2e8f0;
+        }
+        .terms {
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .terms a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .password-hint {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .remember-me {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .remember-me label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #64748b;
+            font-weight: 400;
+            cursor: pointer;
+        }
+        .remember-me a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .role-selector .role-option {
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        .role-selector .role-option:hover {
+            border-color: #94a3b8;
+        }
+        .role-selector .role-option.selected {
+            border-color: #2563eb;
+            background: #dbeafe;
+        }
+        .role-selector .role-option .role-icon {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .role-selector .role-option .role-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .role-selector .role-option .role-desc {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Role-specific access denied */
+        .access-denied {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .access-denied .lock-icon {
+            font-size: 64px;
+            display: block;
+            margin-bottom: 16px;
+        }
+        .access-denied h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .access-denied p {
+            color: #64748b;
+            max-width: 500px;
+            margin: 0 auto 24px;
+        }
+
+        /* ABOUT PAGE */
+        .about-page {
+            padding: 60px 0;
+        }
+        .about-page h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .about-page .subtitle {
+            color: #64748b;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .about-content {
+            max-width: 800px;
+        }
+        .about-content h2 {
+            font-size: 24px;
+            margin-top: 30px;
+            margin-bottom: 12px;
+        }
+        .about-content p {
+            color: #475569;
+            margin-bottom: 16px;
+        }
+        .about-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        .about-content ul li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+        }
+        .about-content ul li strong {
+            color: #0f172a;
+        }
+        .about-features {
+            margin-top: 20px;
+        }
+        .about-feature {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .about-feature span {
+            font-size: 24px;
+        }
+        .about-feature strong {
+            display: block;
+            color: #0f172a;
+        }
+        .about-feature p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 0;
+        }
+        .about-stats {
+            background: white;
+            padding: 60px 0;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 40px;
+        }
+
+        .contact-page {
+            padding: 60px 0;
+        }
+        .contact-page h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .contact-page .subtitle {
+            color: #64748b;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .contact-wrapper {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            max-width: 900px;
+        }
+        .contact-form .form-group {
+            margin-bottom: 16px;
+        }
+        .contact-form .btn-primary {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+        }
+        .contact-info {
+            background: #f8fafc;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            height: fit-content;
+        }
+        .contact-info h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .contact-info p {
+            color: #475569;
+            margin-bottom: 12px;
+        }
+        .contact-info .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .contact-info .contact-item span {
+            font-size: 20px;
+        }
+        .contact-info .contact-item strong {
+            color: #0f172a;
+        }
+        .contact-info .contact-item p {
+            margin-bottom: 0;
+        }
+        .social-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 20px;
+            transition: background 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+        .social-links a:hover {
+            background: #f1f5f9;
+            border-color: #2563eb;
+        }
+
+        .harvester-page {
+            padding: 60px 0;
+        }
+        .harvester-page h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .harvester-page .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .harvester-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .harvester-form {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+        .harvester-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .harvester-form .full-width {
+            grid-column: 1 / -1;
+        }
+        .harvester-form .form-group {
+            margin-bottom: 16px;
+        }
+        .harvester-form label {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: block;
+            color: #0f172a;
+        }
+        .harvester-form input,
+        .harvester-form select,
+        .harvester-form textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .harvester-form input:focus,
+        .harvester-form select:focus,
+        .harvester-form textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .harvester-form .btn-success {
+            width: 100%;
+            padding: 14px;
+        }
+        .harvester-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .harvester-stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .harvester-stat-card .number {
+            font-size: 32px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .harvester-stat-card .label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .source-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .source-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+        .source-icon {
+            font-size: 32px;
+            width: 50px;
+            height: 50px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .source-info h4 {
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+        .source-info p {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .source-info .source-url {
+            font-size: 12px;
+            color: #2563eb;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .source-info .source-url:hover {
+            text-decoration: underline;
+        }
+        .source-status {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .source-status.active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        /* FOOTER */
+        footer {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 60px 0 20px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .footer-col h4 {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .footer-col a {
+            display: block;
+            color: #94a3b8;
+            text-decoration: none;
+            margin-bottom: 8px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        .footer-col a:hover {
+            color: white;
+        }
+        .footer-bottom {
+            border-top: 1px solid #1e293b;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 992px) {
+            .post-job-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .contact-wrapper {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .job-posting-form .form-row {
+                grid-template-columns: 1fr;
+            }
+            .role-selector {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                gap: 12px;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 20px;
+                border-bottom: 1px solid #e2e8f0;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .hero h1,
+            .apply4me-hero h1 {
+                font-size: 32px;
+            }
+            .search-form {
+                flex-direction: column;
+                background: transparent;
+                padding: 0;
+            }
+            .search-form input,
+            .search-form select {
+                background: white;
+                padding: 16px;
+            }
+            .btn-search {
+                width: 100%;
+            }
+            .job-grid {
+                grid-template-columns: 1fr;
+            }
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            .step-grid {
+                grid-template-columns: 1fr;
+            }
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+            .feature-badges {
+                grid-template-columns: 1fr;
+            }
+            .trust-badges,
+            .social-proof,
+            .metrics-bar,
+            .cta-note {
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+            }
+            .lead-form .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .about-feature {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .auth-wrapper {
+                padding: 24px;
+                margin: 0 16px;
+            }
+            .social-login {
+                flex-direction: column;
+            }
+            .remember-me {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+            .harvester-form .form-row {
+                grid-template-columns: 1fr;
+            }
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .source-grid {
+                grid-template-columns: 1fr;
+            }
+            .harvester-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .role-selector {
+                grid-template-columns: 1fr 1fr;
+            }
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .dashboard-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .dash-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .company-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .tracker-steps {
+                flex-wrap: wrap;
+                gap: 8px;
+                justify-content: center;
+            }
+            .tracker-steps::before {
+                display: none;
+            }
+            .logo .heritage-badge {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 16px;
+            }
+            .hero {
+                padding: 40px 0;
+            }
+            .hero h1 {
+                font-size: 28px;
+            }
+            .btn-large {
+                padding: 14px 24px;
+                font-size: 16px;
+            }
+            .pricing-card {
+                padding: 24px;
+            }
+            .pricing-card .price {
+                font-size: 28px;
+            }
+            .harvester-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .job-card {
+                padding: 16px;
+            }
+            .dashboard-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .company-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .role-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+    HEADER
+    ============================================================ -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <a href="#" onclick="showPage('home')">
+                    <img src="primespheres-logo.png" alt="Primespheres" height="36" onerror="this.style.display='none'" />
+                    <span class="brand-name">Primespheres</span>
+                    <span class="heritage-badge">No. 001 — Since 2026</span>
+                </a>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a onclick="showPage('home')">Find Jobs</a></li>
+                <li><a onclick="showPage('apply4me')" class="nav-highlight">🚀 Apply4Me</a></li>
+                <li><a onclick="showPage('harvester')">🌾 Harvest</a></li>
+                <li><a onclick="showPage('post-job')" class="btn-primary">Post a Job</a></li>
+                <li><a onclick="showPage('login')">Login</a></li>
+                <li><a onclick="showPage('register')" class="btn-primary">Sign Up</a></li>
+            </ul>
+            <button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
+        </nav>
+    </header>
+
+    <!-- ============================================================
+    PAGE: HOME
+    ============================================================ -->
+    <div id="page-home" class="page active">
+
+        <section class="hero">
+            <div class="container">
+                <span class="heritage-tag">No. 001 — Since 2026</span>
+                <h1>Find work worth showing up for.</h1>
+                <p class="subtitle">Every listing is verified, dated, and filed by a real hiring team — no ghost postings, no dead ends. Find the role, apply, and get an answer.</p>
+                <form class="search-form" onsubmit="return false;">
+                    <input type="text" placeholder="Search the ledger..." />
+                    <select>
+                        <option value="">All Categories</option>
+                        <option value="Admin Support">Admin Support</option>
+                        <option value="Customer Service">Customer Service</option>
+                        <option value="Tech/IT">Tech/IT</option>
+                        <option value="Digital Marketing">Digital Marketing</option>
+                        <option value="Creative">Creative</option>
+                        <option value="Accounting">Accounting</option>
+                    </select>
+                    <button type="submit" class="btn-search">🔍 Search</button>
+                </form>
+                <div class="trust-badges">
+                    <span>✅ No ghost postings</span>
+                    <span>⏱️ 92% Reply within 5 days</span>
+                    <span>🇵🇭 100% remote-first</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>📌 For Job Seekers</h3>
+                        <p>Browse verified remote jobs from global companies. Find work worth showing up for.</p>
+                        <a onclick="showPage('home')" class="feature-link">Browse Jobs →</a>
+                    </div>
+                    <div class="feature-card highlight">
+                        <h3>🚀 Apply4Me</h3>
+                        <p>Don't apply yourself. Our team applies to 20+ jobs for you monthly.</p>
+                        <a onclick="showPage('apply4me')" class="feature-link">Learn More →</a>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🌾 Job Harvester</h3>
+                        <p>Gather job postings directly from company career pages.</p>
+                        <a onclick="showPage('harvester')" class="feature-link">Start Harvesting →</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="companies-section">
+            <div class="container">
+                <h2>🏢 Companies hiring this week</h2>
+                <p class="subtitle">7 companies filed · updated hourly</p>
+                <div class="company-grid">
+                    <div class="company-card"><span class="company-icon">🏢</span><div class="company-name">North Atlas</div><div class="company-roles">2 open roles</div></div>
+                    <div class="company-card"><span class="company-icon">🏦</span><div class="company-name">Harbor Bank</div><div class="company-roles">3 open roles</div></div>
+                    <div class="company-card"><span class="company-icon">🏭</span><div class="company-name">Kiln & Co.</div><div class="company-roles">1 open role</div></div>
+                    <div class="company-card"><span class="company-icon">⛵</span><div class="company-name">Vessel</div><div class="company-roles">2 open roles</div></div>
+                    <div class="company-card"><span class="company-icon">🌿</span><div class="company-name">Greenfield</div><div class="company-roles">2 open roles</div></div>
+                    <div class="company-card"><span class="company-icon">🎨</span><div class="company-name">Arc Studio</div><div class="company-roles">1 open role</div></div>
+                    <div class="company-card"><span class="company-icon">🏢</span><div class="company-name">Harbor Bank</div><div class="company-roles">3 open roles</div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="jobs-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>📋 Open roles</h2>
+                    <div class="header-actions">
+                        <span style="font-size:14px; color:#94a3b8;">Filed daily · updated hourly</span>
+                        <a onclick="showPage('home')" class="view-all">View All →</a>
+                    </div>
+                </div>
+                <div class="job-grid">
+                    <div class="job-card featured">
+                        <div class="job-header">
+                            <span class="featured-badge">⭐ Featured</span>
+                            <span class="job-type remote">Remote</span>
+                            <span class="admit-badge">🎫 Admit one applicant</span>
+                        </div>
+                        <h3><a href="#">Virtual Assistant</a></h3>
+                        <p class="company">🏢 North Atlas</p>
+                        <p class="description">We are looking for a detail-oriented Virtual Assistant to handle admin tasks, email management, and scheduling. Reference: LDG-0424.</p>
+                        <div class="job-footer">
+                            <span class="time">🌱 Updated 2 hours ago</span>
+                            <button class="btn-apply" onclick="alert('✅ You\'ve applied to this job! The employer will review your application.')">Apply Now</button>
+                        </div>
+                    </div>
+                    <div class="job-card featured">
+                        <div class="job-header">
+                            <span class="featured-badge">⭐ Featured</span>
+                            <span class="job-type remote">Remote</span>
+                            <span class="admit-badge">🎫 Admit one applicant</span>
+                        </div>
+                        <h3><a href="#">Customer Support Representative</a></h3>
+                        <p class="company">🏢 Harbor Bank</p>
+                        <p class="description">Join our growing team! Handle customer inquiries via chat and email. Must have excellent English. Reference: LDG-0425.</p>
+                        <div class="job-footer">
+                            <span class="time">🌱 Updated 5 hours ago</span>
+                            <button class="btn-apply" onclick="alert('✅ You\'ve applied to this job! The employer will review your application.')">Apply Now</button>
+                        </div>
+                    </div>
+                    <div class="job-card featured">
+                        <div class="job-header">
+                            <span class="featured-badge">⭐ Featured</span>
+                            <span class="job-type remote">Remote</span>
+                            <span class="admit-badge">🎫 Admit one applicant</span>
+                        </div>
+                        <h3><a href="#">Web Developer</a></h3>
+                        <p class="company">🏢 Kiln & Co.</p>
+                        <p class="description">Build amazing web applications using React and Node.js. We're a fast-growing company. Reference: LDG-0426.</p>
+                        <div class="job-footer">
+                            <span class="time">🌱 Updated 1 day ago</span>
+                            <button class="btn-apply" onclick="alert('✅ You\'ve applied to this job! The employer will review your application.')">Apply Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="container">
+                <div class="stat-grid">
+                    <div class="stat-item"><span class="stat-number">4.8 / 5</span><span class="stat-label">Applicant rating</span></div>
+                    <div class="stat-item"><span class="stat-number">5 days</span><span class="stat-label">Avg. reply time</span></div>
+                    <div class="stat-item"><span class="stat-number">61%</span><span class="stat-label">Hired within a month</span></div>
+                    <div class="stat-item"><span class="stat-number">7</span><span class="stat-label">Companies filing</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to file your next role?</h2>
+                <p>It takes four minutes to build a profile. It takes one click to apply.</p>
+                <div class="cta-buttons">
+                    <a onclick="showPage('register')" class="btn-primary btn-large">Create your file</a>
+                    <a onclick="showPage('apply4me')" class="btn-secondary btn-large">🚀 Try Apply4Me</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: APPLY4ME
+    ============================================================ -->
+    <div id="page-apply4me" class="page">
+        <section class="apply4me-hero">
+            <div class="container">
+                <div class="apply4me-hero-content">
+                    <span class="apply4me-badge">🚀 NEW SERVICE</span>
+                    <h1>We apply for you. You get the interview.</h1>
+                    <p class="subtitle">"You focus on your skills. We focus on getting you noticed."</p>
+                    <div class="feature-badges">
+                        <span>✅ 20+ applications submitted for you every month</span>
+                        <span>✅ Resume tailored for EACH job</span>
+                        <span>✅ Manual submission — no bots, no spam</span>
+                        <span>✅ Weekly progress reports with screenshots</span>
+                    </div>
+                    <a onclick="showPage('apply4me')" class="btn-primary btn-large">🚀 Start My Apply4Me Journey</a>
+                    <p class="small-text">Free consultation. No commitment.</p>
+                    <div class="social-proof">
+                        <span>⭐ Rated 4.9/5 by 50+ Filipino professionals</span>
+                        <span>💬 "I got 3 interviews in 2 weeks!" — Maria, VA</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="problem-section">
+            <div class="container">
+                <h2>⚠️ The Cold Hard Truth</h2>
+                <div class="stat-grid">
+                    <div class="stat-card"><span class="stat-emoji">😫</span><span class="stat-number">10+ hours</span><span class="stat-label">spent applying every week</span></div>
+                    <div class="stat-card"><span class="stat-emoji">😤</span><span class="stat-number">80%</span><span class="stat-label">of applications go to nowhere</span></div>
+                    <div class="stat-card"><span class="stat-emoji">😭</span><span class="stat-number">1 in 100</span><span class="stat-label">get a response from job boards</span></div>
+                </div>
+                <p class="source">Source: Filipinos in our community survey (2026)</p>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <div class="container">
+                <h2>📋 Three entries, one offer.</h2>
+                <p class="subtitle">No account mazes, no application black holes. Here's the whole process, filed in order.</p>
+                <div class="step-grid">
+                    <div class="step-card"><span class="step-number">01</span><h3>📄 Open a file</h3><ul><li>Build a profile once — your experience, your rate, your availability</li><li>Reuse it for every application</li></ul><a onclick="showPage('apply4me')" class="step-link">Create account →</a></div>
+                    <div class="step-card"><span class="step-number">02</span><h3>🔍 Find the listing</h3><ul><li>Filter by pay, location, and schedule</li><li>Every posting shows who's reviewing it and how fast they reply</li></ul><a onclick="showPage('apply4me')" class="step-link">Browse roles →</a></div>
+                    <div class="step-card"><span class="step-number">03</span><h3>📬 Submit and track</h3><ul><li>Send your application and watch its status change in real time</li><li>Seen, shortlisted, or scheduled</li></ul><a onclick="showPage('apply4me')" class="step-link">See sample tracker →</a></div>
+                </div>
+                <div class="metrics-bar">
+                    <span>⭐ 4.8/5 Applicant rating</span>
+                    <span>⏱️ 5 days Avg. reply</span>
+                    <span>🏆 61% Hired within a month</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="apply4me-plans" class="pricing-section">
+            <div class="container">
+                <h2>💰 Choose Your Plan</h2>
+                <p class="subtitle">Invest in your future. Get hired faster.</p>
+                <div class="pricing-grid">
+                    <div class="pricing-card"><span class="plan-badge">🥉 STARTER</span><div class="price">₱5,350 <span>/mo</span></div><div class="price-usd">(~$97 USD)</div><ul><li>10 applications/month</li><li>Resume tailored per job</li><li>Weekly progress reports</li><li>Manual submission</li></ul><a onclick="showPage('apply4me')" class="btn-secondary">Sign Up</a></div>
+                    <div class="pricing-card featured"><span class="plan-badge">🥈 PRO ⭐ BEST VALUE</span><div class="price">₱10,850 <span>/mo</span></div><div class="price-usd">(~$197 USD)</div><ul><li>20 applications/month</li><li>Resume tailored per job</li><li>Weekly progress reports</li><li>Manual submission</li><li>Priority support</li><li>Follow-up tracking</li></ul><a onclick="showPage('apply4me')" class="btn-primary">Sign Up</a></div>
+                    <div class="pricing-card"><span class="plan-badge">🥇 EXECUTIVE</span><div class="price">₱21,900 <span>/mo</span></div><div class="price-usd">(~$397 USD)</div><ul><li>40 applications/month</li><li>Resume tailored per job</li><li>Weekly progress reports</li><li>Manual submission</li><li>Priority support</li><li>Follow-up tracking</li><li>Weekly strategy calls</li></ul><a onclick="showPage('apply4me')" class="btn-secondary">Sign Up</a></div>
+                </div>
+                <p class="pricing-note">💡 All plans include: Resume rewriting for each job, custom cover letters, manual form filling, and weekly progress screenshots.</p>
+            </div>
+        </section>
+
+        <section class="testimonials">
+            <div class="container">
+                <h2>💬 Real Results from Filipino Professionals</h2>
+                <div class="testimonial-grid">
+                    <div class="testimonial-card"><div class="stars">⭐⭐⭐⭐⭐</div><blockquote>"I applied on a Tuesday, heard back Thursday, and started three weeks later. It's the first job board where the listings actually meant something."</blockquote><div class="author"><strong>— Dana Marsh</strong><span>Hired as Ops Lead, Vessel</span><span class="plan-tag">Apply4Me Pro</span></div></div>
+                    <div class="testimonial-card"><div class="stars">⭐⭐⭐⭐⭐</div><blockquote>"I was spending 15 hours a week applying and getting nowhere. With Apply4Me, I got 5 interviews in 3 weeks. Worth every peso."</blockquote><div class="author"><strong>— Juan Dela Cruz</strong><span>Hired as Web Developer, Kiln & Co.</span><span class="plan-tag">Apply4Me Executive</span></div></div>
+                    <div class="testimonial-card"><div class="stars">⭐⭐⭐⭐⭐</div><blockquote>"The weekly progress reports gave me peace of mind. I knew exactly where I stood and what was happening. Highly recommended!"</blockquote><div class="author"><strong>— Ana Reyes</strong><span>Hired as Customer Support, Harbor Bank</span><span class="plan-tag">Apply4Me Starter</span></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="apply4me-form" class="lead-form-section">
+            <div class="container">
+                <div class="lead-form-wrapper">
+                    <h2>🎯 Start Your Apply4Me Journey</h2>
+                    <p>Fill out the form below and we'll reach out within 24 hours for your free consultation.</p>
+                    <form class="lead-form" onsubmit="alert('✅ Thank you! We\'ll reach out within 24 hours for your free consultation.'); return false;">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Full Name *</label><input type="text" placeholder="Juan Dela Cruz" required /></div>
+                            <div class="form-group"><label>Email Address *</label><input type="email" placeholder="juan@email.com" required /></div>
+                            <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="+63 912 345 6789" /></div>
+                            <div class="form-group"><label>Target Role *</label><select required><option value="">Select your target role</option><option value="Virtual Assistant">Virtual Assistant</option><option value="Customer Service">Customer Service</option><option value="Web Developer">Web Developer</option><option value="Social Media Manager">Social Media Manager</option><option value="Graphic Designer">Graphic Designer</option><option value="Content Writer">Content Writer</option><option value="SEO Specialist">SEO Specialist</option><option value="Bookkeeper">Bookkeeper</option><option value="Project Manager">Project Manager</option><option value="Other">Other</option></select></div>
+                            <div class="form-group full-width"><label>What roles are you targeting? (Optional)</label><textarea rows="2" placeholder="Tell us more about your ideal job..."></textarea></div>
+                            <div class="form-group full-width"><label>Preferred Plan</label><select><option value="starter">Starter (₱5,350/mo — 10 apps)</option><option value="pro" selected>Pro (₱10,850/mo — 20 apps) ⭐ Best Value</option><option value="executive">Executive (₱21,900/mo — 40 apps)</option><option value="undecided">Not sure yet — I want to learn more</option></select></div>
+                        </div>
+                        <button type="submit" class="btn-primary btn-large">🚀 Send My Free Consultation</button>
+                        <p class="form-note">No commitment. We'll discuss your goals and see if Apply4Me is right for you.</p>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section class="final-cta">
+            <div class="container">
+                <h2>🚀 Ready to stop applying and start getting hired?</h2>
+                <p>Join 50+ Filipino professionals who found their dream remote job with Apply4Me.</p>
+                <div class="cta-buttons">
+                    <a onclick="showPage('apply4me')" class="btn-primary btn-large">🎯 Start Your Journey</a>
+                    <a onclick="showPage('home')" class="btn-secondary btn-large">Browse Jobs Instead</a>
+                </div>
+                <div class="cta-note">
+                    <span>⏱️ Get started in 4 minutes. No commitment.</span>
+                    <span>💬 Free consultation before you pay a single peso.</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: POST A JOB
+    ============================================================ -->
+    <div id="page-post-job" class="page">
+        <section class="post-job-page">
+            <div class="container">
+                <h1>💼 Post a Job</h1>
+                <p>Find top Filipino talent for your remote team.</p>
+                <div class="post-job-wrapper">
+                    <div>
+                        <h3 style="margin-bottom:16px;">Choose Your Package</h3>
+                        <div class="package-grid">
+                            <div class="package-card"><h4>Standard</h4><div class="price">₱5,500</div><ul><li>✅ 30-day listing</li><li>✅ Search visibility</li><li>✅ Applicant tracking</li></ul></div>
+                            <div class="package-card featured"><span class="featured-badge-tag">⭐ RECOMMENDED</span><h4>Featured</h4><div class="price">₱11,000</div><ul><li>✅ Everything in Standard</li><li>✅ Pinned to homepage</li><li>✅ Social media promotion</li></ul></div>
+                            <div class="package-card"><h4>Pro</h4><div class="price">₱16,500</div><ul><li>✅ Everything in Featured</li><li>✅ Unlimited posts (1 month)</li><li>✅ Dedicated account manager</li></ul></div>
+                        </div>
+                    </div>
+                    <div>
+                        <form class="post-job-form" onsubmit="alert('✅ Your job has been posted! We\'ll review it within 24 hours.'); return false;">
+                            <div class="form-group"><label>Job Title *</label><input type="text" placeholder="e.g., Virtual Assistant" required /></div>
+                            <div class="form-group"><label>Company Name *</label><input type="text" placeholder="e.g., North Atlas" required /></div>
+                            <div class="form-group"><label>Job Description *</label><textarea rows="4" placeholder="Describe the role, responsibilities, and expectations..." required></textarea></div>
+                            <div class="form-group"><label>Job Type</label><select><option value="Remote">Remote</option><option value="Hybrid">Hybrid</option><option value="On-site">On-site</option></select></div>
+                            <div class="form-group"><label>Category</label><select><option value="Admin Support">Admin Support</option><option value="Customer Service">Customer Service</option><option value="Tech/IT">Tech/IT</option><option value="Digital Marketing">Digital Marketing</option><option value="Creative">Creative</option><option value="Accounting">Accounting</option></select></div>
+                            <div class="form-group"><label>Salary Range (PHP)</label><div class="salary-range"><input type="number" placeholder="Min" step="1000" /><span>to</span><input type="number" placeholder="Max" step="1000" /></div></div>
+                            <button type="submit" class="btn-primary">Post Job — Start at ₱5,500</button>
+                            <p class="form-note">💰 Pay after posting. 100% satisfaction guaranteed.</p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: LOGIN
+    ============================================================ -->
+    <div id="page-login" class="page">
+        <section class="auth-page">
+            <div class="container">
+                <div class="auth-wrapper">
+                    <h1>🔑 Welcome Back</h1>
+                    <p>Login to your Primespheres account.</p>
+                    <form class="auth-form" onsubmit="handleLogin(); return false;">
+                        <div class="form-group"><label>Email Address *</label><input type="email" id="loginEmail" placeholder="juan@email.com" required /></div>
+                        <div class="form-group"><label>Password *</label><input type="password" id="loginPassword" placeholder="••••••••" required /></div>
+                        <div class="remember-me"><label><input type="checkbox" /> Remember me</label><a href="#">Forgot password?</a></div>
+                        <button type="submit" class="btn-primary">Login</button>
+                    </form>
+                    <div class="divider">or</div>
+                    <div class="social-login"><a href="#"><span style="font-size:18px;">🔵</span> Google</a><a href="#"><span style="font-size:18px;">🔷</span> LinkedIn</a></div>
+                    <p class="auth-switch">Don't have an account? <a onclick="showPage('register')">Sign up here</a></p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: REGISTER (with 5 Roles)
+    ============================================================ -->
+    <div id="page-register" class="page">
+        <section class="auth-page">
+            <div class="container">
+                <div class="auth-wrapper">
+                    <h1>🚀 Create Your File</h1>
+                    <p>Build your profile once — your experience, your rate, your availability.</p>
+                    <form class="auth-form" onsubmit="handleRegister(); return false;">
+                        <div class="form-group"><label>Full Name *</label><input type="text" id="regFullName" placeholder="Juan Dela Cruz" required /></div>
+                        <div class="form-group"><label>Email Address *</label><input type="email" id="regEmail" placeholder="juan@email.com" required /></div>
+                        <div class="form-group"><label>Password *</label><input type="password" id="regPassword" placeholder="•••••••• (min 8 characters)" required minlength="8" /><span class="password-hint">Must be at least 8 characters</span></div>
+
+                        <label style="font-weight:600; font-size:14px; display:block; margin-bottom:8px;">Select your role:</label>
+                        <div class="role-selector" id="roleSelector">
+                            <div class="role-option" data-role="owner" onclick="selectRole('owner')">
+                                <span class="role-icon">👑</span>
+                                <div class="role-name">Owner</div>
+                                <div class="role-desc">Full access • Admin</div>
+                            </div>
+                            <div class="role-option" data-role="manager" onclick="selectRole('manager')">
+                                <span class="role-icon">📊</span>
+                                <div class="role-name">Manager</div>
+                                <div class="role-desc">Manage jobs & applicants</div>
+                            </div>
+                            <div class="role-option" data-role="business-partner" onclick="selectRole('business-partner')">
+                                <span class="role-icon">🤝</span>
+                                <div class="role-name">Business Partner</div>
+                                <div class="role-desc">Post jobs • View applicants</div>
+                            </div>
+                            <div class="role-option" data-role="harvester" onclick="selectRole('harvester')">
+                                <span class="role-icon">🌾</span>
+                                <div class="role-name">Harvester</div>
+                                <div class="role-desc">Harvest jobs only</div>
+                            </div>
+                            <div class="role-option" data-role="employee" onclick="selectRole('employee')">
+                                <span class="role-icon">👤</span>
+                                <div class="role-name">Employee</div>
+                                <div class="role-desc">Basic access</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="regUserType" value="employee" />
+
+                        <button type="submit" class="btn-primary">Create File</button>
+                    </form>
+                    <p class="auth-switch">Already have an account? <a onclick="showPage('login')">Login here</a></p>
+                    <p class="terms">By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: PRICING
+    ============================================================ -->
+    <div id="page-pricing" class="page">
+        <section class="pricing-section">
+            <div class="container">
+                <h2>💰 Simple, Transparent Pricing</h2>
+                <p class="subtitle">Choose the plan that fits your hiring needs.</p>
+                <div class="pricing-grid">
+                    <div class="pricing-card"><span class="plan-badge">📌 STANDARD</span><div class="price">₱5,500 <span>/post</span></div><div class="price-usd">(~$99 USD)</div><ul><li>30-day listing</li><li>Search visibility</li><li>Applicant tracking</li><li>Email notifications</li></ul><a onclick="showPage('post-job')" class="btn-secondary">Post a Job</a></div>
+                    <div class="pricing-card featured"><span class="plan-badge">⭐ FEATURED</span><div class="price">₱11,000 <span>/post</span></div><div class="price-usd">(~$199 USD)</div><ul><li>Everything in Standard</li><li>Pinned to homepage</li><li>Social media promotion</li><li>Newsletter feature</li></ul><a onclick="showPage('post-job')" class="btn-primary">Post a Job</a></div>
+                    <div class="pricing-card"><span class="plan-badge">👑 PRO</span><div class="price">₱16,500 <span>/mo</span></div><div class="price-usd">(~$299 USD)</div><ul><li>Everything in Featured</li><li>Unlimited posts (1 month)</li><li>Dedicated account manager</li><li>Priority support</li></ul><a onclick="showPage('post-job')" class="btn-secondary">Post a Job</a></div>
+                </div>
+                <div class="pricing-note">
+                    <strong>🚀 For Job Seekers:</strong> Check out our <a onclick="showPage('apply4me')" style="color:#2563eb; cursor:pointer; font-weight:600;">Apply4Me</a> service starting at ₱5,350/month.<br>
+                    <strong>🎯 For Business Partners:</strong> Post jobs and earn referral fees.
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: ABOUT
+    ============================================================ -->
+    <div id="page-about" class="page">
+        <section class="about-page">
+            <div class="container">
+                <h1>🌏 About Primespheres</h1>
+                <p class="subtitle">Find work worth showing up for. No. 001 — Since 2026.</p>
+                <div class="about-content">
+                    <p><strong>Primespheres</strong> is the leading platform connecting Filipino professionals with global remote opportunities. Every listing is verified, dated, and filed by a real hiring team — no ghost postings, no dead ends.</p>
+                    <h2>Our Mission</h2>
+                    <p>To empower Filipino professionals to work for the world's best companies without leaving the Philippines.</p>
+                    <h2>Our Vision</h2>
+                    <p>To become the #1 remote hiring platform in the Philippines, connecting 1 million Filipino professionals with global employers by 2028.</p>
+                    <h2>Our Team</h2>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin:20px 0;">
+                        <div style="background:#f8fafc; padding:20px; border-radius:8px; text-align:center;"><span style="font-size:32px;">👑</span><h4 style="margin:8px 0;">Owners</h4><p style="font-size:14px; color:#64748b;">Full platform access</p></div>
+                        <div style="background:#f8fafc; padding:20px; border-radius:8px; text-align:center;"><span style="font-size:32px;">📊</span><h4 style="margin:8px 0;">Managers</h4><p style="font-size:14px; color:#64748b;">Manage jobs & applicants</p></div>
+                        <div style="background:#f8fafc; padding:20px; border-radius:8px; text-align:center;"><span style="font-size:32px;">🤝</span><h4 style="margin:8px 0;">Business Partners</h4><p style="font-size:14px; color:#64748b;">Post jobs & earn referrals</p></div>
+                        <div style="background:#f8fafc; padding:20px; border-radius:8px; text-align:center;"><span style="font-size:32px;">🌾</span><h4 style="margin:8px 0;">Harvesters</h4><p style="font-size:14px; color:#64748b;">Job harvesting only</p></div>
+                        <div style="background:#f8fafc; padding:20px; border-radius:8px; text-align:center;"><span style="font-size:32px;">👤</span><h4 style="margin:8px 0;">Employees</h4><p style="font-size:14px; color:#64748b;">Basic access</p></div>
+                    </div>
+                    <h2>Our Values</h2>
+                    <ul>
+                        <li><strong>Quality:</strong> We never compromise on candidate or employer experience.</li>
+                        <li><strong>Transparency:</strong> Clear pricing, honest communication, no hidden fees.</li>
+                        <li><strong>Empowerment:</strong> Helping Filipinos access global opportunities.</li>
+                        <li><strong>Reliability:</strong> Manual applications done right, every time.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <section class="about-stats">
+            <div class="container">
+                <div class="stat-grid">
+                    <div class="stat-item"><span class="stat-number">4.8 / 5</span><span class="stat-label">Applicant rating</span></div>
+                    <div class="stat-item"><span class="stat-number">5 days</span><span class="stat-label">Avg. reply time</span></div>
+                    <div class="stat-item"><span class="stat-number">61%</span><span class="stat-label">Hired within a month</span></div>
+                    <div class="stat-item"><span class="stat-number">7</span><span class="stat-label">Companies filing</span></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: CONTACT
+    ============================================================ -->
+    <div id="page-contact" class="page">
+        <section class="contact-page">
+            <div class="container">
+                <h1>📬 Contact Us</h1>
+                <p class="subtitle">Have questions? We'd love to hear from you.</p>
+                <div class="contact-wrapper">
+                    <form class="contact-form" onsubmit="alert('✅ Your message has been sent! We\'ll get back to you within 24 hours.'); return false;">
+                        <div class="form-group"><label>Your Name *</label><input type="text" placeholder="Juan Dela Cruz" required /></div>
+                        <div class="form-group"><label>Email Address *</label><input type="email" placeholder="juan@email.com" required /></div>
+                        <div class="form-group"><label>Subject</label><input type="text" placeholder="Question about Apply4Me" /></div>
+                        <div class="form-group"><label>Message *</label><textarea rows="5" placeholder="How can we help you?" required></textarea></div>
+                        <button type="submit" class="btn-primary">Send Message</button>
+                    </form>
+                    <div class="contact-info">
+                        <h3>Other Ways to Reach Us</h3>
+                        <div class="contact-item"><span>📧</span><div><strong>Email</strong><p>info@primespheres.online</p></div></div>
+                        <div class="contact-item"><span>🌐</span><div><strong>Website</strong><p>primespheres.online</p></div></div>
+                        <div class="contact-item"><span>📍</span><div><strong>Location</strong><p>Philippines (Remote-first)</p></div></div>
+                        <div class="contact-item"><span>⏱️</span><div><strong>Response Time</strong><p>Within 24 hours</p></div></div>
+                        <h3 style="margin-top:20px;">Follow Us</h3>
+                        <div class="social-links"><a href="#" title="Facebook">📘</a><a href="#" title="LinkedIn">🔷</a><a href="#" title="Twitter">🐦</a><a href="#" title="Instagram">📸</a></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: HARVESTER
+    ============================================================ -->
+    <div id="page-harvester" class="page">
+        <section class="harvester-page">
+            <div class="container">
+                <h1>🌾 Job Harvester</h1>
+                <p class="subtitle">Gather job postings directly from company career pages for your Apply4Me candidates.</p>
+                <div class="harvester-stats">
+                    <div class="harvester-stat-card"><span class="number" id="harvestTotal">0</span><span class="label">Total Harvested</span></div>
+                    <div class="harvester-stat-card"><span class="number" id="harvestActive">0</span><span class="label">Active Jobs</span></div>
+                    <div class="harvester-stat-card"><span class="number" id="harvestSources">7</span><span class="label">Sources</span></div>
+                    <div class="harvester-stat-card"><span class="number" id="harvestToday">0</span><span class="label">Harvested Today</span></div>
+                </div>
+                <div class="harvester-form">
+                    <h3 style="margin-bottom:16px;">📥 Add New Job Posting</h3>
+                    <p style="color:#64748b; margin-bottom:20px; font-size:14px;">Manually enter job details from company career pages. These will be available for Apply4Me candidates.</p>
+                    <form id="harvestForm" onsubmit="harvestJob(); return false;">
+                        <div class="form-row">
+                            <div class="form-group"><label>Job Title *</label><input type="text" id="harvestTitle" placeholder="e.g., Virtual Assistant" required /></div>
+                            <div class="form-group"><label>Company Name *</label><input type="text" id="harvestCompany" placeholder="e.g., North Atlas" required /></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Job Type</label><select id="harvestJobType"><option value="Remote">Remote</option><option value="Hybrid">Hybrid</option><option value="On-site">On-site</option></select></div>
+                            <div class="form-group"><label>Category</label><select id="harvestCategory"><option value="Admin Support">Admin Support</option><option value="Customer Service">Customer Service</option><option value="Tech/IT">Tech/IT</option><option value="Digital Marketing">Digital Marketing</option><option value="Creative">Creative</option><option value="Accounting">Accounting</option></select></div>
+                        </div>
+                        <div class="form-group"><label>Job Description *</label><textarea id="harvestDescription" rows="3" placeholder="Paste the job description from the company website..." required></textarea></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Job Posting URL *</label><input type="url" id="harvestURL" placeholder="https://company.com/careers/job-123" required /><span style="font-size:12px; color:#94a3b8; margin-top:4px;">Link to the original job posting</span></div>
+                            <div class="form-group"><label>Company Website</label><input type="url" id="harvestCompanyURL" placeholder="https://company.com" /></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Salary Min (PHP)</label><input type="number" id="harvestSalaryMin" placeholder="25000" step="1000" /></div>
+                            <div class="form-group"><label>Salary Max (PHP)</label><input type="number" id="harvestSalaryMax" placeholder="45000" step="1000" /></div>
+                        </div>
+                        <button type="submit" class="btn-success btn-large">🌾 Harvest This Job</button>
+                        <p class="form-note">The job will be added with a direct link to the original posting.</p>
+                    </form>
+                </div>
+                <div style="background:white; border-radius:12px; border:1px solid #e2e8f0; padding:24px;">
+                    <h3 style="margin-bottom:16px;">📋 Harvested Jobs</h3>
+                    <div id="harvestedList"><p style="color:#94a3b8; text-align:center; padding:20px 0;">No jobs harvested yet. Add your first job above.</p></div>
+                </div>
+            </div>
+        </section>
+        <section style="padding:60px 0; background:#f8fafc;">
+            <div class="container">
+                <h2 style="text-align:center; font-size:28px; margin-bottom:8px;">🔗 Harvest Sources</h2>
+                <p style="text-align:center; color:#64748b; margin-bottom:30px;">Job postings are gathered from these verified company career pages.</p>
+                <div class="source-grid">
+                    <div class="source-card"><div class="source-icon">🏢</div><div class="source-info"><h4>Google Careers</h4><p>Tech & IT roles</p><a href="https://careers.google.com" target="_blank" class="source-url">careers.google.com</a><span class="source-status active">Active</span></div></div>
+                    <div class="source-card"><div class="source-icon">🏢</div><div class="source-info"><h4>Microsoft Careers</h4><p>Tech & Engineering</p><a href="https://careers.microsoft.com" target="_blank" class="source-url">careers.microsoft.com</a><span class="source-status active">Active</span></div></div>
+                    <div class="source-card"><div class="source-icon">🏢</div><div class="source-info"><h4>Amazon Jobs</h4><p>Operations & Tech</p><a href="https://amazon.jobs" target="_blank" class="source-url">amazon.jobs</a><span class="source-status active">Active</span></div></div>
+                    <div class="source-card"><div class="source-icon">🏢</div><div class="source-info"><h4>Apple Careers</h4><p>Creative & Tech</p><a href="https://apple.com/careers" target="_blank" class="source-url">apple.com/careers</a><span class="source-status active">Active</span></div></div>
+                    <div class="source-card"><div class="source-icon">🏢</div><div class="source-info"><h4>Shopify Careers</h4><p>E-commerce & Remote</p><a href="https://shopify.com/careers" target="_blank" class="source-url">shopify.com/careers</a><span class="source-status active">Active</span></div></div>
+                    <div class="source-card"><div class="source-icon">🏢</div><div class="source-info"><h4>HubSpot Careers</h4><p>Marketing & Sales</p><a href="https://hubspot.com/careers" target="_blank" class="source-url">hubspot.com/careers</a><span class="source-status active">Active</span></div></div>
+                    <div class="source-card"><div class="source-icon">🏢</div><div class="source-info"><h4>Stripe Careers</h4><p>FinTech & Remote</p><a href="https://stripe.com/jobs" target="_blank" class="source-url">stripe.com/jobs</a><span class="source-status active">Active</span></div></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    FOOTER
+    ============================================================ -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>🌏 Primespheres</h4>
+                    <p>Find work worth showing up for.</p>
+                    <p style="font-size:12px; color:#64748b;">No. 001 — Since 2026</p>
+                </div>
+                <div class="footer-col">
+                    <h4>For Job Seekers</h4>
+                    <a onclick="showPage('home')">Browse Jobs</a>
+                    <a onclick="showPage('apply4me')">Apply4Me</a>
+                    <a onclick="showPage('register')">Create Your File</a>
+                </div>
+                <div class="footer-col">
+                    <h4>For Employers</h4>
+                    <a onclick="showPage('post-job')">Post a Job</a>
+                    <a onclick="showPage('pricing')">Pricing</a>
+                    <a onclick="showPage('register')">Dashboard</a>
+                </div>
+                <div class="footer-col">
+                    <h4>For Business Partners</h4>
+                    <a onclick="showPage('register')">Sign Up (Free)</a>
+                    <a onclick="showPage('pricing')">Referral Rewards</a>
+                    <a onclick="showPage('register')">Post Jobs Free</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Tools</h4>
+                    <a onclick="showPage('harvester')">🌾 Job Harvester</a>
+                    <a onclick="showPage('apply4me')">🚀 Apply4Me</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <a onclick="showPage('about')">About Us</a>
+                    <a onclick="showPage('contact')">Contact</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Primespheres. All rights reserved. Made with ❤️ in the Philippines.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // USER SESSION MANAGEMENT
+        // ============================================================
+        let currentUser = null;
+
+        function getUsers() {
+            const users = localStorage.getItem('primespheres_users');
+            return users ? JSON.parse(users) : [];
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('primespheres_users', JSON.stringify(users));
+        }
+
+        function getCurrentUser() {
+            const user = localStorage.getItem('primespheres_current_user');
+            return user ? JSON.parse(user) : null;
+        }
+
+        function setCurrentUser(user) {
+            localStorage.setItem('primespheres_current_user', JSON.stringify(user));
+            currentUser = user;
+            updateNavForUser(user);
+        }
+
+        function logout() {
+            localStorage.removeItem('primespheres_current_user');
+            currentUser = null;
+            updateNavForUser(null);
+            showPage('home');
+            alert('👋 You have been logged out.');
+        }
+
+        // ============================================================
+        // ROLE PERMISSIONS
+        // ============================================================
+        function hasAccess(requiredRoles) {
+            if (!currentUser) return false;
+            return requiredRoles.includes(currentUser.role);
+        }
+
+        function checkAccess(requiredRoles, redirectPage) {
+            if (!hasAccess(requiredRoles)) {
+                alert('⛔ Access Denied. You do not have permission to view this page.');
+                showPage(redirectPage || 'home');
+                return false;
+            }
+            return true;
+        }
+
+        // ============================================================
+        // NAVIGATION UPDATE
+        // ============================================================
+        function updateNavForUser(user) {
+            const nav = document.querySelector('.nav-links');
+            document.querySelectorAll('.nav-dashboard-link, .nav-logout-link, .user-badge').forEach(el => el.remove());
+
+            if (user) {
+                const badge = document.createElement('span');
+                badge.className = 'user-badge';
+                const roleNames = {
+                    'owner': '👑 Owner',
+                    'manager': '📊 Manager',
+                    'business-partner': '🤝 Partner',
+                    'harvester': '🌾 Harvester',
+                    'employee': '👤 Employee'
+                };
+                badge.textContent = roleNames[user.role] || user.role;
+                badge.style.marginLeft = '8px';
+                nav.appendChild(badge);
+
+                // Dashboard link based on role
+                const dashLink = document.createElement('a');
+                dashLink.className = 'nav-dashboard-link';
+                dashLink.style.fontWeight = '600';
+
+                // Role-based dashboard routing
+                if (user.role === 'owner' || user.role === 'manager') {
+                    dashLink.textContent = '📊 Dashboard';
+                    dashLink.onclick = function() { showPage('manager-dashboard'); };
+                } else if (user.role === 'business-partner') {
+                    dashLink.textContent = '🤝 Dashboard';
+                    dashLink.onclick = function() { showPage('partner-dashboard'); };
+                } else if (user.role === 'harvester') {
+                    dashLink.textContent = '🌾 Harvester';
+                    dashLink.onclick = function() { showPage('harvester'); };
+                } else if (user.role === 'employee') {
+                    dashLink.textContent = '👤 Dashboard';
+                    dashLink.onclick = function() { showPage('employee-dashboard'); };
+                }
+                nav.appendChild(dashLink);
+
+                const logoutLink = document.createElement('a');
+                logoutLink.className = 'nav-logout-link';
+                logoutLink.textContent = 'Logout';
+                logoutLink.style.color = '#ef4444';
+                logoutLink.onclick = function() { logout(); };
+                nav.appendChild(logoutLink);
+            }
+
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                if (link.textContent === 'Login' || link.textContent === 'Sign Up') {
+                    link.style.display = user ? 'none' : 'inline-block';
+                }
+                if (link.textContent.includes('Dashboard') || link.textContent === 'Logout' || link.textContent.includes('Harvester')) {
+                    link.style.display = user ? 'inline-block' : 'none';
+                }
+            });
+        }
+
+        // ============================================================
+        // AUTH HANDLERS
+        // ============================================================
+        function selectRole(role) {
+            document.querySelectorAll('.role-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.role === role);
+            });
+            document.getElementById('regUserType').value = role;
+        }
+
+        function handleRegister() {
+            const name = document.getElementById('regFullName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regUserType').value;
+
+            if (!name || !email || !password || !role) {
+                alert('⚠️ Please fill in all fields and select a role.');
+                return;
+            }
+
+            const users = getUsers();
+            if (users.find(u => u.email === email)) {
+                alert('⚠️ An account with this email already exists. Please login.');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                name: name,
+                email: email,
+                password: password,
+                role: role,
+                createdAt: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            saveUsers(users);
+            setCurrentUser(newUser);
+
+            // Initialize role-specific data
+            initRoleData(email, role);
+
+            alert('✅ Account created successfully! Welcome to Primespheres.');
+            showPage(getDashboardForRole(role));
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('⚠️ Please enter your email and password.');
+                return;
+            }
+
+            const users = getUsers();
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (!user) {
+                alert('⚠️ Invalid email or password. Please try again.');
+                return;
+            }
+
+            setCurrentUser(user);
+            alert('✅ Welcome back, ' + user.name + '!');
+            showPage(getDashboardForRole(user.role));
+        }
+
+        function getDashboardForRole(role) {
+            const map = {
+                'owner': 'manager-dashboard',
+                'manager': 'manager-dashboard',
+                'business-partner': 'partner-dashboard',
+                'harvester': 'harvester',
+                'employee': 'employee-dashboard'
+            };
+            return map[role] || 'home';
+        }
+
+        function initRoleData(email, role) {
+            const key = role + '_data_' + email;
+            if (!localStorage.getItem(key)) {
+                const data = {
+                    jobs: [],
+                    applicants: [],
+                    referrals: [],
+                    earnings: 0,
+                    hires: 0,
+                    views: 0,
+                    code: 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+                };
+                localStorage.setItem(key, JSON.stringify(data));
+            }
+        }
+
+        function getRoleData(email, role) {
+            const key = role + '_data_' + email;
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : { jobs: [], applicants: [], referrals: [] };
+        }
+
+        function saveRoleData(email, role, data) {
+            const key = role + '_data_' + email;
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // ============================================================
+        // MANAGER DASHBOARD (Owner + Manager)
+        // ============================================================
+        function renderManagerDashboard() {
+            if (!currentUser) return;
+            if (!hasAccess(['owner', 'manager'])) {
+                document.getElementById('managerDashboardContent').innerHTML = `
+                    <div class="access-denied">
+                        <span class="lock-icon">🔒</span>
+                        <h2>Access Denied</h2>
+                        <p>You do not have permission to view this dashboard.</p>
+                        <button class="btn-primary" onclick="showPage('home')">Return Home</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Get all users data for overview
+            const users = getUsers();
+            const totalJobs = 0; // Would sum from all roles
+
+            document.getElementById('managerTotalJobs').textContent = '12';
+            document.getElementById('managerTotalUsers').textContent = users.length;
+            document.getElementById('managerTotalApplicants').textContent = '45';
+            document.getElementById('managerTotalRevenue').textContent = '₱67,500';
+
+            // Render recent activity
+            const activityList = document.getElementById('managerActivityList');
+            activityList.innerHTML = `
+                <div class="dash-item"><div><div class="dash-item-title">New job posted</div><div class="dash-item-sub">Virtual Assistant • North Atlas • 2 hours ago</div></div><span class="dash-item-status active">Active</span></div>
+                <div class="dash-item"><div><div class="dash-item-title">New applicant</div><div class="dash-item-sub">Maria Santos • Web Developer • 4 hours ago</div></div><span class="dash-item-status pending">Pending</span></div>
+                <div class="dash-item"><div><div class="dash-item-title">Job harvested</div><div class="dash-item-sub">Customer Support • Harbor Bank • 6 hours ago</div></div><span class="dash-item-status approved">Harvested</span></div>
+                <div class="dash-item"><div><div class="dash-item-title">Referral earned</div><div class="dash-item-sub">Ramon Rivera • ₱1,500 • 1 day ago</div></div><span class="dash-item-status hired">Paid</span></div>
+            `;
+        }
+
+        // ============================================================
+        // BUSINESS PARTNER DASHBOARD
+        // ============================================================
+        function renderPartnerDashboard() {
+            if (!currentUser) return;
+            if (!hasAccess(['business-partner'])) {
+                document.getElementById('partnerDashboardContent').innerHTML = `
+                    <div class="access-denied">
+                        <span class="lock-icon">🔒</span>
+                        <h2>Access Denied</h2>
+                        <p>You do not have permission to view this dashboard.</p>
+                        <button class="btn-primary" onclick="showPage('home')">Return Home</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const data = getRoleData(currentUser.email, 'business-partner');
+            const jobs = data.jobs || [];
+            const referrals = data.referrals || [];
+
+            document.getElementById('partnerJobCount').textContent = jobs.filter(j => j.status === 'active').length;
+            document.getElementById('partnerReferralCount').textContent = referrals.length;
+            document.getElementById('partnerEarnings').textContent = '₱' + (data.earnings || 0).toLocaleString();
+            document.getElementById('partnerHires').textContent = data.hires || 0;
+
+            // Referral code
+            const codeDisplay = document.getElementById('partnerCodeDisplay');
+            if (data.code) codeDisplay.textContent = data.code;
+
+            // Jobs list
+            const jobsList = document.getElementById('partnerJobsList');
+            if (jobs.length === 0) {
+                jobsList.innerHTML = '<div class="empty-state"><span class="empty-icon">📝</span><p>No jobs posted yet. Post your first job above.</p></div>';
+            } else {
+                jobsList.innerHTML = jobs.slice(0, 5).map(job => `
+                    <div class="dash-item">
+                        <div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${job.jobType} • ${job.applicants || 0} applicants</div></div>
+                        <span class="dash-item-status ${job.status === 'active' ? 'active' : 'closed'}">${job.status}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Referrals list
+            const referralsList = document.getElementById('partnerReferralsList');
+            if (referrals.length === 0) {
+                referralsList.innerHTML = '<div class="empty-state"><span class="empty-icon">🔗</span><p>No referrals yet. Share your code to start earning.</p></div>';
+            } else {
+                referralsList.innerHTML = referrals.slice(0, 5).map(ref => `
+                    <div class="dash-item">
+                        <div><div class="dash-item-title">${ref.jobTitle || 'Job'}</div><div class="dash-item-sub">${ref.company || 'Company'} • ${ref.date ? new Date(ref.date).toLocaleDateString('en-PH') : 'Recently'}</div></div>
+                        <div><span class="dash-item-status ${ref.status}">${ref.status}</span>${ref.status === 'hired' ? `<span style="font-size:13px; color:#22c55e; font-weight:600; margin-left:8px;">+₱${(ref.reward || 1500).toLocaleString()}</span>` : ''}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function postPartnerJob() {
+            if (!currentUser || !hasAccess(['business-partner'])) {
+                alert('⚠️ You do not have permission to post jobs.');
+                return;
+            }
+
+            const title = document.getElementById('partnerJobTitle').value.trim();
+            const company = document.getElementById('partnerCompany').value.trim();
+            const jobType = document.getElementById('partnerJobType').value;
+            const category = document.getElementById('partnerCategory').value;
+            const description = document.getElementById('partnerDescription').value.trim();
+
+            if (!title || !company || !description) {
+                alert('⚠️ Please fill in all required fields.');
+                return;
+            }
+
+            const data = getRoleData(currentUser.email, 'business-partner');
+            if (!data.jobs) data.jobs = [];
+
+            data.jobs.unshift({
+                id: Date.now(),
+                title: title,
+                company: company,
+                jobType: jobType,
+                category: category,
+                description: description,
+                status: 'active',
+                applicants: 0,
+                postedAt: new Date().toISOString()
+            });
+
+            // Add to referrals
+            if (!data.referrals) data.referrals = [];
+            data.referrals.push({
+                id: Date.now(),
+                jobTitle: title,
+                company: company,
+                status: 'pending',
+                date: new Date().toISOString(),
+                reward: 1500
+            });
+
+            saveRoleData(currentUser.email, 'business-partner', data);
+            renderPartnerDashboard();
+            alert('✅ Job posted successfully! You\'ll earn ₱1,500 per successful hire.');
+            document.getElementById('partnerJobTitle').value = '';
+            document.getElementById('partnerCompany').value = '';
+            document.getElementById('partnerDescription').value = '';
+        }
+
+        function copyPartnerCode() {
+            const code = document.getElementById('partnerCodeDisplay').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('📋 Referral code copied: ' + code);
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('📋 Referral code copied: ' + code);
+            });
+        }
+
+        // ============================================================
+        // EMPLOYEE DASHBOARD
+        // ============================================================
+        function renderEmployeeDashboard() {
+            if (!currentUser || currentUser.role !== 'employee') {
+                document.getElementById('employeeDashboardContent').innerHTML = `
+                    <div class="access-denied">
+                        <span class="lock-icon">🔒</span>
+                        <h2>Access Denied</h2>
+                        <p>You do not have permission to view this dashboard.</p>
+                        <button class="btn-primary" onclick="showPage('home')">Return Home</button>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('employeeAppliedCount').textContent = '0';
+            document.getElementById('employeeSavedCount').textContent = '0';
+            document.getElementById('employeeInterviews').textContent = '0';
+
+            const applicationsList = document.getElementById('employeeApplicationsList');
+            applicationsList.innerHTML = '<div class="empty-state"><span class="empty-icon">📤</span><p>You haven\'t applied to any jobs yet. Start browsing!</p></div>';
+
+            const recommendations = document.getElementById('employeeRecommendations');
+            recommendations.innerHTML = `
+                <div class="dash-item"><div><div class="dash-item-title">Virtual Assistant</div><div class="dash-item-sub">North Atlas • Remote • ₱25,000-₱35,000</div></div><button class="btn-primary btn-sm" onclick="alert('✅ Application submitted!')">Quick Apply</button></div>
+                <div class="dash-item"><div><div class="dash-item-title">Customer Support</div><div class="dash-item-sub">Harbor Bank • Remote • ₱20,000-₱28,000</div></div><button class="btn-primary btn-sm" onclick="alert('✅ Application submitted!')">Quick Apply</button></div>
+                <div class="dash-item"><div><div class="dash-item-title">Web Developer</div><div class="dash-item-sub">Kiln & Co. • Remote • ₱45,000-₱65,000</div></div><button class="btn-primary btn-sm" onclick="alert('✅ Application submitted!')">Quick Apply</button></div>
+            `;
+        }
+
+        // ============================================================
+        // HARVESTER FUNCTIONS
+        // ============================================================
+        let harvestedJobs = [];
+
+        function loadHarvestedJobs() {
+            const saved = localStorage.getItem('primespheres_harvested');
+            if (saved) {
+                try { harvestedJobs = JSON.parse(saved); } catch (e) { harvestedJobs = []; }
+            }
+            return harvestedJobs;
+        }
+
+        function saveHarvestedJobs() {
+            localStorage.setItem('primespheres_harvested', JSON.stringify(harvestedJobs));
+        }
+
+        function harvestJob() {
+            // Check if user has harvester access
+            if (currentUser && !hasAccess(['harvester', 'owner', 'manager', 'business-partner'])) {
+                alert('⛔ You do not have permission to harvest jobs.');
+                return;
+            }
+
+            const title = document.getElementById('harvestTitle').value.trim();
+            const company = document.getElementById('harvestCompany').value.trim();
+            const jobType = document.getElementById('harvestJobType').value;
+            const category = document.getElementById('harvestCategory').value;
+            const description = document.getElementById('harvestDescription').value.trim();
+            const url = document.getElementById('harvestURL').value.trim();
+            const companyURL = document.getElementById('harvestCompanyURL').value.trim();
+            const salaryMin = document.getElementById('harvestSalaryMin').value;
+            const salaryMax = document.getElementById('harvestSalaryMax').value;
+
+            if (!title || !company || !description || !url) {
+                alert('⚠️ Please fill in all required fields.');
+                return;
+            }
+
+            const job = {
+                id: Date.now(),
+                title: title,
+                company: company,
+                jobType: jobType,
+                category: category,
+                description: description,
+                url: url,
+                companyURL: companyURL || '#',
+                salaryMin: salaryMin ? parseInt(salaryMin) : null,
+                salaryMax: salaryMax ? parseInt(salaryMax) : null,
+                harvestedAt: new Date().toISOString(),
+                isActive: true,
+                harvestedBy: currentUser ? currentUser.name : 'Unknown'
+            };
+
+            harvestedJobs.unshift(job);
+            saveHarvestedJobs();
+
+            document.getElementById('harvestTitle').value = '';
+            document.getElementById('harvestCompany').value = '';
+            document.getElementById('harvestDescription').value = '';
+            document.getElementById('harvestURL').value = '';
+            document.getElementById('harvestCompanyURL').value = '';
+            document.getElementById('harvestSalaryMin').value = '';
+            document.getElementById('harvestSalaryMax').value = '';
+
+            renderHarvestedJobs();
+            updateHarvesterStats();
+            alert('🌾 Job harvested successfully!');
+        }
+
+        function renderHarvestedJobs() {
+            const container = document.getElementById('harvestedList');
+            loadHarvestedJobs();
+            if (!container) return;
+
+            if (harvestedJobs.length === 0) {
+                container.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:20px 0;">No jobs harvested yet. Add your first job above.</p>';
+            } else {
+                let html = '<div style="display:grid; gap:16px;">';
+                harvestedJobs.slice(0, 20).forEach(function(job) {
+                    const date = new Date(job.harvestedAt);
+                    const dateStr = date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+                    html += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;">
+                            <div>
+                                <strong style="font-size:16px;">${job.title}</strong>
+                                <span style="color:#64748b; font-size:14px;"> • ${job.company}</span>
+                                <span class="job-type ${job.jobType.toLowerCase()}" style="margin-left:8px;">${job.jobType}</span>
+                                ${job.harvestedBy ? `<span style="font-size:11px; color:#94a3b8; margin-left:8px;">🌾 by ${job.harvestedBy}</span>` : ''}
+                                <div style="font-size:13px; color:#94a3b8; margin-top:4px;">
+                                    ${job.salaryMin && job.salaryMax ? `₱${Number(job.salaryMin).toLocaleString()} - ₱${Number(job.salaryMax).toLocaleString()} • ` : ''}
+                                    Harvested: ${dateStr}
+                                </div>
+                                <div style="font-size:12px; margin-top:4px;">
+                                    <a href="${job.url}" target="_blank" style="color:#2563eb; text-decoration:none;">🔗 View Original Posting</a>
+                                    ${job.companyURL && job.companyURL !== '#' ? ` • <a href="${job.companyURL}" target="_blank" style="color:#2563eb; text-decoration:none;">🏢 Company Website</a>` : ''}
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn-success btn-sm" onclick="window.open('${job.url}','_blank')">Apply</button>
+                                ${hasAccess(['owner', 'manager']) ? `<button class="btn-secondary btn-sm" onclick="deleteHarvestedJob(${job.id})" style="color:#dc2626!important; border-color:#fecaca;">✕</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            }
+        }
+
+        function deleteHarvestedJob(id) {
+            if (!hasAccess(['owner', 'manager'])) {
+                alert('⛔ You do not have permission to delete jobs.');
+                return;
+            }
+            if (confirm('Delete this harvested job?')) {
+                harvestedJobs = harvestedJobs.filter(function(job) { return job.id !== id; });
+                saveHarvestedJobs();
+                renderHarvestedJobs();
+                updateHarvesterStats();
+            }
+        }
+
+        function updateHarvesterStats() {
+            loadHarvestedJobs();
+            const total = harvestedJobs.length;
+            const active = harvestedJobs.filter(function(j) { return j.isActive !== false; }).length;
+
+            document.getElementById('harvestTotal').textContent = total;
+            document.getElementById('harvestActive').textContent = active;
+
+            const today = new Date().toDateString();
+            const todayCount = harvestedJobs.filter(function(job) {
+                return new Date(job.harvestedAt).toDateString() === today;
+            }).length;
+            document.getElementById('harvestToday').textContent = todayCount;
+        }
+
+        // ============================================================
+        // PAGE NAVIGATION
+        // ============================================================
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(function(page) {
+                page.classList.remove('active');
+            });
+
+            var targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+
+            document.getElementById('navLinks').classList.remove('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            history.pushState(null, '', '#' + pageId);
+
+            // Render dashboards based on role
+            if (pageId === 'manager-dashboard') renderManagerDashboard();
+            else if (pageId === 'partner-dashboard') renderPartnerDashboard();
+            else if (pageId === 'employee-dashboard') renderEmployeeDashboard();
+            else if (pageId === 'harvester') {
+                renderHarvestedJobs();
+                updateHarvesterStats();
+            }
+
+            console.log('📄 Navigated to: ' + pageId);
+        }
+
+        // ============================================================
+        // MOBILE MENU
+        // ============================================================
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('active');
+        });
+
+        document.querySelectorAll('.nav-links a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                document.getElementById('navLinks').classList.remove('active');
+            });
+        });
+
+        // ============================================================
+        // HASH ROUTING
+        // ============================================================
+        window.addEventListener('hashchange', function() {
+            var hash = window.location.hash.replace('#', '');
+            if (hash) showPage(hash);
+            else showPage('home');
+        });
+
+        // ============================================================
+        // INITIAL LOAD
+        // ============================================================
+        var initialHash = window.location.hash.replace('#', '');
+        var validPages = ['home', 'apply4me', 'harvester', 'post-job', 'login', 'register', 'pricing', 'about', 'contact',
+            'manager-dashboard', 'partner-dashboard', 'employee-dashboard'
+        ];
+        if (initialHash && validPages.includes(initialHash)) {
+            showPage(initialHash);
+        } else {
+            showPage('home');
+        }
+
+        const savedUser = getCurrentUser();
+        if (savedUser) {
+            currentUser = savedUser;
+            updateNavForUser(savedUser);
+            const currentPage = document.querySelector('.page.active');
+            if (currentPage && (currentPage.id === 'page-login' || currentPage.id === 'page-register')) {
+                showPage(getDashboardForRole(savedUser.role));
+            }
+        }
+
+        loadHarvestedJobs();
+        renderHarvestedJobs();
+        updateHarvesterStats();
+
+        console.log('🌏 Primespheres — Complete Website Loaded');
+        console.log('📋 Find work worth showing up for.');
+        console.log('👑 Roles: Owner, Manager, Business Partner, Harvester, Employee');
+        console.log('🌾 Harvested Jobs: ' + harvestedJobs.length);
+        console.log('🇵🇭 Made with ❤️ in the Philippines');
+    </script>
+
+</body>
+</html>
