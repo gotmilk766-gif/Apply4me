@@ -685,6 +685,38 @@
             color: #94a3b8;
         }
 
+        /* ----- TIME IN/OUT ----- */
+        .time-tracker {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 16px;
+        }
+        body.dark-mode .time-tracker {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        .time-tracker .time-display {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: monospace;
+        }
+        .time-tracker .time-status {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .time-tracker .time-status.clocked-in {
+            color: #16a34a;
+        }
+        .time-tracker .time-status.clocked-out {
+            color: #dc2626;
+        }
+
         /* ----- REFERRAL ----- */
         .referral-code {
             background: #f8fafc;
@@ -1526,9 +1558,9 @@
             </div>
             <ul class="nav-links" id="navLinks">
                 <li><a onclick="showPage('home')">Home</a></li>
-                <li><a onclick="showPage('apply4me')" class="nav-highlight">Apply4Me</a></li>
-                <li><a onclick="showPage('post-job')">Post a Job</a></li>
-                <li><a onclick="showPage('profile')" id="profileNavLink" style="display:none;">Profile</li>
+                <li><a onclick="showPage('apply4me')" class="nav-highlight" id="apply4meNav">Apply4Me</a></li>
+                <li><a onclick="showPage('post-job')" id="postJobNav">Post a Job</a></li>
+                <li><a onclick="showPage('profile')" id="profileNavLink" style="display:none;">Profile</a></li>
                 <li><a onclick="showPage('login')">Login</a></li>
                 <li><a onclick="showPage('register')" class="btn-primary">Sign Up</a></li>
                 <li><button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button></li>
@@ -1937,7 +1969,7 @@
                             </div>
                             <div class="role-option" data-role="employee" onclick="selectRole('employee')">
                                 <div class="role-name">Employee</div>
-                                <div class="role-desc">Basic access</div>
+                                <div class="role-desc">Apply4Me access only</div>
                             </div>
                             <div class="role-option" data-role="employer" onclick="selectRole('employer')">
                                 <div class="role-name">Employer</div>
@@ -1999,6 +2031,24 @@
                         <span class="lock-icon">🔒</span>
                         <h2>Access Denied</h2>
                         <p>Please login to access your profile.</p>
+                        <button class="btn-primary" onclick="showPage('login')">Login</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================
+    PAGE: HARVESTER DASHBOARD
+    ============================================================ -->
+    <div id="page-harvester-dashboard" class="page">
+        <section class="dashboard-page">
+            <div class="container">
+                <div id="harvesterDashboardContent">
+                    <div class="access-denied">
+                        <span class="lock-icon">🔒</span>
+                        <h2>Access Denied</h2>
+                        <p>Please login to access your dashboard.</p>
                         <button class="btn-primary" onclick="showPage('login')">Login</button>
                     </div>
                 </div>
@@ -2226,7 +2276,7 @@
                 'owner': 'manager-dashboard',
                 'manager': 'manager-dashboard',
                 'business-partner': 'partner-dashboard',
-                'harvester': 'partner-dashboard',
+                'harvester': 'harvester-dashboard',
                 'employee': 'employee-dashboard',
                 'employer': 'employer-dashboard',
                 'job-seeker': 'jobseeker-dashboard'
@@ -2251,6 +2301,28 @@
                 profileLink.style.display = user ? 'inline-block' : 'none';
             }
 
+            // Role-specific nav visibility
+            const apply4meNav = document.getElementById('apply4meNav');
+            const postJobNav = document.getElementById('postJobNav');
+
+            if (apply4meNav) {
+                // Employer cannot see Apply4Me
+                if (user && user.role === 'employer') {
+                    apply4meNav.style.display = 'none';
+                } else {
+                    apply4meNav.style.display = 'inline-block';
+                }
+            }
+
+            if (postJobNav) {
+                // Job Seeker cannot see Post a Job
+                if (user && user.role === 'job-seeker') {
+                    postJobNav.style.display = 'none';
+                } else {
+                    postJobNav.style.display = 'inline-block';
+                }
+            }
+
             if (user) {
                 const badge = document.createElement('span');
                 badge.className = 'user-badge ' + user.role.replace('-', '');
@@ -2265,9 +2337,12 @@
                 if (['owner', 'manager'].includes(role)) {
                     dashLink.textContent = 'Dashboard';
                     dashLink.onclick = function() { showPage('manager-dashboard'); };
-                } else if (role === 'business-partner' || role === 'harvester') {
+                } else if (role === 'business-partner') {
                     dashLink.textContent = 'Dashboard';
                     dashLink.onclick = function() { showPage('partner-dashboard'); };
+                } else if (role === 'harvester') {
+                    dashLink.textContent = 'Dashboard';
+                    dashLink.onclick = function() { showPage('harvester-dashboard'); };
                 } else if (role === 'employee') {
                     dashLink.textContent = 'Dashboard';
                     dashLink.onclick = function() { showPage('employee-dashboard'); };
@@ -2350,7 +2425,10 @@
                     referrals: [],
                     earnings: 0,
                     hires: 0,
-                    code: 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+                    code: 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                    harvestedJobs: [],
+                    timeIn: null,
+                    timeOut: null
                 }));
             }
 
@@ -3198,9 +3276,262 @@
         }
 
         // ============================================================
-        // DASHBOARD RENDERERS
+        // TIME IN/OUT FUNCTIONS
         // ============================================================
+        function clockIn() {
+            if (!currentUser) {
+                showNotification('Please login first.', 'warning');
+                return;
+            }
 
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            const now = new Date();
+            data.timeIn = now.toISOString();
+            data.timeInDisplay = now.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            localStorage.setItem(key, JSON.stringify(data));
+
+            showNotification('⏰ Clocked in at ' + data.timeInDisplay, 'success');
+            renderHarvesterDashboard();
+            renderEmployeeDashboard();
+        }
+
+        function clockOut() {
+            if (!currentUser) {
+                showNotification('Please login first.', 'warning');
+                return;
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{}');
+            if (!data.timeIn) {
+                showNotification('Please clock in first.', 'warning');
+                return;
+            }
+
+            const now = new Date();
+            data.timeOut = now.toISOString();
+            data.timeOutDisplay = now.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            // Calculate hours worked
+            const timeIn = new Date(data.timeIn);
+            const timeOut = new Date(data.timeOut);
+            const diffMs = timeOut - timeIn;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            data.hoursWorked = diffHours + 'h ' + diffMinutes + 'm';
+
+            localStorage.setItem(key, JSON.stringify(data));
+
+            showNotification('⏰ Clocked out at ' + data.timeOutDisplay + ' (Worked: ' + data.hoursWorked + ')', 'info');
+            renderHarvesterDashboard();
+            renderEmployeeDashboard();
+        }
+
+        // ============================================================
+        // HARVESTER FUNCTIONS
+        // ============================================================
+        function addHarvestedJob(event) {
+            event.preventDefault();
+
+            if (!currentUser || currentUser.role !== 'harvester') {
+                showNotification('Only Harvesters can add harvested jobs.', 'error');
+                return;
+            }
+
+            const title = document.getElementById('harvestTitle')?.value.trim();
+            const company = document.getElementById('harvestCompany')?.value.trim();
+            const url = document.getElementById('harvestURL')?.value.trim();
+            const description = document.getElementById('harvestDescription')?.value.trim();
+
+            if (!title || !company || !url) {
+                showNotification('Please fill in all required fields.', 'error');
+                return;
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
+            if (!data.harvestedJobs) data.harvestedJobs = [];
+
+            data.harvestedJobs.unshift({
+                id: Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                title: title,
+                company: company,
+                url: url,
+                description: description || '',
+                harvestedAt: new Date().toISOString(),
+                status: 'active'
+            });
+
+            localStorage.setItem(key, JSON.stringify(data));
+
+            showNotification('🌾 Job harvested successfully!', 'success');
+            document.getElementById('harvestTitle').value = '';
+            document.getElementById('harvestCompany').value = '';
+            document.getElementById('harvestURL').value = '';
+            document.getElementById('harvestDescription').value = '';
+            renderHarvesterDashboard();
+        }
+
+        function editHarvestedJob(jobId) {
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
+            const job = data.harvestedJobs.find(j => j.id == jobId);
+            if (!job) {
+                showNotification('Job not found.', 'error');
+                return;
+            }
+
+            const newTitle = prompt('Edit Job Title:', job.title);
+            if (newTitle === null) return;
+            const newCompany = prompt('Edit Company:', job.company);
+            if (newCompany === null) return;
+            const newUrl = prompt('Edit Job URL:', job.url);
+            if (newUrl === null) return;
+            const newDescription = prompt('Edit Description:', job.description || '');
+
+            job.title = newTitle.trim() || job.title;
+            job.company = newCompany.trim() || job.company;
+            job.url = newUrl.trim() || job.url;
+            job.description = newDescription || job.description;
+            job.updatedAt = new Date().toISOString();
+
+            localStorage.setItem(key, JSON.stringify(data));
+            showNotification('✅ Job updated successfully!', 'success');
+            renderHarvesterDashboard();
+        }
+
+        function deleteHarvestedJob(jobId) {
+            if (!confirm('Delete this harvested job?')) return;
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
+            data.harvestedJobs = data.harvestedJobs.filter(j => j.id != jobId);
+            localStorage.setItem(key, JSON.stringify(data));
+
+            showNotification('Job deleted.', 'info');
+            renderHarvesterDashboard();
+        }
+
+        // ============================================================
+        // HARVESTER DASHBOARD
+        // ============================================================
+        function renderHarvesterDashboard() {
+            const container = document.getElementById('harvesterDashboardContent');
+            if (!container) return;
+
+            if (!currentUser || currentUser.role !== 'harvester') {
+                container.innerHTML = `
+                    <div class="access-denied">
+                        <span class="lock-icon">🔒</span>
+                        <h2>Access Denied</h2>
+                        <p>You do not have permission to view this dashboard.</p>
+                        <button class="btn-primary" onclick="showPage('home')">Return Home</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[],"timeIn":null,"timeOut":null}');
+            const harvestedJobs = data.harvestedJobs || [];
+            const timeIn = data.timeInDisplay || 'Not clocked in';
+            const timeOut = data.timeOutDisplay || 'Not clocked out';
+            const hoursWorked = data.hoursWorked || '—';
+
+            container.innerHTML = `
+                <div class="dashboard-header">
+                    <div>
+                        <h1>🌾 Harvester Dashboard</h1>
+                        <p style="color:#64748b;">Manage harvested jobs and track your time.</p>
+                    </div>
+                    <div class="user-info">
+                        <div class="avatar">${currentUser.name.charAt(0)}</div>
+                        <div>
+                            <strong>${currentUser.name}</strong>
+                            <span class="user-badge harvester">Harvester</span>
+                        </div>
+                        <button class="btn-secondary btn-sm" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+
+                <!-- Time Tracker -->
+                <div class="time-tracker">
+                    <div>
+                        <strong>Time Tracker</strong>
+                        <div style="font-size:13px;color:#64748b;">Clock in and out to track your hours</div>
+                    </div>
+                    <div>
+                        <span class="time-status ${data.timeIn && !data.timeOut ? 'clocked-in' : data.timeIn && data.timeOut ? 'clocked-out' : ''}">
+                            ${data.timeIn && !data.timeOut ? '🟢 Clocked In' : data.timeIn && data.timeOut ? '🔴 Clocked Out' : '⚪ Not Started'}
+                        </span>
+                    </div>
+                    <div style="font-size:14px;">
+                        <span>In: <strong>${timeIn}</strong></span>
+                        <span style="margin-left:12px;">Out: <strong>${timeOut}</strong></span>
+                        ${data.timeIn && data.timeOut ? `<span style="margin-left:12px;">Hours: <strong>${hoursWorked}</strong></span>` : ''}
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn-success btn-sm" onclick="clockIn()" ${data.timeIn && !data.timeOut ? 'disabled' : ''}>Clock In</button>
+                        <button class="btn-danger btn-sm" onclick="clockOut()" ${!data.timeIn || data.timeOut ? 'disabled' : ''}>Clock Out</button>
+                    </div>
+                </div>
+
+                <!-- Add Harvested Job -->
+                <div class="dashboard-card" style="margin-bottom:24px;">
+                    <h3>Add Harvested Job</h3>
+                    <form onsubmit="addHarvestedJob(event)" style="margin-top:12px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:13px;">Job Title *</label>
+                                <input type="text" id="harvestTitle" placeholder="e.g., Virtual Assistant" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;" required />
+                            </div>
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:13px;">Company *</label>
+                                <input type="text" id="harvestCompany" placeholder="e.g., North Atlas" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;" required />
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:13px;">Job URL *</label>
+                                <input type="url" id="harvestURL" placeholder="https://company.com/jobs/123" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;" required />
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:13px;">Description (Optional)</label>
+                                <textarea id="harvestDescription" rows="2" placeholder="Brief description of the job..." style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;font-family:inherit;"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-success" style="width:100%;padding:12px;">🌾 Harvest Job</button>
+                    </form>
+                </div>
+
+                <!-- Harvested Jobs List -->
+                <div class="dashboard-card">
+                    <h3>Harvested Jobs (${harvestedJobs.length})</h3>
+                    ${harvestedJobs.length === 0 ? '<div class="empty-state"><p>No jobs harvested yet. Add your first job above.</p></div>' :
+                        harvestedJobs.map(job => `
+                            <div class="dash-item">
+                                <div>
+                                    <div class="dash-item-title">${job.title}</div>
+                                    <div class="dash-item-sub">${job.company} • <a href="${job.url}" target="_blank" style="color:#1a56db;">🔗 Link</a> • ${job.harvestedAt ? new Date(job.harvestedAt).toLocaleDateString('en-PH') : 'Recent'}</div>
+                                    ${job.description ? `<div style="font-size:12px;color:#94a3b8;margin-top:2px;">${job.description}</div>` : ''}
+                                </div>
+                                <div style="display:flex;gap:6px;">
+                                    <button class="btn-secondary btn-sm" onclick="editHarvestedJob('${job.id}')">✏️ Edit</button>
+                                    <button class="btn-danger btn-sm" onclick="deleteHarvestedJob('${job.id}')">Delete</button>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            `;
+        }
+
+        // ============================================================
+        // EMPLOYER DASHBOARD
+        // ============================================================
         function renderEmployerDashboard() {
             const container = document.getElementById('employerDashboardContent');
             if (!container) return;
@@ -3310,6 +3641,9 @@
             showNotification('Job closed successfully.', 'info');
         }
 
+        // ============================================================
+        // JOB SEEKER DASHBOARD
+        // ============================================================
         function renderJobSeekerDashboard() {
             const container = document.getElementById('jobseekerDashboardContent');
             if (!container) return;
@@ -3417,6 +3751,9 @@
             `;
         }
 
+        // ============================================================
+        // MANAGER DASHBOARD
+        // ============================================================
         function renderManagerDashboard() {
             const container = document.getElementById('managerDashboardContent');
 
@@ -3486,10 +3823,13 @@
             `;
         }
 
+        // ============================================================
+        // PARTNER DASHBOARD
+        // ============================================================
         function renderPartnerDashboard() {
             const container = document.getElementById('partnerDashboardContent');
 
-            if (!currentUser || !['business-partner', 'harvester'].includes(currentUser.role)) {
+            if (!currentUser || currentUser.role !== 'business-partner') {
                 container.innerHTML = `
                     <div class="access-denied">
                         <span class="lock-icon">🔒</span>
@@ -3508,20 +3848,19 @@
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
-                        <h1>${currentUser.role === 'business-partner' ? 'Business Partner' : 'Harvester'} Dashboard</h1>
-                        <p style="color:#64748b;">${currentUser.role === 'business-partner' ? 'Post jobs and earn referral fees.' : 'Harvest jobs from company career pages.'}</p>
+                        <h1>Business Partner Dashboard</h1>
+                        <p style="color:#64748b;">Post jobs and earn referral fees.</p>
                     </div>
                     <div class="user-info">
                         <div class="avatar">${currentUser.name.charAt(0)}</div>
                         <div>
                             <strong>${currentUser.name}</strong>
-                            <span class="user-badge ${currentUser.role.replace('-','')}">${getRoleDisplay(currentUser.role)}</span>
+                            <span class="user-badge partner">Business Partner</span>
                         </div>
                         <button class="btn-secondary btn-sm" onclick="logout()">Logout</button>
                     </div>
                 </div>
 
-                ${currentUser.role === 'business-partner' ? `
                 <div class="referral-stats">
                     <div class="referral-stat"><span class="number">${jobs.filter(j => j.status === 'active').length}</span><span class="label">Active Jobs</span></div>
                     <div class="referral-stat"><span class="number">${(data.referrals || []).length}</span><span class="label">Total Referrals</span></div>
@@ -3538,19 +3877,9 @@
                     </div>
                     <p style="font-size:13px;color:#64748b;margin-top:12px;">Earn ₱1,500 for every successful hire through your referral.</p>
                 </div>
-                ` : `
-                <div class="dashboard-card" style="margin-bottom:24px;">
-                    <h3>Harvester Tools</h3>
-                    <p style="color:#64748b;">Use the harvester to gather job postings from company career pages.</p>
-                    <div style="display:flex;gap:12px;margin-top:16px;">
-                        <button class="btn-primary" onclick="showPage('home')">View Job Board</button>
-                        <button class="btn-secondary" onclick="showNotification('Auto-harvest settings coming soon.', 'info')">Settings</button>
-                    </div>
-                </div>
-                `}
 
                 <div class="dashboard-card">
-                    <h3>${currentUser.role === 'business-partner' ? 'Your Jobs' : 'Recent Activity'}</h3>
+                    <h3>Your Jobs</h3>
                     ${jobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet.</p></div>' :
                         jobs.slice(0, 5).map(job => `
                             <div class="dash-item">
@@ -3563,6 +3892,9 @@
             `;
         }
 
+        // ============================================================
+        // EMPLOYEE DASHBOARD (with Time In/Out, only Apply4Me access)
+        // ============================================================
         function renderEmployeeDashboard() {
             const container = document.getElementById('employeeDashboardContent');
 
@@ -3579,18 +3911,17 @@
             }
 
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"applications":[],"savedJobs":[]}');
+            const data = JSON.parse(localStorage.getItem(key) || '{"applications":[],"savedJobs":[],"timeIn":null,"timeOut":null}');
             const applications = data.applications || [];
-            const savedJobs = data.savedJobs || [];
-            const allJobs = getAllJobs();
-            const appliedJobIds = applications.map(a => a.jobId);
-            const recommendedJobs = allJobs.filter(j => !appliedJobIds.includes(j.id) && j.status === 'active').slice(0, 3);
+            const timeIn = data.timeInDisplay || 'Not clocked in';
+            const timeOut = data.timeOutDisplay || 'Not clocked out';
+            const hoursWorked = data.hoursWorked || '—';
 
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
                         <h1>Employee Dashboard</h1>
-                        <p style="color:#64748b;">Track your applications and find your dream job.</p>
+                        <p style="color:#64748b;">Track your applications and time.</p>
                     </div>
                     <div class="user-info">
                         <div class="avatar">${currentUser.name.charAt(0)}</div>
@@ -3602,11 +3933,33 @@
                     </div>
                 </div>
 
+                <!-- Time Tracker -->
+                <div class="time-tracker">
+                    <div>
+                        <strong>⏰ Time Tracker</strong>
+                        <div style="font-size:13px;color:#64748b;">Clock in and out to track your hours</div>
+                    </div>
+                    <div>
+                        <span class="time-status ${data.timeIn && !data.timeOut ? 'clocked-in' : data.timeIn && data.timeOut ? 'clocked-out' : ''}">
+                            ${data.timeIn && !data.timeOut ? '🟢 Clocked In' : data.timeIn && data.timeOut ? '🔴 Clocked Out' : '⚪ Not Started'}
+                        </span>
+                    </div>
+                    <div style="font-size:14px;">
+                        <span>In: <strong>${timeIn}</strong></span>
+                        <span style="margin-left:12px;">Out: <strong>${timeOut}</strong></span>
+                        ${data.timeIn && data.timeOut ? `<span style="margin-left:12px;">Hours: <strong>${hoursWorked}</strong></span>` : ''}
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn-success btn-sm" onclick="clockIn()" ${data.timeIn && !data.timeOut ? 'disabled' : ''}>Clock In</button>
+                        <button class="btn-danger btn-sm" onclick="clockOut()" ${!data.timeIn || data.timeOut ? 'disabled' : ''}>Clock Out</button>
+                    </div>
+                </div>
+
                 <div class="dashboard-stats">
                     <div class="dashboard-stat-card"><span class="number">${applications.length}</span><span class="label">Applications Sent</span></div>
                     <div class="dashboard-stat-card"><span class="number">${applications.filter(a => a.status === 'seen').length}</span><span class="label">Viewed</span></div>
                     <div class="dashboard-stat-card"><span class="number">${applications.filter(a => a.status === 'interview').length}</span><span class="label">Interviews</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${savedJobs.length}</span><span class="label">Saved Jobs</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${(data.savedJobs || []).length}</span><span class="label">Saved Jobs</span></div>
                 </div>
 
                 <div class="dashboard-grid">
@@ -3634,18 +3987,11 @@
                         }
                     </div>
                     <div class="dashboard-card">
-                        <h3>Recommended Jobs</h3>
-                        ${recommendedJobs.length === 0 ? '<div class="empty-state"><p>No recommendations right now. Check back later!</p></div>' :
-                            recommendedJobs.map(job => `
-                                <div class="dash-item">
-                                    <div>
-                                        <div class="dash-item-title">${job.title}</div>
-                                        <div class="dash-item-sub">${job.company} • ${job.jobType} ${job.salaryMin && job.salaryMax ? '• ₱' + Number(job.salaryMin).toLocaleString() + '-' + Number(job.salaryMax).toLocaleString() : ''}</div>
-                                    </div>
-                                    <button class="btn-primary btn-sm" onclick="applyToJob('${job.id}')">Apply</button>
-                                </div>
-                            `).join('')
-                        }
+                        <h3>Apply4Me</h3>
+                        <div style="text-align:center;padding:20px 0;">
+                            <p style="color:#64748b;margin-bottom:16px;">Let us apply to jobs for you!</p>
+                            <button class="btn-primary" onclick="showPage('apply4me')">Go to Apply4Me</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -3672,6 +4018,8 @@
                 renderJobBoard();
             } else if (pageId === 'profile') {
                 renderProfile();
+            } else if (pageId === 'harvester-dashboard') {
+                renderHarvesterDashboard();
             } else if (pageId === 'employer-dashboard') {
                 renderEmployerDashboard();
             } else if (pageId === 'jobseeker-dashboard') {
@@ -3715,7 +4063,7 @@
         var initialHash = window.location.hash.replace('#', '');
         var validPages = ['home', 'apply4me', 'post-job', 'login', 'register', 'profile',
             'manager-dashboard', 'partner-dashboard', 'employee-dashboard',
-            'employer-dashboard', 'jobseeker-dashboard'
+            'employer-dashboard', 'jobseeker-dashboard', 'harvester-dashboard'
         ];
         if (initialHash && validPages.includes(initialHash)) {
             showPage(initialHash);
@@ -3735,8 +4083,8 @@
 
         renderJobBoard();
 
-        console.log('Primespheres — Complete System Loaded');
-        console.log('Features: 7 Roles, Job Board, Apply4Me, Resume Parsing, Saved Jobs, Dark Mode, Export, Analytics, Profile');
+        console.log('Primespheres — Complete Final System Loaded');
+        console.log('Roles: Owner, Manager, Business Partner, Harvester, Employee, Employer, Job Seeker');
         console.log('Current User:', currentUser);
     </script>
 
