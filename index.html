@@ -685,30 +685,21 @@
             color: #94a3b8;
         }
 
-        /* ----- TIME IN/OUT ----- */
+        /* ----- TIME TRACKER ----- */
         .time-tracker {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
             gap: 16px;
             align-items: center;
-            flex-wrap: wrap;
-            padding: 16px;
+            padding: 20px;
             background: #f8fafc;
-            border-radius: 8px;
+            border-radius: 12px;
             border: 1px solid #e2e8f0;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
         }
         body.dark-mode .time-tracker {
             background: #1e293b;
             border-color: #334155;
-        }
-        .time-tracker .time-display {
-            font-size: 20px;
-            font-weight: 700;
-            font-family: monospace;
-        }
-        .time-tracker .time-status {
-            font-size: 14px;
-            font-weight: 600;
         }
         .time-tracker .time-status.clocked-in {
             color: #16a34a;
@@ -1527,6 +1518,7 @@
             .job-filters select,
             .job-filters input { flex: 1; }
             .dashboard-stats { grid-template-columns: 1fr 1fr; }
+            .time-tracker { grid-template-columns: 1fr; gap: 8px; }
         }
 
         @media (max-width: 480px) {
@@ -1540,6 +1532,7 @@
             .dashboard-stats { grid-template-columns: 1fr 1fr; }
             .modal { padding: 24px; }
             .job-filters { flex-direction: column; }
+            .time-tracker { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -2290,7 +2283,7 @@
         }
 
         // ============================================================
-        // NAVIGATION UPDATE
+        // NAVIGATION UPDATE — Hide items on login page
         // ============================================================
         function updateNavForUser(user) {
             const nav = document.querySelector('.nav-links');
@@ -2301,25 +2294,30 @@
                 profileLink.style.display = user ? 'inline-block' : 'none';
             }
 
-            // Role-specific nav visibility
             const apply4meNav = document.getElementById('apply4meNav');
             const postJobNav = document.getElementById('postJobNav');
 
-            if (apply4meNav) {
-                // Employer cannot see Apply4Me
-                if (user && user.role === 'employer') {
-                    apply4meNav.style.display = 'none';
-                } else {
-                    apply4meNav.style.display = 'inline-block';
+            // Hide Apply4Me and Post a Job when NOT logged in
+            if (!user) {
+                if (apply4meNav) apply4meNav.style.display = 'none';
+                if (postJobNav) postJobNav.style.display = 'none';
+            } else {
+                // Show Apply4Me based on role (Employer cannot see Apply4Me)
+                if (apply4meNav) {
+                    if (user.role === 'employer') {
+                        apply4meNav.style.display = 'none';
+                    } else {
+                        apply4meNav.style.display = 'inline-block';
+                    }
                 }
-            }
 
-            if (postJobNav) {
-                // Job Seeker cannot see Post a Job
-                if (user && user.role === 'job-seeker') {
-                    postJobNav.style.display = 'none';
-                } else {
-                    postJobNav.style.display = 'inline-block';
+                // Show Post a Job based on role (Job Seeker cannot see Post a Job)
+                if (postJobNav) {
+                    if (user.role === 'job-seeker') {
+                        postJobNav.style.display = 'none';
+                    } else {
+                        postJobNav.style.display = 'inline-block';
+                    }
                 }
             }
 
@@ -2363,6 +2361,7 @@
                 nav.appendChild(logoutLink);
             }
 
+            // Show/hide Login and Sign Up based on user state
             document.querySelectorAll('.nav-links a').forEach(link => {
                 if (link.textContent === 'Login' || link.textContent === 'Sign Up') {
                     link.style.display = user ? 'none' : 'inline-block';
@@ -2428,7 +2427,9 @@
                     code: 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
                     harvestedJobs: [],
                     timeIn: null,
-                    timeOut: null
+                    timeOut: null,
+                    lastPostDate: null,
+                    postCountToday: 0
                 }));
             }
 
@@ -2806,8 +2807,65 @@
         }
 
         // ============================================================
-        // POST JOB HANDLER
+        // POST JOB HANDLER — With daily limit for employers
         // ============================================================
+        function canPostJobToday() {
+            if (!currentUser || currentUser.role !== 'employer') {
+                return { allowed: false, message: 'Only employers can post jobs.' };
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{"jobs":[],"lastPostDate":null,"postCountToday":0}');
+
+            const today = new Date().toDateString();
+            const lastPostDate = data.lastPostDate ? new Date(data.lastPostDate).toDateString() : null;
+
+            if (lastPostDate !== today) {
+                data.postCountToday = 0;
+                data.lastPostDate = new Date().toISOString();
+                localStorage.setItem(key, JSON.stringify(data));
+                return { allowed: true, message: 'You can post today.' };
+            }
+
+            if (data.postCountToday >= 1) {
+                return {
+                    allowed: false,
+                    message: 'You have already posted a job today. Free employers are limited to 1 post per day. Upgrade to post more.'
+                };
+            }
+
+            return { allowed: true, message: 'You can post today.' };
+        }
+
+        function getRemainingPostsToday() {
+            if (!currentUser || currentUser.role !== 'employer') {
+                return 0;
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{"jobs":[],"lastPostDate":null,"postCountToday":0}');
+
+            const today = new Date().toDateString();
+            const lastPostDate = data.lastPostDate ? new Date(data.lastPostDate).toDateString() : null;
+
+            if (lastPostDate !== today) {
+                return 1;
+            }
+
+            return Math.max(0, 1 - (data.postCountToday || 0));
+        }
+
+        function handlePostJobClick() {
+            const result = canPostJobToday();
+
+            if (!result.allowed) {
+                showNotification('⛔ ' + result.message, 'warning');
+                return;
+            }
+
+            showPage('post-job');
+        }
+
         function handlePostJob(event) {
             event.preventDefault();
 
@@ -2820,6 +2878,15 @@
             if (!['owner', 'manager', 'business-partner', 'employer'].includes(currentUser.role)) {
                 showNotification('You do not have permission to post jobs.', 'error');
                 return;
+            }
+
+            // Check daily limit for employers
+            if (currentUser.role === 'employer') {
+                const result = canPostJobToday();
+                if (!result.allowed) {
+                    showNotification('⛔ ' + result.message, 'warning');
+                    return;
+                }
             }
 
             const title = document.getElementById('postTitle').value.trim();
@@ -2841,7 +2908,7 @@
             expiresAt.setDate(expiresAt.getDate() + expiryDays);
 
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"jobs":[]}');
+            const data = JSON.parse(localStorage.getItem(key) || '{"jobs":[],"lastPostDate":null,"postCountToday":0}');
             if (!data.jobs) data.jobs = [];
 
             data.jobs.unshift({
@@ -2861,9 +2928,22 @@
                 expiresAt: expiresAt.toISOString()
             });
 
+            // Update daily post count for employers
+            if (currentUser.role === 'employer') {
+                const today = new Date().toDateString();
+                const lastPostDate = data.lastPostDate ? new Date(data.lastPostDate).toDateString() : null;
+
+                if (lastPostDate !== today) {
+                    data.postCountToday = 1;
+                    data.lastPostDate = new Date().toISOString();
+                } else {
+                    data.postCountToday = (data.postCountToday || 0) + 1;
+                }
+            }
+
             localStorage.setItem(key, JSON.stringify(data));
 
-            showNotification('Job posted successfully!', 'success');
+            showNotification('✅ Job posted successfully!', 'success');
             document.getElementById('postTitle').value = '';
             document.getElementById('postCompany').value = '';
             document.getElementById('postDescription').value = '';
@@ -3284,16 +3364,41 @@
                 return;
             }
 
+            if (currentUser.role !== 'harvester' && currentUser.role !== 'employee') {
+                showNotification('Only Harvesters and Employees can clock in.', 'warning');
+                return;
+            }
+
             const key = currentUser.role + '_data_' + currentUser.email;
             const data = JSON.parse(localStorage.getItem(key) || '{}');
+
+            if (data.timeIn && !data.timeOut) {
+                showNotification('You are already clocked in.', 'warning');
+                return;
+            }
+
             const now = new Date();
             data.timeIn = now.toISOString();
-            data.timeInDisplay = now.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            data.timeInDisplay = now.toLocaleString('en-PH', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            data.timeOut = null;
+            data.timeOutDisplay = null;
+            data.hoursWorked = null;
+
             localStorage.setItem(key, JSON.stringify(data));
 
             showNotification('⏰ Clocked in at ' + data.timeInDisplay, 'success');
-            renderHarvesterDashboard();
-            renderEmployeeDashboard();
+
+            if (currentUser.role === 'harvester') {
+                renderHarvesterDashboard();
+            } else if (currentUser.role === 'employee') {
+                renderEmployeeDashboard();
+            }
         }
 
         function clockOut() {
@@ -3302,30 +3407,51 @@
                 return;
             }
 
+            if (currentUser.role !== 'harvester' && currentUser.role !== 'employee') {
+                showNotification('Only Harvesters and Employees can clock out.', 'warning');
+                return;
+            }
+
             const key = currentUser.role + '_data_' + currentUser.email;
             const data = JSON.parse(localStorage.getItem(key) || '{}');
+
             if (!data.timeIn) {
                 showNotification('Please clock in first.', 'warning');
                 return;
             }
 
+            if (data.timeOut) {
+                showNotification('You are already clocked out.', 'warning');
+                return;
+            }
+
             const now = new Date();
             data.timeOut = now.toISOString();
-            data.timeOutDisplay = now.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            data.timeOutDisplay = now.toLocaleString('en-PH', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
 
-            // Calculate hours worked
             const timeIn = new Date(data.timeIn);
             const timeOut = new Date(data.timeOut);
             const diffMs = timeOut - timeIn;
             const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
             const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            data.hoursWorked = diffHours + 'h ' + diffMinutes + 'm';
+            const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+            data.hoursWorked = diffHours + 'h ' + diffMinutes + 'm ' + diffSeconds + 's';
 
             localStorage.setItem(key, JSON.stringify(data));
 
             showNotification('⏰ Clocked out at ' + data.timeOutDisplay + ' (Worked: ' + data.hoursWorked + ')', 'info');
-            renderHarvesterDashboard();
-            renderEmployeeDashboard();
+
+            if (currentUser.role === 'harvester') {
+                renderHarvesterDashboard();
+            } else if (currentUser.role === 'employee') {
+                renderEmployeeDashboard();
+            }
         }
 
         // ============================================================
@@ -3343,6 +3469,9 @@
             const company = document.getElementById('harvestCompany')?.value.trim();
             const url = document.getElementById('harvestURL')?.value.trim();
             const description = document.getElementById('harvestDescription')?.value.trim();
+            const salary = document.getElementById('harvestSalary')?.value.trim();
+            const location = document.getElementById('harvestLocation')?.value.trim();
+            const jobType = document.getElementById('harvestJobType')?.value || 'Remote';
 
             if (!title || !company || !url) {
                 showNotification('Please fill in all required fields.', 'error');
@@ -3359,6 +3488,9 @@
                 company: company,
                 url: url,
                 description: description || '',
+                salary: salary || '',
+                location: location || 'Remote',
+                jobType: jobType,
                 harvestedAt: new Date().toISOString(),
                 status: 'active'
             });
@@ -3370,10 +3502,17 @@
             document.getElementById('harvestCompany').value = '';
             document.getElementById('harvestURL').value = '';
             document.getElementById('harvestDescription').value = '';
+            document.getElementById('harvestSalary').value = '';
+            document.getElementById('harvestLocation').value = '';
             renderHarvesterDashboard();
         }
 
         function editHarvestedJob(jobId) {
+            if (!currentUser || currentUser.role !== 'harvester') {
+                showNotification('Only Harvesters can edit jobs.', 'error');
+                return;
+            }
+
             const key = currentUser.role + '_data_' + currentUser.email;
             const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
             const job = data.harvestedJobs.find(j => j.id == jobId);
@@ -3382,26 +3521,120 @@
                 return;
             }
 
-            const newTitle = prompt('Edit Job Title:', job.title);
-            if (newTitle === null) return;
-            const newCompany = prompt('Edit Company:', job.company);
-            if (newCompany === null) return;
-            const newUrl = prompt('Edit Job URL:', job.url);
-            if (newUrl === null) return;
-            const newDescription = prompt('Edit Description:', job.description || '');
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.id = 'editHarvestModal';
+            modal.innerHTML = `
+                <div class="modal" style="max-width:600px;">
+                    <button class="modal-close" onclick="closeEditHarvestModal()">&times;</button>
+                    <h2>✏️ Edit Harvested Job</h2>
+                    <form id="editHarvestForm" onsubmit="saveHarvestedJob(event, '${jobId}')">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Title *</label>
+                                <input type="text" id="editHarvestTitle" value="${job.title}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
+                            </div>
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Company *</label>
+                                <input type="text" id="editHarvestCompany" value="${job.company}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job URL *</label>
+                                <input type="url" id="editHarvestURL" value="${job.url}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Salary</label>
+                                <input type="text" id="editHarvestSalary" value="${job.salary || ''}" placeholder="e.g., ₱25,000-₱35,000" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
+                            </div>
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Location</label>
+                                <input type="text" id="editHarvestLocation" value="${job.location || 'Remote'}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Description (Optional)</label>
+                                <textarea id="editHarvestDescription" rows="3" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">${job.description || ''}</textarea>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Type</label>
+                                <select id="editHarvestJobType" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">
+                                    <option value="Remote" ${job.jobType === 'Remote' ? 'selected' : ''}>Remote</option>
+                                    <option value="Hybrid" ${job.jobType === 'Hybrid' ? 'selected' : ''}>Hybrid</option>
+                                    <option value="On-site" ${job.jobType === 'On-site' ? 'selected' : ''}>On-site</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;">
+                            <button type="submit" class="btn-primary" style="flex:1;padding:14px;">💾 Save Changes</button>
+                            <button type="button" class="btn-secondary" onclick="closeEditHarvestModal()" style="padding:14px 24px;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+        }
 
-            job.title = newTitle.trim() || job.title;
-            job.company = newCompany.trim() || job.company;
-            job.url = newUrl.trim() || job.url;
-            job.description = newDescription || job.description;
+        function closeEditHarvestModal() {
+            const modal = document.getElementById('editHarvestModal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function saveHarvestedJob(event, jobId) {
+            event.preventDefault();
+
+            const title = document.getElementById('editHarvestTitle').value.trim();
+            const company = document.getElementById('editHarvestCompany').value.trim();
+            const url = document.getElementById('editHarvestURL').value.trim();
+            const description = document.getElementById('editHarvestDescription').value.trim();
+            const salary = document.getElementById('editHarvestSalary').value.trim();
+            const location = document.getElementById('editHarvestLocation').value.trim();
+            const jobType = document.getElementById('editHarvestJobType').value;
+
+            if (!title || !company || !url) {
+                showNotification('Please fill in all required fields.', 'error');
+                return;
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
+            const job = data.harvestedJobs.find(j => j.id == jobId);
+            if (!job) {
+                showNotification('Job not found.', 'error');
+                return;
+            }
+
+            job.title = title;
+            job.company = company;
+            job.url = url;
+            job.description = description;
+            job.salary = salary;
+            job.location = location || 'Remote';
+            job.jobType = jobType;
             job.updatedAt = new Date().toISOString();
 
             localStorage.setItem(key, JSON.stringify(data));
+            closeEditHarvestModal();
             showNotification('✅ Job updated successfully!', 'success');
             renderHarvesterDashboard();
         }
 
         function deleteHarvestedJob(jobId) {
+            if (!currentUser || currentUser.role !== 'harvester') {
+                showNotification('Only Harvesters can delete jobs.', 'error');
+                return;
+            }
+
             if (!confirm('Delete this harvested job?')) return;
 
             const key = currentUser.role + '_data_' + currentUser.email;
@@ -3413,8 +3646,16 @@
             renderHarvesterDashboard();
         }
 
+        function viewHarvestedJob(url) {
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                showNotification('No URL available for this job.', 'warning');
+            }
+        }
+
         // ============================================================
-        // HARVESTER DASHBOARD
+        // RENDER HARVESTER DASHBOARD
         // ============================================================
         function renderHarvesterDashboard() {
             const container = document.getElementById('harvesterDashboardContent');
@@ -3438,6 +3679,8 @@
             const timeIn = data.timeInDisplay || 'Not clocked in';
             const timeOut = data.timeOutDisplay || 'Not clocked out';
             const hoursWorked = data.hoursWorked || '—';
+            const isClockedIn = data.timeIn && !data.timeOut;
+            const isClockedOut = data.timeIn && data.timeOut;
 
             container.innerHTML = `
                 <div class="dashboard-header">
@@ -3458,79 +3701,133 @@
                 <!-- Time Tracker -->
                 <div class="time-tracker">
                     <div>
-                        <strong>Time Tracker</strong>
+                        <strong style="font-size:16px;">⏰ Time Tracker</strong>
                         <div style="font-size:13px;color:#64748b;">Clock in and out to track your hours</div>
                     </div>
                     <div>
-                        <span class="time-status ${data.timeIn && !data.timeOut ? 'clocked-in' : data.timeIn && data.timeOut ? 'clocked-out' : ''}">
-                            ${data.timeIn && !data.timeOut ? '🟢 Clocked In' : data.timeIn && data.timeOut ? '🔴 Clocked Out' : '⚪ Not Started'}
+                        <span class="time-status ${isClockedIn ? 'clocked-in' : isClockedOut ? 'clocked-out' : ''}" style="font-size:16px;font-weight:600;">
+                            ${isClockedIn ? '🟢 Clocked In' : isClockedOut ? '🔴 Clocked Out' : '⚪ Not Started'}
                         </span>
                     </div>
                     <div style="font-size:14px;">
-                        <span>In: <strong>${timeIn}</strong></span>
-                        <span style="margin-left:12px;">Out: <strong>${timeOut}</strong></span>
-                        ${data.timeIn && data.timeOut ? `<span style="margin-left:12px;">Hours: <strong>${hoursWorked}</strong></span>` : ''}
+                        <div>In: <strong>${timeIn}</strong></div>
+                        <div>Out: <strong>${timeOut}</strong></div>
+                        ${isClockedOut ? `<div>Hours: <strong>${hoursWorked}</strong></div>` : ''}
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button class="btn-success btn-sm" onclick="clockIn()" ${data.timeIn && !data.timeOut ? 'disabled' : ''}>Clock In</button>
-                        <button class="btn-danger btn-sm" onclick="clockOut()" ${!data.timeIn || data.timeOut ? 'disabled' : ''}>Clock Out</button>
+                        <button class="btn-success btn-sm" onclick="clockIn()" ${isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock In</button>
+                        <button class="btn-danger btn-sm" onclick="clockOut()" ${!isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock Out</button>
                     </div>
                 </div>
 
                 <!-- Add Harvested Job -->
                 <div class="dashboard-card" style="margin-bottom:24px;">
-                    <h3>Add Harvested Job</h3>
-                    <form onsubmit="addHarvestedJob(event)" style="margin-top:12px;">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                    <h3>📥 Add Harvested Job</h3>
+                    <form onsubmit="addHarvestedJob(event)" style="margin-top:16px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
                             <div class="form-group">
-                                <label style="font-weight:600;font-size:13px;">Job Title *</label>
-                                <input type="text" id="harvestTitle" placeholder="e.g., Virtual Assistant" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;" required />
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Title <span style="color:#dc2626;">*</span></label>
+                                <input type="text" id="harvestTitle" placeholder="e.g., Virtual Assistant" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
                             </div>
                             <div class="form-group">
-                                <label style="font-weight:600;font-size:13px;">Company *</label>
-                                <input type="text" id="harvestCompany" placeholder="e.g., North Atlas" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;" required />
-                            </div>
-                        </div>
-                        <div style="margin-bottom:12px;">
-                            <div class="form-group">
-                                <label style="font-weight:600;font-size:13px;">Job URL *</label>
-                                <input type="url" id="harvestURL" placeholder="https://company.com/jobs/123" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;" required />
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Company <span style="color:#dc2626;">*</span></label>
+                                <input type="text" id="harvestCompany" placeholder="e.g., North Atlas" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
                             </div>
                         </div>
-                        <div style="margin-bottom:12px;">
+                        <div style="margin-bottom:16px;">
                             <div class="form-group">
-                                <label style="font-weight:600;font-size:13px;">Description (Optional)</label>
-                                <textarea id="harvestDescription" rows="2" placeholder="Brief description of the job..." style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;font-family:inherit;"></textarea>
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job URL <span style="color:#dc2626;">*</span></label>
+                                <input type="url" id="harvestURL" placeholder="https://company.com/jobs/123" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
                             </div>
                         </div>
-                        <button type="submit" class="btn-success" style="width:100%;padding:12px;">🌾 Harvest Job</button>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Salary</label>
+                                <input type="text" id="harvestSalary" placeholder="e.g., ₱25,000-₱35,000" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
+                            </div>
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Location</label>
+                                <input type="text" id="harvestLocation" placeholder="e.g., Remote" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
+                            </div>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Description (Optional)</label>
+                                <textarea id="harvestDescription" rows="3" placeholder="Brief description of the job..." style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;"></textarea>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Type</label>
+                                <select id="harvestJobType" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">
+                                    <option value="Remote">Remote</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                    <option value="On-site">On-site</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-success" style="width:100%;padding:14px;font-size:16px;">🌾 Harvest Job</button>
                     </form>
                 </div>
 
                 <!-- Harvested Jobs List -->
                 <div class="dashboard-card">
-                    <h3>Harvested Jobs (${harvestedJobs.length})</h3>
-                    ${harvestedJobs.length === 0 ? '<div class="empty-state"><p>No jobs harvested yet. Add your first job above.</p></div>' :
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3 style="margin:0;">📋 Harvested Jobs</h3>
+                        <span style="font-size:14px;color:#94a3b8;">${harvestedJobs.length} jobs</span>
+                    </div>
+                    ${harvestedJobs.length === 0 ?
+                        '<div class="empty-state"><span class="empty-icon">🌾</span><p>No jobs harvested yet. Add your first job above.</p></div>' :
                         harvestedJobs.map(job => `
-                            <div class="dash-item">
-                                <div>
-                                    <div class="dash-item-title">${job.title}</div>
-                                    <div class="dash-item-sub">${job.company} • <a href="${job.url}" target="_blank" style="color:#1a56db;">🔗 Link</a> • ${job.harvestedAt ? new Date(job.harvestedAt).toLocaleDateString('en-PH') : 'Recent'}</div>
-                                    ${job.description ? `<div style="font-size:12px;color:#94a3b8;margin-top:2px;">${job.description}</div>` : ''}
+                            <div class="dash-item" style="padding:16px 0;">
+                                <div style="flex:1;">
+                                    <div class="dash-item-title" style="font-size:16px;">${job.title}</div>
+                                    <div class="dash-item-sub" style="margin-top:4px;">
+                                        <strong>${job.company}</strong>
+                                        ${job.salary ? ` • ${job.salary}` : ''}
+                                        ${job.location ? ` • 📍 ${job.location}` : ''}
+                                        ${job.jobType ? ` • ${job.jobType}` : ''}
+                                    </div>
+                                    ${job.description ? `<div style="font-size:13px;color:#64748b;margin-top:4px;">${job.description}</div>` : ''}
+                                    <div style="font-size:12px;color:#94a3b8;margin-top:4px;">
+                                        🌾 Harvested: ${job.harvestedAt ? new Date(job.harvestedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}
+                                        ${job.updatedAt ? ` • ✏️ Updated: ${new Date(job.updatedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}` : ''}
+                                    </div>
                                 </div>
-                                <div style="display:flex;gap:6px;">
-                                    <button class="btn-secondary btn-sm" onclick="editHarvestedJob('${job.id}')">✏️ Edit</button>
-                                    <button class="btn-danger btn-sm" onclick="deleteHarvestedJob('${job.id}')">Delete</button>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                    <button class="btn-secondary btn-sm" onclick="viewHarvestedJob('${job.url}')" style="padding:4px 12px;">🔗 View</button>
+                                    <button class="btn-secondary btn-sm" onclick="editHarvestedJob('${job.id}')" style="padding:4px 12px;">✏️ Edit</button>
+                                    <button class="btn-danger btn-sm" onclick="deleteHarvestedJob('${job.id}')" style="padding:4px 12px;">🗑️ Delete</button>
                                 </div>
                             </div>
                         `).join('')
                     }
                 </div>
+
+                <!-- Stats Summary -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:24px;">
+                    <div class="dashboard-stat-card">
+                        <span class="number">${harvestedJobs.length}</span>
+                        <span class="label">Total Harvested</span>
+                    </div>
+                    <div class="dashboard-stat-card">
+                        <span class="number">${harvestedJobs.filter(j => j.status === 'active').length}</span>
+                        <span class="label">Active Jobs</span>
+                    </div>
+                    <div class="dashboard-stat-card">
+                        <span class="number">${isClockedIn ? '🟢' : isClockedOut ? '🔴' : '⚪'}</span>
+                        <span class="label">${isClockedIn ? 'Clocked In' : isClockedOut ? 'Clocked Out' : 'Not Started'}</span>
+                    </div>
+                    <div class="dashboard-stat-card">
+                        <span class="number">${isClockedOut ? hoursWorked : '—'}</span>
+                        <span class="label">Hours Worked</span>
+                    </div>
+                </div>
             `;
         }
 
         // ============================================================
-        // EMPLOYER DASHBOARD
+        // RENDER EMPLOYER DASHBOARD — With daily limit
         // ============================================================
         function renderEmployerDashboard() {
             const container = document.getElementById('employerDashboardContent');
@@ -3549,16 +3846,20 @@
             }
 
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"jobs":[],"applicants":[]}');
+            const data = JSON.parse(localStorage.getItem(key) || '{"jobs":[],"applicants":[],"lastPostDate":null,"postCountToday":0}');
             const jobs = data.jobs || [];
             const allJobs = getAllJobs();
             const totalApplicants = allJobs.reduce((sum, j) => sum + (j.applicants || 0), 0);
             const totalViews = allJobs.reduce((sum, j) => sum + (j.views || 0), 0);
+            const remainingPosts = getRemainingPostsToday();
+            const today = new Date().toDateString();
+            const lastPostDate = data.lastPostDate ? new Date(data.lastPostDate).toDateString() : null;
+            const postedToday = (lastPostDate === today) ? (data.postCountToday || 0) : 0;
 
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
-                        <h1>Employer Dashboard</h1>
+                        <h1>🏢 Employer Dashboard</h1>
                         <p style="color:#64748b;">Post jobs, manage listings, and track analytics.</p>
                     </div>
                     <div class="user-info">
@@ -3568,6 +3869,32 @@
                             <span class="user-badge employer">Employer</span>
                         </div>
                         <button class="btn-secondary btn-sm" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+
+                <!-- Daily Posting Limit Status -->
+                <div style="background:#f8fafc;padding:16px 20px;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <strong style="font-size:15px;">📊 Daily Posting Limit</strong>
+                        <div style="font-size:13px;color:#64748b;margin-top:2px;">
+                            Free employers can post <strong>1 job per day</strong>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                        <div style="text-align:center;">
+                            <span style="font-size:24px;font-weight:800;color:#1a56db;">${remainingPosts}</span>
+                            <span style="font-size:13px;color:#64748b;display:block;">Posts remaining today</span>
+                        </div>
+                        <div style="text-align:center;">
+                            <span style="font-size:24px;font-weight:800;color:${postedToday > 0 ? '#16a34a' : '#94a3b8'};">${postedToday}/1</span>
+                            <span style="font-size:13px;color:#64748b;display:block;">Posted today</span>
+                        </div>
+                        <div style="text-align:center;">
+                            <span style="font-size:13px;color:#64748b;display:block;">
+                                ${remainingPosts > 0 ? '✅ You can post today' : '⛔ Daily limit reached'}
+                            </span>
+                            ${remainingPosts === 0 ? `<span style="font-size:12px;color:#f59e0b;">⏳ Come back tomorrow</span>` : ''}
+                        </div>
                     </div>
                 </div>
 
@@ -3592,8 +3919,9 @@
 
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>Your Active Jobs</h3>
-                        ${jobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet. <a onclick="showPage(\'post-job\')" style="color:#1a56db;cursor:pointer;">Post your first job →</a></p></div>' :
+                        <h3>📋 Your Active Jobs</h3>
+                        ${jobs.length === 0 ?
+                            `<div class="empty-state"><p>No jobs posted yet. <a onclick="showPage('post-job')" style="color:#1a56db;cursor:pointer;font-weight:600;">Post your first job →</a></p></div>` :
                             jobs.filter(j => j.status === 'active').slice(0, 5).map(job => `
                                 <div class="dash-item">
                                     <div>
@@ -3607,13 +3935,17 @@
                                 </div>
                             `).join('')
                         }
+                        ${jobs.filter(j => j.status === 'active').length > 5 ? `<div style="text-align:center;padding-top:12px;"><a onclick="showPage('home')" style="color:#1a56db;cursor:pointer;font-weight:600;">View all →</a></div>` : ''}
                     </div>
                     <div class="dashboard-card">
-                        <h3>Quick Actions</h3>
+                        <h3>⚡ Quick Actions</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
-                            <button class="btn-primary" onclick="showPage('post-job')">Post a Job</button>
-                            <button class="btn-secondary" onclick="showPage('home')">View Job Board</button>
-                            <button class="btn-secondary" onclick="exportJobsCSV()">Export Jobs</button>
+                            <button class="btn-primary" onclick="handlePostJobClick()" ${remainingPosts === 0 ? 'disabled' : ''} style="opacity:${remainingPosts === 0 ? '0.5' : '1'};">
+                                📝 Post a Job ${remainingPosts === 0 ? '(Limit reached)' : ''}
+                            </button>
+                            <button class="btn-secondary" onclick="showPage('home')">👁️ View Job Board</button>
+                            <button class="btn-secondary" onclick="exportJobsCSV()">📊 Export Jobs</button>
+                            <button class="btn-secondary" onclick="showNotification('Upgrade to Premium for unlimited job posting!', 'info')">💎 Upgrade Plan</button>
                         </div>
                     </div>
                 </div>
@@ -3642,7 +3974,7 @@
         }
 
         // ============================================================
-        // JOB SEEKER DASHBOARD
+        // RENDER JOB SEEKER DASHBOARD
         // ============================================================
         function renderJobSeekerDashboard() {
             const container = document.getElementById('jobseekerDashboardContent');
@@ -3671,7 +4003,7 @@
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
-                        <h1>Job Seeker Dashboard</h1>
+                        <h1>🔍 Job Seeker Dashboard</h1>
                         <p style="color:#64748b;">Find your dream job, track applications, and save jobs.</p>
                     </div>
                     <div class="user-info">
@@ -3693,15 +4025,15 @@
 
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>Your Applications</h3>
+                        <h3>📤 Your Applications</h3>
                         ${applications.length === 0 ? '<div class="empty-state"><p>You haven\'t applied to any jobs yet. <a onclick="showPage(\'home\')" style="color:#1a56db;cursor:pointer;">Browse jobs →</a></p></div>' :
                             applications.slice(0, 5).map(app => {
                                 const statusLabels = {
-                                    'pending': 'Pending',
-                                    'seen': 'Seen',
-                                    'interview': 'Interview',
-                                    'hired': 'Hired',
-                                    'rejected': 'Rejected'
+                                    'pending': '⏳ Pending',
+                                    'seen': '👁️ Seen',
+                                    'interview': '📞 Interview',
+                                    'hired': '✅ Hired',
+                                    'rejected': '❌ Rejected'
                                 };
                                 return `
                                     <div class="dash-item">
@@ -3716,7 +4048,7 @@
                         }
                     </div>
                     <div class="dashboard-card">
-                        <h3>Saved Jobs</h3>
+                        <h3>⭐ Saved Jobs</h3>
                         ${savedJobs.length === 0 ? '<div class="empty-state"><p>Save jobs you\'re interested in for later.</p></div>' :
                             savedJobs.slice(0, 5).map(jobId => {
                                 const job = allJobs.find(j => j.id == jobId);
@@ -3735,7 +4067,7 @@
                 </div>
 
                 <div class="dashboard-card" style="margin-top:24px;">
-                    <h3>Recommended Jobs</h3>
+                    <h3>🎯 Recommended Jobs</h3>
                     ${recommendedJobs.length === 0 ? '<div class="empty-state"><p>No recommendations right now. Check back later!</p></div>' :
                         recommendedJobs.map(job => `
                             <div class="dash-item">
@@ -3752,7 +4084,7 @@
         }
 
         // ============================================================
-        // MANAGER DASHBOARD
+        // RENDER MANAGER DASHBOARD
         // ============================================================
         function renderManagerDashboard() {
             const container = document.getElementById('managerDashboardContent');
@@ -3778,7 +4110,7 @@
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
-                        <h1>${currentUser.role === 'owner' ? 'Owner' : 'Manager'} Dashboard</h1>
+                        <h1>${currentUser.role === 'owner' ? '👑 Owner' : '📊 Manager'} Dashboard</h1>
                         <p style="color:#64748b;">Welcome back, ${currentUser.name}.</p>
                     </div>
                     <div class="user-info">
@@ -3800,7 +4132,7 @@
 
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>Recent Job Postings</h3>
+                        <h3>📋 Recent Job Postings</h3>
                         ${jobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet.</p></div>' :
                             jobs.slice(0, 5).map(job => `
                                 <div class="dash-item">
@@ -3811,12 +4143,12 @@
                         }
                     </div>
                     <div class="dashboard-card">
-                        <h3>Quick Actions</h3>
+                        <h3>⚡ Quick Actions</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
-                            <button class="btn-primary" onclick="showPage('post-job')">Post a Job</button>
-                            <button class="btn-secondary" onclick="showPage('apply4me')">Apply4Me</button>
-                            <button class="btn-secondary" onclick="showPage('home')">View Job Board</button>
-                            <button class="btn-secondary" onclick="exportJobsCSV()">Export Data</button>
+                            <button class="btn-primary" onclick="showPage('post-job')">📝 Post a Job</button>
+                            <button class="btn-secondary" onclick="showPage('apply4me')">🚀 Apply4Me</button>
+                            <button class="btn-secondary" onclick="showPage('home')">👁️ View Job Board</button>
+                            <button class="btn-secondary" onclick="exportJobsCSV()">📊 Export Data</button>
                         </div>
                     </div>
                 </div>
@@ -3824,7 +4156,7 @@
         }
 
         // ============================================================
-        // PARTNER DASHBOARD
+        // RENDER PARTNER DASHBOARD
         // ============================================================
         function renderPartnerDashboard() {
             const container = document.getElementById('partnerDashboardContent');
@@ -3848,7 +4180,7 @@
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
-                        <h1>Business Partner Dashboard</h1>
+                        <h1>🤝 Business Partner Dashboard</h1>
                         <p style="color:#64748b;">Post jobs and earn referral fees.</p>
                     </div>
                     <div class="user-info">
@@ -3869,7 +4201,7 @@
                 </div>
 
                 <div class="dashboard-card" style="margin-bottom:24px;">
-                    <h3>Your Referral Code</h3>
+                    <h3>🔗 Your Referral Code</h3>
                     <div class="referral-code">
                         <span>Share this code with employers:</span>
                         <span class="code">${data.code || 'REF-XXXXXX'}</span>
@@ -3879,7 +4211,7 @@
                 </div>
 
                 <div class="dashboard-card">
-                    <h3>Your Jobs</h3>
+                    <h3>📋 Your Jobs</h3>
                     ${jobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet.</p></div>' :
                         jobs.slice(0, 5).map(job => `
                             <div class="dash-item">
@@ -3893,7 +4225,7 @@
         }
 
         // ============================================================
-        // EMPLOYEE DASHBOARD (with Time In/Out, only Apply4Me access)
+        // RENDER EMPLOYEE DASHBOARD — With Apply4Me client access
         // ============================================================
         function renderEmployeeDashboard() {
             const container = document.getElementById('employeeDashboardContent');
@@ -3916,12 +4248,28 @@
             const timeIn = data.timeInDisplay || 'Not clocked in';
             const timeOut = data.timeOutDisplay || 'Not clocked out';
             const hoursWorked = data.hoursWorked || '—';
+            const isClockedIn = data.timeIn && !data.timeOut;
+            const isClockedOut = data.timeIn && data.timeOut;
+
+            // Get Apply4Me clients
+            const allLeads = JSON.parse(localStorage.getItem('apply4me_leads') || '[]');
+            const apply4meClients = allLeads.map(lead => ({
+                name: lead.name,
+                email: lead.email,
+                phone: lead.phone || 'N/A',
+                role: lead.role || 'N/A',
+                plan: lead.planName || 'N/A',
+                portfolio: lead.portfolio || 'N/A',
+                linkedin: lead.linkedin || 'N/A',
+                resume: lead.resume ? lead.resume.name : 'Not uploaded',
+                submittedAt: lead.submittedAt || new Date().toISOString()
+            }));
 
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
-                        <h1>Employee Dashboard</h1>
-                        <p style="color:#64748b;">Track your applications and time.</p>
+                        <h1>👤 Employee Dashboard</h1>
+                        <p style="color:#64748b;">Track your applications, time, and manage Apply4Me clients.</p>
                     </div>
                     <div class="user-info">
                         <div class="avatar">${currentUser.name.charAt(0)}</div>
@@ -3936,22 +4284,22 @@
                 <!-- Time Tracker -->
                 <div class="time-tracker">
                     <div>
-                        <strong>⏰ Time Tracker</strong>
+                        <strong style="font-size:16px;">⏰ Time Tracker</strong>
                         <div style="font-size:13px;color:#64748b;">Clock in and out to track your hours</div>
                     </div>
                     <div>
-                        <span class="time-status ${data.timeIn && !data.timeOut ? 'clocked-in' : data.timeIn && data.timeOut ? 'clocked-out' : ''}">
-                            ${data.timeIn && !data.timeOut ? '🟢 Clocked In' : data.timeIn && data.timeOut ? '🔴 Clocked Out' : '⚪ Not Started'}
+                        <span class="time-status ${isClockedIn ? 'clocked-in' : isClockedOut ? 'clocked-out' : ''}" style="font-size:16px;font-weight:600;">
+                            ${isClockedIn ? '🟢 Clocked In' : isClockedOut ? '🔴 Clocked Out' : '⚪ Not Started'}
                         </span>
                     </div>
                     <div style="font-size:14px;">
-                        <span>In: <strong>${timeIn}</strong></span>
-                        <span style="margin-left:12px;">Out: <strong>${timeOut}</strong></span>
-                        ${data.timeIn && data.timeOut ? `<span style="margin-left:12px;">Hours: <strong>${hoursWorked}</strong></span>` : ''}
+                        <div>In: <strong>${timeIn}</strong></div>
+                        <div>Out: <strong>${timeOut}</strong></div>
+                        ${isClockedOut ? `<div>Hours: <strong>${hoursWorked}</strong></div>` : ''}
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button class="btn-success btn-sm" onclick="clockIn()" ${data.timeIn && !data.timeOut ? 'disabled' : ''}>Clock In</button>
-                        <button class="btn-danger btn-sm" onclick="clockOut()" ${!data.timeIn || data.timeOut ? 'disabled' : ''}>Clock Out</button>
+                        <button class="btn-success btn-sm" onclick="clockIn()" ${isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock In</button>
+                        <button class="btn-danger btn-sm" onclick="clockOut()" ${!isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock Out</button>
                     </div>
                 </div>
 
@@ -3964,15 +4312,16 @@
 
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>Your Applications</h3>
-                        ${applications.length === 0 ? '<div class="empty-state"><p>You haven\'t applied to any jobs yet. <a onclick="showPage(\'home\')" style="color:#1a56db;cursor:pointer;">Browse jobs →</a></p></div>' :
+                        <h3>📤 Your Applications</h3>
+                        ${applications.length === 0 ?
+                            '<div class="empty-state"><p>You haven\'t applied to any jobs yet. <a onclick="showPage(\'home\')" style="color:#1a56db;cursor:pointer;">Browse jobs →</a></p></div>' :
                             applications.slice(0, 5).map(app => {
                                 const statusLabels = {
-                                    'pending': 'Pending',
-                                    'seen': 'Seen',
-                                    'interview': 'Interview',
-                                    'hired': 'Hired',
-                                    'rejected': 'Rejected'
+                                    'pending': '⏳ Pending',
+                                    'seen': '👁️ Seen',
+                                    'interview': '📞 Interview',
+                                    'hired': '✅ Hired',
+                                    'rejected': '❌ Rejected'
                                 };
                                 return `
                                     <div class="dash-item">
@@ -3987,14 +4336,113 @@
                         }
                     </div>
                     <div class="dashboard-card">
-                        <h3>Apply4Me</h3>
-                        <div style="text-align:center;padding:20px 0;">
-                            <p style="color:#64748b;margin-bottom:16px;">Let us apply to jobs for you!</p>
-                            <button class="btn-primary" onclick="showPage('apply4me')">Go to Apply4Me</button>
+                        <h3>🚀 Apply4Me Clients</h3>
+                        ${apply4meClients.length === 0 ?
+                            '<div class="empty-state"><p>No Apply4Me clients yet. Share the service to get clients!</p></div>' :
+                            apply4meClients.slice(0, 5).map(client => `
+                                <div class="dash-item">
+                                    <div>
+                                        <div class="dash-item-title">${client.name}</div>
+                                        <div class="dash-item-sub">${client.role} • ${client.plan} • 📄 ${client.resume !== 'Not uploaded' ? '✅' : '❌'} Resume</div>
+                                    </div>
+                                    <button class="btn-primary btn-sm" onclick="viewClientProfile('${client.email}')">View</button>
+                                </div>
+                            `).join('')
+                        }
+                        ${apply4meClients.length > 5 ? `<div style="text-align:center;padding-top:12px;"><span style="color:#94a3b8;font-size:13px;">Showing 5 of ${apply4meClients.length} clients</span></div>` : ''}
+                        <div style="margin-top:12px;text-align:center;">
+                            <button class="btn-primary btn-sm" onclick="showPage('apply4me')">🚀 Go to Apply4Me</button>
                         </div>
                     </div>
                 </div>
             `;
+        }
+
+        // ============================================================
+        // VIEW CLIENT PROFILE
+        // ============================================================
+        function viewClientProfile(email) {
+            const allLeads = JSON.parse(localStorage.getItem('apply4me_leads') || '[]');
+            const lead = allLeads.find(l => l.email === email);
+
+            if (!lead) {
+                showNotification('Client not found.', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.id = 'clientProfileModal';
+            modal.innerHTML = `
+                <div class="modal" style="max-width:700px;">
+                    <button class="modal-close" onclick="closeClientProfileModal()">&times;</button>
+                    <h2>👤 Client Profile</h2>
+                    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div>
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Full Name</p>
+                            <p style="font-weight:600;">${lead.name}</p>
+                        </div>
+                        <div>
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Email</p>
+                            <p style="font-weight:600;">${lead.email}</p>
+                        </div>
+                        <div>
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Phone</p>
+                            <p style="font-weight:600;">${lead.phone || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Target Role</p>
+                            <p style="font-weight:600;">${lead.role || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Plan</p>
+                            <p><span style="background:#dbeafe;color:#1a56db;padding:2px 12px;border-radius:12px;font-size:13px;font-weight:600;">${lead.planName || 'N/A'}</span></p>
+                        </div>
+                        <div>
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Submitted</p>
+                            <p style="font-size:13px;color:#64748b;">${new Date(lead.submittedAt).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                        </div>
+                        <div>
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Portfolio</p>
+                            ${lead.portfolio ? `<a href="${lead.portfolio}" target="_blank" style="color:#1a56db;font-weight:600;">🔗 View</a>` : '<span style="color:#94a3b8;">Not provided</span>'}
+                        </div>
+                        <div>
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">LinkedIn</p>
+                            ${lead.linkedin ? `<a href="${lead.linkedin}" target="_blank" style="color:#1a56db;font-weight:600;">🔗 View</a>` : '<span style="color:#94a3b8;">Not provided</span>'}
+                        </div>
+                        <div style="grid-column:1/3;">
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Resume</p>
+                            ${lead.resume ? `<span style="color:#16a34a;font-weight:600;">📄 ${lead.resume.name}</span>` : '<span style="color:#94a3b8;">Not uploaded</span>'}
+                        </div>
+                        ${lead.message ? `
+                        <div style="grid-column:1/3;">
+                            <p style="font-size:13px;color:#94a3b8;margin-bottom:2px;">Message</p>
+                            <p style="background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e2e8f0;font-size:14px;color:#475569;">${lead.message}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid #e2e8f0;padding-top:20px;">
+                        <button class="btn-secondary" onclick="closeClientProfileModal()">Close</button>
+                        <button class="btn-primary" onclick="contactClient('${lead.email}')">📧 Contact Client</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeClientProfileModal() {
+            const modal = document.getElementById('clientProfileModal');
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function contactClient(email) {
+            closeClientProfileModal();
+            showNotification(`📧 Opening email to ${email}...`, 'info');
+            window.location.href = `mailto:${email}?subject=Apply4Me Service Inquiry`;
         }
 
         // ============================================================
@@ -4083,9 +4531,9 @@
 
         renderJobBoard();
 
-        console.log('Primespheres — Complete Final System Loaded');
-        console.log('Roles: Owner, Manager, Business Partner, Harvester, Employee, Employer, Job Seeker');
-        console.log('Current User:', currentUser);
+        console.log('🚀 Primespheres — Complete Final System Loaded');
+        console.log('📋 7 Roles: Owner, Manager, Business Partner, Harvester, Employee, Employer, Job Seeker');
+        console.log('👤 Current User:', currentUser);
     </script>
 
 </body>
