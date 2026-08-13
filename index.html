@@ -450,14 +450,25 @@
             color: var(--primary);
         }
         .logo img {
-            height: 36px;
+            height: 40px;
             width: auto;
         }
-        .logo .brand-name {
+        
+        /* Logo Text Fallback styling */
+        .brand-name {
             font-size: 22px;
             font-weight: 800;
             letter-spacing: -0.5px;
+            display: inline-flex;
+            align-items: center;
         }
+        .brand-name .prime {
+            color: #001F6B; /* Dark Navy from logo */
+        }
+        .brand-name .spheres {
+            color: #00A3B2; /* Teal/Cyan from logo */
+        }
+
         .nav-links {
             display: flex;
             align-items: center;
@@ -2109,8 +2120,13 @@
         <nav class="container">
             <div class="logo">
                 <a href="#" onclick="showPage('home')">
-                    <img src="primespheres-logo.png" alt="Primespheres" height="36" onerror="this.style.display='none'" />
-                    <span class="brand-name">Primespheres</span>
+                    <!-- The Logo Image -->
+                    <img src="primespheres-logo.png" alt="Primespheres Logo" height="40" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    
+                    <!-- Text Fallback (Hidden if image loads) -->
+                    <span class="brand-name" style="display:none;">
+                        <span class="prime">Prime</span><span class="spheres">Spheres</span>
+                    </span>
                 </a>
             </div>
             <ul class="nav-links" id="navLinks">
