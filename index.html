@@ -4661,8 +4661,103 @@
         let scrapedJobs = [];
         let scraperRunning = false;
 
+        // Multiple CORS proxies tried in order — if one is down or rate-limited,
+        // the next is tried automatically. This is what makes URL scraping "universal"
+        // instead of depending on a single flaky free service.
+        const CORS_PROXIES = [
+            url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+            url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+            url => `https://thingproxy.freeboard.io/fetch/${url}`
+        ];
+
         /**
-         * Main scraper function — fetches a URL and extracts job listings
+         * Fetch a URL's HTML, trying multiple CORS proxies in order until one works.
+         * Each attempt times out after 15s so a dead proxy can't hang the scraper.
+         * Throws a descriptive error only if every proxy fails.
+         */
+        async function fetchHTMLWithFallback(url, onStatus) {
+            const errors = [];
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                const proxyUrl = CORS_PROXIES[i](url);
+                try {
+                    onStatus?.(`🕷️ Fetching page (source ${i + 1}/${CORS_PROXIES.length})...`);
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+                    const response = await fetch(proxyUrl, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    const html = await response.text();
+                    if (!html || html.length < 100) {
+                        throw new Error('empty response');
+                    }
+                    return html;
+                } catch (err) {
+                    const reason = err.name === 'AbortError' ? 'timed out' : err.message;
+                    errors.push(`source ${i + 1} (${reason})`);
+                }
+            }
+            throw new Error('All fetch sources failed — ' + errors.join(', ') +
+                '. The target site may be blocking automated access, or try "Paste HTML" instead.');
+        }
+
+        /**
+         * Detect and fetch jobs directly from known ATS JSON APIs (Greenhouse, Lever).
+         * These APIs allow cross-origin requests and are far more reliable/complete
+         * than scraping rendered HTML through a proxy. Returns null if the URL
+         * doesn't match a recognized ATS pattern, so the caller can fall back to HTML scraping.
+         */
+        async function tryATSDirectAPI(url) {
+            // Greenhouse: boards.greenhouse.io/COMPANY or job-boards.greenhouse.io/COMPANY
+            let m = url.match(/greenhouse\.io\/([a-zA-Z0-9_-]+)/i);
+            if (m) {
+                const token = m[1];
+                const res = await fetch(`https://boards-api.greenhouse.io/v1/boards/${token}/jobs?content=true`);
+                if (!res.ok) throw new Error(`Greenhouse API HTTP ${res.status}`);
+                const data = await res.json();
+                return (data.jobs || []).map(j => ({
+                    title: j.title || 'Untitled Job',
+                    company: token,
+                    description: (j.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500),
+                    location: j.location?.name || '',
+                    salary: '',
+                    jobType: 'Remote',
+                    postedAt: j.updated_at || new Date().toISOString(),
+                    source: 'Greenhouse API',
+                    applyUrl: j.absolute_url || url
+                }));
+            }
+
+            // Lever: jobs.lever.co/COMPANY
+            m = url.match(/jobs\.lever\.co\/([a-zA-Z0-9_-]+)/i);
+            if (m) {
+                const token = m[1];
+                const res = await fetch(`https://api.lever.co/v0/postings/${token}?mode=json`);
+                if (!res.ok) throw new Error(`Lever API HTTP ${res.status}`);
+                const data = await res.json();
+                return (data || []).map(j => ({
+                    title: j.text || 'Untitled Job',
+                    company: token,
+                    description: (j.descriptionPlain || j.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500),
+                    location: j.categories?.location || '',
+                    salary: '',
+                    jobType: j.categories?.commitment || 'Remote',
+                    postedAt: j.createdAt ? new Date(j.createdAt).toISOString() : new Date().toISOString(),
+                    source: 'Lever API',
+                    applyUrl: j.hostedUrl || url
+                }));
+            }
+
+            return null; // not a recognized ATS — caller falls back to generic HTML scraping
+        }
+
+        /**
+         * Main scraper function — fetches a URL and extracts job listings.
+         * Tries, in order: (1) a direct ATS API if recognized, (2) HTML scraping
+         * via a chain of CORS proxies with automatic fallback.
          */
         async function scrapeJobsFromURL() {
             const input = document.getElementById('scraperUrlInput');
@@ -4670,6 +4765,17 @@
 
             if (!url) {
                 showNotification('Please enter a URL to scrape.', 'warning');
+                return;
+            }
+            if (!/^https?:\/\//i.test(url)) {
+                showNotification('Please enter a full URL starting with http:// or https://', 'warning');
+                return;
+            }
+            if (window.location.protocol === 'file:') {
+                showNotification(
+                    '⚠️ This page is open as a local file, so the browser blocks live network requests entirely. Host this page (e.g. a simple web server) and reload, or use the "Paste HTML" tab instead.',
+                    'error'
+                );
                 return;
             }
 
@@ -4684,45 +4790,44 @@
             updateScraperUI('loading');
 
             try {
-                // Use a CORS proxy to fetch the page
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-
-                showNotification('🕷️ Fetching page...', 'info');
-
-                const response = await fetch(proxyUrl);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status} — ${response.statusText}`);
+                // Step 1: try a direct ATS API if this looks like a Greenhouse/Lever board —
+                // faster, more complete, and doesn't depend on a CORS proxy at all.
+                let atsJobs = null;
+                try {
+                    atsJobs = await tryATSDirectAPI(url);
+                } catch (atsErr) {
+                    console.warn('ATS direct API failed, falling back to HTML scrape:', atsErr.message);
                 }
 
-                const html = await response.text();
-
-                if (!html || html.length < 100) {
-                    throw new Error('Page content too short or empty.');
-                }
-
-                showNotification('🔍 Parsing job listings...', 'info');
-
-                // Extract jobs from the HTML
-                const extracted = extractJobsFromHTML(html, url);
-
-                if (extracted.length === 0) {
-                    // Try alternative: look for JSON-LD
-                    const jsonLdJobs = extractJSONLDJobs(html);
-                    if (jsonLdJobs.length > 0) {
-                        scrapedJobs = jsonLdJobs;
-                    } else {
-                        // Try one more fallback: look for common job patterns
-                        const fallbackJobs = fallbackJobExtraction(html);
-                        if (fallbackJobs.length > 0) {
-                            scrapedJobs = fallbackJobs;
-                        } else {
-                            throw new Error(
-                                'No job listings found on this page. Try a different URL or use the "Paste HTML" tab.'
-                            );
-                        }
-                    }
+                if (atsJobs && atsJobs.length > 0) {
+                    scrapedJobs = atsJobs;
                 } else {
-                    scrapedJobs = extracted;
+                    // Step 2: generic HTML scraping via the CORS proxy fallback chain
+                    const html = await fetchHTMLWithFallback(url, msg => showNotification(msg, 'info'));
+
+                    showNotification('🔍 Parsing job listings...', 'info');
+
+                    const extracted = extractJobsFromHTML(html, url);
+
+                    if (extracted.length === 0) {
+                        // Try alternative: look for JSON-LD
+                        const jsonLdJobs = extractJSONLDJobs(html);
+                        if (jsonLdJobs.length > 0) {
+                            scrapedJobs = jsonLdJobs;
+                        } else {
+                            // Try one more fallback: look for common job patterns
+                            const fallbackJobs = fallbackJobExtraction(html);
+                            if (fallbackJobs.length > 0) {
+                                scrapedJobs = fallbackJobs;
+                            } else {
+                                throw new Error(
+                                    'No job listings found on this page. Try the "Paste HTML" tab and paste the page source directly.'
+                                );
+                            }
+                        }
+                    } else {
+                        scrapedJobs = extracted;
+                    }
                 }
 
                 // Enrich with source URL
@@ -7182,7 +7287,16 @@
 
             document.getElementById('navLinks')?.classList.remove('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            history.pushState(null, '', '#' + pageId);
+            // pushState throws a SecurityError when this page is loaded inside a
+            // sandboxed iframe (e.g. a preview tool) whose origin doesn't match its
+            // own URL. Fall back to a plain hash assignment (still updates the URL
+            // and still fires 'hashchange') so navigation keeps working either way.
+            try {
+                history.pushState(null, '', '#' + pageId);
+            } catch (err) {
+                console.warn('pushState blocked (likely a sandboxed preview frame), using location.hash instead:', err.message);
+                window.location.hash = pageId;
+            }
 
             if (pageId === 'home') {
                 renderJobBoard();
