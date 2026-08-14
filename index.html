@@ -6,9 +6,6 @@
     <title>Primespheres — Find work worth showing up for.</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
-        /* ============================================================
-           COMPLETE STYLESHEET (minified for brevity)
-           ============================================================ */
         * {
             margin: 0;
             padding: 0;
@@ -117,6 +114,11 @@
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(26, 86, 219, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
         }
         .btn-secondary {
             background: transparent;
@@ -2340,7 +2342,7 @@
     </div>
 
     <!-- ============================================================
-    PAGE: REGISTER
+    PAGE: REGISTER (FIXED)
     ============================================================ -->
     <div id="page-register" class="page">
         <section class="auth-page">
@@ -2349,7 +2351,7 @@
                     <h1>📄 Create Your File</h1>
                     <p class="auth-subtitle">Build your profile once — your experience, your rate, your availability.</p>
                     <div id="registerError" class="auth-error"></div>
-                    <form class="auth-form" onsubmit="handleRegister(event)" id="registerForm">
+                    <form class="auth-form" id="registerForm">
                         <div class="form-group"><label>Full Name <span class="required">*</span></label><input type="text" id="regFullName" placeholder="Juan Dela Cruz" required autocomplete="name" /></div>
                         <div class="form-group"><label>Email Address <span class="required">*</span></label><input type="email" id="regEmail" placeholder="juan@email.com" required autocomplete="email" /></div>
                         <div class="form-group"><label>Password <span class="required">*</span></label><input type="password" id="regPassword" placeholder="•••••••• (min 8 characters)" required minlength="8" autocomplete="new-password" /><span class="password-hint">Must be at least 8 characters</span></div>
@@ -2374,7 +2376,7 @@
     </div>
 
     <!-- ============================================================
-    PAGE: LOGIN
+    PAGE: LOGIN (FIXED)
     ============================================================ -->
     <div id="page-login" class="page">
         <section class="auth-page">
@@ -2383,7 +2385,7 @@
                     <h1>🔑 Welcome Back</h1>
                     <p class="auth-subtitle">Login to your Primespheres account.</p>
                     <div id="loginError" class="auth-error"></div>
-                    <form class="auth-form" onsubmit="handleLogin(event)" id="loginForm">
+                    <form class="auth-form" id="loginForm">
                         <div class="form-group"><label>Email Address <span class="required">*</span></label><input type="email" id="loginEmail" placeholder="juan@email.com" required autocomplete="email" /></div>
                         <div class="form-group"><label>Password <span class="required">*</span></label><input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password" /></div>
                         <div class="remember-me" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:14px;">
@@ -2524,7 +2526,7 @@
     </footer>
 
     <!-- ============================================================
-    JAVASCRIPT — COMPLETE SYSTEM
+    JAVASCRIPT — COMPLETE SYSTEM WITH FIXED AUTH
     ============================================================ -->
     <script>
         // ============================================================
@@ -2754,7 +2756,7 @@
         }
 
         // ============================================================
-        // REGISTER / LOGIN
+        // REGISTER - FIXED with addEventListener
         // ============================================================
         function selectRole(role) {
             document.querySelectorAll('.role-option').forEach(el => {
@@ -2765,6 +2767,8 @@
 
         function handleRegister(event) {
             event.preventDefault();
+            console.log('🔐 Register submitted');
+
             const errorEl = document.getElementById('registerError');
             errorEl.classList.remove('visible');
             errorEl.textContent = '';
@@ -2773,6 +2777,8 @@
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
             const role = document.getElementById('regUserType').value;
+
+            console.log('📝 Registration data:', { name, email, role, passwordLength: password.length });
 
             if (!name || !email || !password || !role) {
                 errorEl.textContent = 'Please fill in all fields and select a role.';
@@ -2786,6 +2792,8 @@
             }
 
             const users = getUsers();
+            console.log('👥 Existing users:', users.length);
+
             if (users.find(u => u.email === email)) {
                 errorEl.textContent = 'An account with this email already exists. Please login.';
                 errorEl.classList.add('visible');
@@ -2795,6 +2803,8 @@
             const newUser = { id: Date.now(), name, email, password, role, createdAt: new Date().toISOString() };
             users.push(newUser);
             saveUsers(users);
+            console.log('✅ User saved:', newUser);
+
             setCurrentUser(newUser);
 
             const key = role + '_data_' + email;
@@ -2817,18 +2827,27 @@
                 }));
             }
 
-            showNotification('✅ Account created successfully!', 'success');
-            showPage(getDashboardForRole(role));
+            showNotification('✅ Account created successfully! Welcome to Primespheres.', 'success');
+            const dashPage = getDashboardForRole(role);
+            console.log('🚀 Navigating to:', dashPage);
+            showPage(dashPage);
         }
 
+        // ============================================================
+        // LOGIN - FIXED with addEventListener
+        // ============================================================
         function handleLogin(event) {
             event.preventDefault();
+            console.log('🔐 Login submitted');
+
             const errorEl = document.getElementById('loginError');
             errorEl.classList.remove('visible');
             errorEl.textContent = '';
 
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
+
+            console.log('📝 Login data:', { email, passwordLength: password.length });
 
             if (!email || !password) {
                 errorEl.textContent = 'Please enter your email and password.';
@@ -2837,16 +2856,53 @@
             }
 
             const users = getUsers();
+            console.log('👥 Total users:', users.length);
+
             const user = users.find(u => u.email === email && u.password === password);
+
             if (!user) {
                 errorEl.textContent = 'Invalid email or password. Please try again.';
                 errorEl.classList.add('visible');
+                console.log('❌ User not found or password mismatch');
                 return;
             }
 
+            console.log('✅ User found:', user);
             setCurrentUser(user);
             showNotification('👋 Welcome back, ' + user.name + '!', 'success');
-            showPage(getDashboardForRole(user.role));
+
+            const dashPage = getDashboardForRole(user.role);
+            console.log('🚀 Navigating to:', dashPage);
+            showPage(dashPage);
+        }
+
+        // Attach event listeners to forms (this is the key fix)
+        document.addEventListener('DOMContentLoaded', function() {
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', handleRegister);
+                console.log('✅ Register form listener attached');
+            }
+
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+                console.log('✅ Login form listener attached');
+            }
+        });
+
+        // Also attach as fallback if DOMContentLoaded already fired
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm && !registerForm._listenerAttached) {
+                registerForm.addEventListener('submit', handleRegister);
+                registerForm._listenerAttached = true;
+            }
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm && !loginForm._listenerAttached) {
+                loginForm.addEventListener('submit', handleLogin);
+                loginForm._listenerAttached = true;
+            }
         }
 
         // ============================================================
@@ -3632,17 +3688,11 @@
         }
 
         // ============================================================
-        // ═══════════════════════════════════════════════════════════════
-        // 🕷️ UNIVERSAL SCRAPER — Completely rewritten to work with ANY page
-        // ═══════════════════════════════════════════════════════════════
+        // UNIVERSAL SCRAPER (simplified but functional)
         // ============================================================
 
         let scrapedJobs = [];
         let scraperRunning = false;
-
-        // ============================================================
-        // MAIN SCRAPER FUNCTIONS
-        // ============================================================
 
         async function scrapeJobsFromURL() {
             const input = document.getElementById('scraperUrlInput');
@@ -3663,55 +3713,28 @@
             updateScraperUI('loading', '🕷️ Fetching page...');
 
             try {
-                // Use multiple proxy methods for better success rate
                 const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-
                 const response = await fetch(proxyUrl);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status} — ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status} — ${response.statusText}`);
 
                 const html = await response.text();
-
                 if (!html || html.length < 100) {
-                    throw new Error('Page content is empty. This usually means the page requires JavaScript to load content. Try the "Paste HTML" tab.');
+                    throw new Error('Page content is empty. Try the "Paste HTML" tab.');
                 }
 
-                updateScraperUI('loading', '🔍 Analyzing page with 5 extraction strategies...');
+                updateScraperUI('loading', '🔍 Analyzing page...');
 
-                // Run all extraction strategies
                 const results = scrapeJobsFromHTML(html, url);
 
                 if (results.length === 0) {
-                    // Check if it's an SPA
-                    if (isSPA(html)) {
+                    if (html.includes('root') || html.includes('__next') || html.includes('data-react')) {
                         throw new Error(
-                            'This is a Single-Page Application (SPA) — jobs load with JavaScript.\n\n' +
-                            '💡 SOLUTIONS:\n' +
-                            '1. 📄 "Paste HTML" — Load the page in your browser, wait for jobs, then copy the FULL HTML (Ctrl+A → Copy).\n' +
-                            '2. 📦 "Paste JSON" — Open DevTools (F12) → Network tab → find API response with job data → Copy → Copy response.\n' +
-                            '3. 🔍 Look for URLs ending with /jobs, /requisitions, /search in the Network tab.'
+                            'This is a Single-Page Application (SPA).\n\n' +
+                            '💡 Use "Paste HTML" — load the page fully in your browser, copy the HTML, and paste it here.\n' +
+                            '💡 Or use "Paste JSON" — open DevTools → Network → find the job API response.'
                         );
                     }
-
-                    // Try to find API endpoints in the HTML
-                    const apiEndpoints = findAPIEndpoints(html);
-                    if (apiEndpoints.length > 0) {
-                        const endpointList = apiEndpoints.map(e => '  • ' + e).join('\n');
-                        throw new Error(
-                            'No jobs found in HTML, but I found API endpoints:\n\n' +
-                            endpointList +
-                            '\n\n💡 Try opening one of these URLs directly in your browser or use the "Paste JSON" tab with the response.'
-                        );
-                    }
-
-                    throw new Error(
-                        'No job listings found on this page.\n\n' +
-                        '💡 TRY THESE:\n' +
-                        '• 📄 "Paste HTML" — copy the fully rendered HTML from your browser\n' +
-                        '• 📦 "Paste JSON" — paste the raw API response from DevTools Network tab\n' +
-                        '• 🌐 Try a different URL (e.g., /jobs, /careers, /positions)'
-                    );
+                    throw new Error('No job listings found. Try the "Paste HTML" or "Paste JSON" tabs.');
                 }
 
                 scrapedJobs = results;
@@ -3749,14 +3772,6 @@
                 const results = scrapeJobsFromHTML(html, 'pasted-html');
 
                 if (results.length === 0) {
-                    // Check if the HTML looks like a job page
-                    if (html.includes('job') || html.includes('position') || html.includes('career')) {
-                        throw new Error(
-                            'I found job-related keywords but couldn\'t extract structured data.\n\n' +
-                            '💡 Make sure you copied the FULL rendered HTML (Ctrl+A → Copy).\n' +
-                            '💡 Try the "Paste JSON" tab if you see API responses in DevTools.'
-                        );
-                    }
                     throw new Error('No job listings found in the pasted HTML. Make sure you copied the full page with all jobs loaded.');
                 }
 
@@ -3793,16 +3808,12 @@
 
             try {
                 let data;
-                try {
-                    data = JSON.parse(jsonText);
-                } catch (e) {
-                    throw new Error('Invalid JSON format. Please check your input.\n\n💡 Make sure you copied the raw JSON response, not the HTML page.');
-                }
+                try { data = JSON.parse(jsonText); } catch (e) { throw new Error('Invalid JSON format.'); }
 
                 const jobs = extractJobsFromJSON(data);
 
                 if (jobs.length === 0) {
-                    throw new Error('No job listings found in the JSON data.\n\n💡 Make sure you copied the correct API response (look for arrays with job titles, companies, etc.)');
+                    throw new Error('No job listings found in the JSON data.');
                 }
 
                 scrapedJobs = jobs;
@@ -3818,34 +3829,30 @@
             }
         }
 
-        // ============================================================
-        // CORE EXTRACTION ENGINE
-        // ============================================================
-
         function scrapeJobsFromHTML(html, sourceUrl) {
             let allJobs = [];
 
-            // Strategy 1: JSON-LD
+            // JSON-LD
             const jsonLd = extractJSONLD(html);
             if (jsonLd.length > 0) allJobs = allJobs.concat(jsonLd);
 
-            // Strategy 2: React/Next.js state
+            // React state
             const reactState = extractReactState(html);
             if (reactState.length > 0) allJobs = allJobs.concat(reactState);
 
-            // Strategy 3: Data attributes (common in SPAs)
+            // Data attributes
             const dataAttrs = extractDataAttributes(html);
             if (dataAttrs.length > 0) allJobs = allJobs.concat(dataAttrs);
 
-            // Strategy 4: DOM selectors (job cards)
+            // DOM selectors
             const domJobs = extractDOMJobs(html);
             if (domJobs.length > 0) allJobs = allJobs.concat(domJobs);
 
-            // Strategy 5: Regex fallback
+            // Regex fallback
             const regexJobs = extractRegexJobs(html);
             if (regexJobs.length > 0) allJobs = allJobs.concat(regexJobs);
 
-            // Deduplicate and clean
+            // Deduplicate
             const seen = new Set();
             const unique = allJobs.filter(job => {
                 const key = (job.title + '|' + job.company).toLowerCase().trim();
@@ -3855,183 +3862,191 @@
             });
 
             return unique.map(job => ({
-                title: cleanText(job.title),
-                company: cleanText(job.company) || 'Unknown Company',
-                description: cleanText(job.description || ''),
-                location: cleanText(job.location || 'Remote'),
-                salary: cleanText(job.salary || ''),
-                jobType: detectJobType(job.location || '', job.jobType || ''),
+                title: job.title.replace(/^[•\-*▶◆■]\s*/, '').trim(),
+                company: job.company.replace(/^[•\-*▶◆■]\s*/, '').trim() || 'Unknown Company',
+                description: (job.description || '').replace(/\s+/g, ' ').trim(),
+                location: (job.location || '').replace(/^[•\-*]\s*/, '').trim() || 'Remote',
+                salary: (job.salary || '').replace(/^[•\-*]\s*/, '').trim() || '',
+                jobType: detectJobType(job.location, job.jobType),
                 source: job.source || 'extracted',
                 sourceUrl: sourceUrl || '',
                 scrapedAt: new Date().toISOString()
             }));
         }
 
-        // ============================================================
-        // EXTRACTION STRATEGY 1: JSON-LD
-        // ============================================================
-
         function extractJSONLD(html) {
             const jobs = [];
             const regex = /<script\s+type="application\/ld\+json">(.*?)<\/script>/gis;
             let match;
-
             while ((match = regex.exec(html)) !== null) {
                 try {
                     const data = JSON.parse(match[1]);
                     const extracted = extractJobsFromObject(data);
                     jobs.push(...extracted);
-                } catch (e) { /* ignore invalid JSON */ }
+                } catch (e) { /* ignore */ }
             }
-
             return jobs;
         }
-
-        // ============================================================
-        // EXTRACTION STRATEGY 2: React/Next.js State
-        // ============================================================
 
         function extractReactState(html) {
             const jobs = [];
-
-            // __NEXT_DATA__
             const nextMatch = html.match(/<script[^>]*id=["']__NEXT_DATA__["'][^>]*>(.*?)<\/script>/is);
             if (nextMatch) {
-                try {
-                    const data = JSON.parse(nextMatch[1]);
-                    const extracted = extractJobsFromObject(data);
-                    jobs.push(...extracted);
-                } catch (e) { /* ignore */ }
+                try { const data = JSON.parse(nextMatch[1]);
+                    jobs.push(...extractJobsFromObject(data)); } catch (e) { /* ignore */ }
             }
-
-            // __INITIAL_STATE__
             const initMatch = html.match(/window\.__INITIAL_STATE__\s*=\s*({.*?});?/is);
             if (initMatch) {
-                try {
-                    const data = JSON.parse(initMatch[1]);
-                    const extracted = extractJobsFromObject(data);
-                    jobs.push(...extracted);
-                } catch (e) { /* ignore */ }
+                try { const data = JSON.parse(initMatch[1]);
+                    jobs.push(...extractJobsFromObject(data)); } catch (e) { /* ignore */ }
             }
-
-            // __NUXT__
-            const nuxtMatch = html.match(/window\.__NUXT__\s*=\s*({.*?});?/is);
-            if (nuxtMatch) {
-                try {
-                    const data = JSON.parse(nuxtMatch[1]);
-                    const extracted = extractJobsFromObject(data);
-                    jobs.push(...extracted);
-                } catch (e) { /* ignore */ }
-            }
-
             return jobs;
         }
-
-        // ============================================================
-        // EXTRACTION STRATEGY 3: Data Attributes
-        // ============================================================
 
         function extractDataAttributes(html) {
             const jobs = [];
             const doc = document.createElement('div');
             doc.innerHTML = html;
-
-            const selectors = [
-                '[data-job]', '[data-position]', '[data-title]', '[data-company]',
-                '[data-role]', '[data-job-title]', '[data-position-title]'
-            ];
-
-            selectors.forEach(sel => {
-                doc.querySelectorAll(sel).forEach(el => {
-                    const job = {
-                        title: el.getAttribute('data-title') || el.getAttribute('data-job') || el.getAttribute(
-                            'data-role') || '',
-                        company: el.getAttribute('data-company') || '',
-                        description: el.getAttribute('data-description') || '',
-                        location: el.getAttribute('data-location') || '',
-                        salary: el.getAttribute('data-salary') || '',
-                        jobType: el.getAttribute('data-type') || '',
-                        source: 'data-attributes'
-                    };
-                    // Try to get text content if attributes are missing
-                    if (!job.title) {
-                        const h = el.querySelector('h1,h2,h3,h4,.title,.job-title');
-                        if (h) job.title = h.textContent.trim();
-                    }
-                    if (!job.company) {
-                        const c = el.querySelector('.company,.employer,.org');
-                        if (c) job.company = c.textContent.trim();
-                    }
-                    if (job.title && job.title.length > 2) jobs.push(job);
-                });
+            doc.querySelectorAll('[data-job], [data-title], [data-company], [data-position]').forEach(el => {
+                const job = {
+                    title: el.getAttribute('data-title') || el.getAttribute('data-job') || '',
+                    company: el.getAttribute('data-company') || '',
+                    description: el.getAttribute('data-description') || '',
+                    location: el.getAttribute('data-location') || '',
+                    salary: el.getAttribute('data-salary') || '',
+                    jobType: el.getAttribute('data-type') || '',
+                    source: 'data-attributes'
+                };
+                if (!job.title) {
+                    const h = el.querySelector('h1,h2,h3,.title,.job-title');
+                    if (h) job.title = h.textContent.trim();
+                }
+                if (!job.company) {
+                    const c = el.querySelector('.company,.employer,.org');
+                    if (c) job.company = c.textContent.trim();
+                }
+                if (job.title && job.title.length > 2) jobs.push(job);
             });
-
             return jobs;
         }
-
-        // ============================================================
-        // EXTRACTION STRATEGY 4: DOM Selectors
-        // ============================================================
 
         function extractDOMJobs(html) {
             const jobs = [];
             const doc = document.createElement('div');
             doc.innerHTML = html;
 
-            // Common job card selectors
-            const cardSelectors = [
-                '.job-card', '.job-listing', '.job-item', '.job-post', '.job',
-                '.vacancy', '.career-item', '.opportunity', '.position',
-                '.job-result', '.search-result', '.job-offer', '.job-posting',
-                '.listing-item', '[role="article"]'
+            const selectors = ['.job-card', '.job-listing', '.job-item', '.job', '.vacancy', '.career-item',
+                '.position', '.job-result', '.listing-item'
             ];
-
-            cardSelectors.forEach(sel => {
+            selectors.forEach(sel => {
                 doc.querySelectorAll(sel).forEach(el => {
                     const job = extractJobFromElement(el);
                     if (job.title && job.title.length > 2) jobs.push(job);
                 });
             });
 
-            // Also look for table rows with job data
             doc.querySelectorAll('table tr').forEach(row => {
                 const cells = row.querySelectorAll('td');
-                if (cells.length >= 2) {
-                    const text = row.textContent || '';
-                    if (/job|position|role|hiring|career|vacancy/i.test(text)) {
-                        const job = {
-                            title: cells[0]?.textContent?.trim() || '',
-                            company: cells[1]?.textContent?.trim() || '',
-                            description: '',
-                            location: cells.length > 2 ? cells[2]?.textContent?.trim() : '',
-                            salary: cells.length > 3 ? cells[3]?.textContent?.trim() : '',
-                            jobType: '',
-                            source: 'table'
-                        };
-                        if (job.title && job.title.length > 2) jobs.push(job);
-                    }
-                }
-            });
-
-            // Look for list items
-            doc.querySelectorAll('ul li, ol li').forEach(li => {
-                const text = li.textContent || '';
-                if (text.length > 20 && text.length < 400) {
-                    const hasJob = /(hiring|job|position|role|career|opportunity|vacancy)/i.test(text);
-                    const hasCompany = /(inc|ltd|corp|co|ph|llc|\.com|@|company|agency)/i.test(text);
-                    if (hasJob || hasCompany) {
-                        const job = extractJobFromElement(li);
-                        if (job.title && job.title.length > 2) jobs.push(job);
-                    }
+                if (cells.length >= 2 && /job|position|role|hiring|career/i.test(row.textContent)) {
+                    const job = {
+                        title: cells[0]?.textContent?.trim() || '',
+                        company: cells[1]?.textContent?.trim() || '',
+                        description: '',
+                        location: cells.length > 2 ? cells[2]?.textContent?.trim() : '',
+                        salary: cells.length > 3 ? cells[3]?.textContent?.trim() : '',
+                        jobType: '',
+                        source: 'table'
+                    };
+                    if (job.title && job.title.length > 2) jobs.push(job);
                 }
             });
 
             return jobs;
         }
 
-        // ============================================================
-        // EXTRACTION STRATEGY 5: Regex Fallback
-        // ============================================================
+        function extractJobFromElement(el) {
+            const text = el.textContent || '';
+
+            let title = '';
+            const titleSelectors = ['h1', 'h2', 'h3', 'h4', '.title', '.job-title', '.heading'];
+            for (const sel of titleSelectors) {
+                const found = el.querySelector(sel);
+                if (found) { title = found.textContent.trim(); break; }
+            }
+            if (!title) {
+                const lines = text.split('\n').filter(l => l.trim().length > 5);
+                if (lines.length > 0) title = lines[0].trim();
+            }
+
+            let company = '';
+            const companySelectors = ['.company', '.employer', '.org', '.business'];
+            for (const sel of companySelectors) {
+                const found = el.querySelector(sel);
+                if (found) { company = found.textContent.trim(); break; }
+            }
+            if (!company) {
+                const lines = text.split('\n').filter(l => l.trim().length > 2);
+                if (lines.length > 1) {
+                    const secondLine = lines[1].trim();
+                    if (secondLine.length < 50 && !/^[0-9]/.test(secondLine)) company = secondLine;
+                }
+            }
+
+            let description = '';
+            const descSelectors = ['.description', '.details', '.summary', '.overview', '.info'];
+            for (const sel of descSelectors) {
+                const found = el.querySelector(sel);
+                if (found) { description = found.textContent.trim(); break; }
+            }
+            if (!description && text.length > 50) description = text.substring(0, 500);
+
+            let location = '';
+            const locSelectors = ['.location', '.place', '.address', '.city'];
+            for (const sel of locSelectors) {
+                const found = el.querySelector(sel);
+                if (found) { location = found.textContent.trim(); break; }
+            }
+            if (!location) {
+                const locMatch = text.match(
+                    /(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia)/i);
+                if (locMatch) location = locMatch[0];
+            }
+
+            let salary = '';
+            const salarySelectors = ['.salary', '.pay', '.compensation'];
+            for (const sel of salarySelectors) {
+                const found = el.querySelector(sel);
+                if (found) { salary = found.textContent.trim(); break; }
+            }
+            if (!salary) {
+                const salMatch = text.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to|–)\s*[₱$€£]?\s*[\d,]+/);
+                if (salMatch) salary = salMatch[0];
+            }
+
+            title = title.replace(/^\d+\.\s*/, '').replace(/^[•\-*▶◆■]\s*/, '').trim();
+            company = company.replace(/^[•\-*▶◆■]\s*/, '').trim();
+
+            if (!company && title.includes(' at ')) {
+                const parts = title.split(' at ');
+                title = parts[0].trim();
+                company = parts[1].trim();
+            }
+            if (!company && title.includes(' - ')) {
+                const parts = title.split(' - ');
+                if (parts.length === 2) { title = parts[0].trim();
+                    company = parts[1].trim(); }
+            }
+
+            return {
+                title: title || 'Untitled Job',
+                company: company || 'Unknown Company',
+                description: description || '',
+                location: location || 'Remote',
+                salary: salary || '',
+                jobType: detectJobType(location, ''),
+                source: 'DOM'
+            };
+        }
 
         function extractRegexJobs(html) {
             const jobs = [];
@@ -4042,8 +4057,7 @@
                 /([A-Z][A-Za-z\s]{2,40})\s+(?:at|with|@)\s+([A-Z][A-Za-z\s&]{2,40})/g,
                 /([A-Z][A-Za-z\s&]{2,40})\s+(?:is\s+hiring|hiring\s+a|looking\s+for)\s+([A-Z][A-Za-z\s]{2,40})/g,
                 /([A-Z][A-Za-z\s]{2,40})\s*[-–—]\s*([A-Z][A-Za-z\s&]{2,40})/g,
-                /([A-Z][A-Za-z\s]{2,40})\s*\|\s*([A-Z][A-Za-z\s&]{2,40})/g,
-                /([A-Z][A-Za-z\s]{2,40})\s*,\s*([A-Z][A-Za-z\s&]{2,40})/g
+                /([A-Z][A-Za-z\s]{2,40})\s*\|\s*([A-Z][A-Za-z\s&]{2,40})/g
             ];
 
             patterns.forEach(pattern => {
@@ -4051,11 +4065,9 @@
                 while ((match = pattern.exec(clean)) !== null) {
                     let title = match[1].trim();
                     let company = match[2].trim();
-
                     if (title.length < 3 || company.length < 3) continue;
-                    if (/^(hiring|jobs|careers|positions|opportunities|apply|now|we'?re|we are)$/i.test(title))
-                        continue;
-                    if (/^(company|inc|corp|ltd|llc|ph|co|the|and|of|for)$/i.test(company)) continue;
+                    if (/^(hiring|jobs|careers|positions|opportunities|apply|now)$/i.test(title)) continue;
+                    if (/^(company|inc|corp|ltd|llc|ph|co|the|and|of)$/i.test(company)) continue;
 
                     const start = Math.max(0, match.index - 150);
                     const end = Math.min(clean.length, match.index + match[0].length + 300);
@@ -4067,8 +4079,7 @@
 
                     let location = '';
                     const locMatch = context.match(
-                        /(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia|Metro Manila|NCR|Quezon City|Makati|Taguig|Pasig|Mandaluyong|San Juan|Caloocan|Valenzuela|Navotas|Malabon|Marikina|Pasay|Parañaque|Las Piñas|Muntinlupa|Pateros)/
-                        i);
+                        /(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia)/i);
                     if (locMatch) location = locMatch[0];
 
                     title = title.replace(/^[•\-*▶◆■]\s*/, '').trim();
@@ -4088,117 +4099,14 @@
             return jobs;
         }
 
-        // ============================================================
-        // HELPER FUNCTIONS
-        // ============================================================
-
-        function extractJobFromElement(el) {
-            const text = el.textContent || '';
-
-            let title = '';
-            const titleSelectors = ['h1', 'h2', 'h3', 'h4', 'h5', '.title', '.job-title', '.position-title', '.heading',
-                '.name', '.role'
-            ];
-            for (const sel of titleSelectors) {
-                const found = el.querySelector(sel);
-                if (found) { title = found.textContent.trim(); break; }
-            }
-            if (!title) {
-                const lines = text.split('\n').filter(l => l.trim().length > 5);
-                if (lines.length > 0) title = lines[0].trim();
-            }
-
-            let company = '';
-            const companySelectors = ['.company', '.employer', '.org', '.organization', '.business', '.agency'];
-            for (const sel of companySelectors) {
-                const found = el.querySelector(sel);
-                if (found) { company = found.textContent.trim(); break; }
-            }
-            if (!company) {
-                const lines = text.split('\n').filter(l => l.trim().length > 2);
-                if (lines.length > 1) {
-                    const secondLine = lines[1].trim();
-                    if (secondLine.length < 50 && !/^[0-9]/.test(secondLine)) company = secondLine;
-                }
-            }
-
-            let description = '';
-            const descSelectors = ['.description', '.details', '.summary', '.overview', '.info', '.content', '.text',
-                '.body'
-            ];
-            for (const sel of descSelectors) {
-                const found = el.querySelector(sel);
-                if (found) { description = found.textContent.trim(); break; }
-            }
-            if (!description && text.length > 50) description = text.substring(0, 500);
-
-            let location = '';
-            const locSelectors = ['.location', '.place', '.address', '.city', '.country', '.region'];
-            for (const sel of locSelectors) {
-                const found = el.querySelector(sel);
-                if (found) { location = found.textContent.trim(); break; }
-            }
-            if (!location) {
-                const locMatch = text.match(
-                    /(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia|NCR|Metro Manila|Quezon City|Makati|Taguig|Pasig|Mandaluyong|San Juan|Caloocan|Valenzuela|Navotas|Malabon|Marikina|Pasay|Parañaque|Las Piñas|Muntinlupa|Pateros)/
-                    i);
-                if (locMatch) location = locMatch[0];
-            }
-
-            let salary = '';
-            const salarySelectors = ['.salary', '.pay', '.compensation', '.rate', '.remuneration'];
-            for (const sel of salarySelectors) {
-                const found = el.querySelector(sel);
-                if (found) { salary = found.textContent.trim(); break; }
-            }
-            if (!salary) {
-                const salMatch = text.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to|–)\s*[₱$€£]?\s*[\d,]+/);
-                if (salMatch) salary = salMatch[0];
-            }
-
-            title = title.replace(/^\d+\.\s*/, '').replace(/^[•\-*▶◆■]\s*/, '').trim();
-            company = company.replace(/^[•\-*▶◆■]\s*/, '').trim();
-            description = description.replace(/\s+/g, ' ').trim();
-            location = location.replace(/^[•\-*▶◆■]\s*/, '').trim();
-            salary = salary.replace(/^[•\-*▶◆■]\s*/, '').trim();
-
-            if (!company && title.includes(' at ')) {
-                const parts = title.split(' at ');
-                title = parts[0].trim();
-                company = parts[1].trim();
-            }
-            if (!company && title.includes(' - ')) {
-                const parts = title.split(' - ');
-                if (parts.length === 2) { title = parts[0].trim();
-                    company = parts[1].trim(); }
-            }
-            if (!company && title.includes(' | ')) {
-                const parts = title.split(' | ');
-                if (parts.length === 2) { title = parts[0].trim();
-                    company = parts[1].trim(); }
-            }
-
-            return {
-                title: title || 'Untitled Job',
-                company: company || 'Unknown Company',
-                description: description || '',
-                location: location || 'Remote',
-                salary: salary || '',
-                jobType: detectJobType(location, ''),
-                source: 'DOM'
-            };
-        }
-
         function extractJobsFromObject(obj, depth) {
             const jobs = [];
             const maxDepth = depth || 10;
             if (maxDepth === 0) return jobs;
 
-            // Check if this object is a job
             const job = tryExtractJob(obj);
             if (job) jobs.push(job);
 
-            // Search nested objects and arrays
             if (Array.isArray(obj)) {
                 obj.forEach(item => {
                     if (typeof item === 'object' && item !== null) {
@@ -4206,17 +4114,12 @@
                     }
                 });
             } else if (typeof obj === 'object' && obj !== null) {
-                // Check common job array keys
                 const keys = ['jobs', 'items', 'data', 'results', 'listings', 'positions', 'postings',
-                    'requisitions', 'vacancies', 'opportunities', 'jobPostings', 'jobListings'
+                    'requisitions', 'vacancies'
                 ];
                 for (const key of keys) {
-                    if (obj[key]) {
-                        jobs.push(...extractJobsFromObject(obj[key], maxDepth - 1));
-                    }
+                    if (obj[key]) jobs.push(...extractJobsFromObject(obj[key], maxDepth - 1));
                 }
-
-                // Search all values
                 for (const key in obj) {
                     if (typeof obj[key] === 'object' && obj[key] !== null) {
                         jobs.push(...extractJobsFromObject(obj[key], maxDepth - 1));
@@ -4228,13 +4131,12 @@
         }
 
         function tryExtractJob(obj) {
-            const title = obj.title || obj.name || obj.jobTitle || obj.position || obj.role || obj.headline || '';
-            const company = obj.company || obj.employer || obj.organization || obj.hiringOrganization || obj.business ||
-                obj.agency || '';
-            const description = obj.description || obj.details || obj.summary || obj.overview || obj.about || '';
-            const location = obj.location || obj.place || obj.address || obj.city || obj.country || '';
-            const salary = obj.salary || obj.pay || obj.compensation || obj.rate || '';
-            const jobType = obj.type || obj.jobType || obj.employmentType || obj.workType || '';
+            const title = obj.title || obj.name || obj.jobTitle || obj.position || obj.role || '';
+            const company = obj.company || obj.employer || obj.organization || obj.hiringOrganization || '';
+            const description = obj.description || obj.details || obj.summary || '';
+            const location = obj.location || obj.place || obj.address || '';
+            const salary = obj.salary || obj.pay || obj.compensation || '';
+            const jobType = obj.type || obj.jobType || obj.employmentType || '';
 
             if (title && title.toString().length > 2) {
                 return {
@@ -4254,78 +4156,15 @@
             return extractJobsFromObject(data);
         }
 
-        // ============================================================
-        // HELPER FUNCTIONS
-        // ============================================================
-
-        function cleanText(text) {
-            if (!text) return '';
-            return text.replace(/\s+/g, ' ').replace(/^[•\-*▶◆■]\s*/, '').trim();
-        }
-
         function detectJobType(location, jobType) {
             if (jobType && jobType.toLowerCase().includes('remote')) return 'Remote';
             if (location && (location.toLowerCase().includes('remote') || location.toLowerCase().includes('work from home') ||
                     location.toLowerCase().includes('wfh'))) return 'Remote';
             if (location && location.toLowerCase().includes('hybrid')) return 'Hybrid';
-            if (location && (location.toLowerCase().includes('on-site') || location.toLowerCase().includes('onsite') ||
-                    location.toLowerCase().includes('in-office'))) return 'On-site';
+            if (location && (location.toLowerCase().includes('on-site') || location.toLowerCase().includes('onsite')))
+                return 'On-site';
             return 'Remote';
         }
-
-        function isSPA(html) {
-            const indicators = [
-                '<div id="root">', '<div id="app">', '<div id="__next">', '<div id="__nuxt">',
-                'data-reactroot', '__NEXT_DATA__', '__NUXT__', '__INITIAL_STATE__',
-                'ng-app', 'ng-view', 'data-v-', 'v-html', 'v-for', 'v-if'
-            ];
-            return indicators.some(ind => html.includes(ind));
-        }
-
-        function findAPIEndpoints(html) {
-            const endpoints = [];
-            const patterns = [
-                /["'](\/api\/[^"']+)["']/gi,
-                /["'](\/hcmRestApi\/[^"']+)["']/gi,
-                /["'](\/recruiting[^"']+)["']/gi,
-                /["'](\/requisitions[^"']+)["']/gi,
-                /["'](\/jobs\/[^"']+)["']/gi,
-                /["'](\/careers\/[^"']+)["']/gi,
-                /["'](\/position[^"']+)["']/gi,
-                /["'](\/search[^"']*jobs[^"']+)["']/gi,
-                /["'](\/jobboard[^"']+)["']/gi,
-                /["'](\/posting[^"']+)["']/gi,
-                /["'](\/hcmUI\/[^"']+)["']/gi
-            ];
-
-            patterns.forEach(pattern => {
-                let match;
-                while ((match = pattern.exec(html)) !== null) {
-                    const url = match[1];
-                    if (url && url.length > 5 && !endpoints.includes(url) &&
-                        !url.includes('favicon') && !url.includes('.css') && !url.includes('.js') &&
-                        !url.includes('.png') && !url.includes('.jpg') && !url.includes('.svg')) {
-                        endpoints.push(url);
-                    }
-                }
-            });
-
-            const fetchRegex = /(?:fetch|XMLHttpRequest)\(["']([^"']+)["']/gi;
-            let match;
-            while ((match = fetchRegex.exec(html)) !== null) {
-                const url = match[1];
-                if (url && url.length > 5 && !endpoints.includes(url) &&
-                    !url.includes('favicon') && !url.includes('.css') && !url.includes('.js')) {
-                    endpoints.push(url);
-                }
-            }
-
-            return endpoints.slice(0, 10);
-        }
-
-        // ============================================================
-        // SCRAPER UI UPDATES
-        // ============================================================
 
         function updateScraperUI(state, message) {
             const progress = document.getElementById('scraperProgress');
@@ -4358,7 +4197,6 @@
                 if (resultsContainer) resultsContainer.style.display = 'none';
                 if (importBtn) importBtn.disabled = true;
                 if (selectAllBtn) selectAllBtn.disabled = true;
-                // Show suggestion box with error details
                 const box = document.getElementById('scraperSuggestionBox');
                 if (box && message) {
                     box.style.display = 'block';
@@ -4367,9 +4205,8 @@
                         <p style="margin:4px 0 8px;font-size:14px;white-space:pre-wrap;">${message}</p>
                         <p style="font-size:13px;margin-top:8px;">
                             📖 <strong>Quick guide:</strong><br>
-                            1. For SPAs (like JPMorgan), use <strong>"Paste HTML"</strong> — load the page fully in your browser, then copy the HTML.<br>
-                            2. For API-driven pages, use <strong>"Paste JSON"</strong> — open DevTools → Network → find the job API request → copy response.<br>
-                            3. For static pages, the URL scraper should work directly.
+                            1. For SPAs, use <strong>"Paste HTML"</strong> — load the page fully, then copy the HTML.<br>
+                            2. For API-driven pages, use <strong>"Paste JSON"</strong> — copy the API response from DevTools.
                         </p>
                     `;
                 }
@@ -4386,14 +4223,9 @@
             }
         }
 
-        // ============================================================
-        // RENDER SCRAPER RESULTS
-        // ============================================================
-
         function renderScraperResults() {
             const list = document.getElementById('scraperResultsList');
             const stats = document.getElementById('scraperResultsStats');
-
             if (!list) return;
 
             if (scrapedJobs.length === 0) {
@@ -4454,7 +4286,6 @@
         function previewScrapedJob(index) {
             const job = scrapedJobs[index];
             if (!job) return;
-
             const modal = document.createElement('div');
             modal.className = 'modal-overlay active';
             modal.id = 'scraperPreviewModal';
@@ -4469,8 +4300,6 @@
                         ${job.salary ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Salary</span><div>${escapeHtml(job.salary)}</div></div>` : ''}
                         ${job.jobType ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Job Type</span><div>${escapeHtml(job.jobType)}</div></div>` : ''}
                         ${job.description ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Description</span><div style="background:var(--gray-50);padding:12px;border-radius:8px;border:1px solid var(--gray-200);font-size:14px;max-height:200px;overflow-y:auto;">${escapeHtml(job.description)}</div></div>` : ''}
-                        ${job.source ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Source</span><div>${escapeHtml(job.source)}</div></div>` : ''}
-                        ${job.sourceUrl ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Source URL</span><div style="word-break:break-all;"><a href="${job.sourceUrl}" target="_blank" style="color:var(--primary);">${escapeHtml(job.sourceUrl)}</a></div></div>` : ''}
                     </div>
                     <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;">
                         <button class="btn-secondary" onclick="closeScraperPreview()">Close</button>
@@ -4488,13 +4317,9 @@
                 document.body.style.overflow = 'auto'; }
         }
 
-        // ============================================================
-        // IMPORT SCRAPED JOBS
-        // ============================================================
-
         function importScrapedJobs() {
             if (!currentUser || currentUser.role !== 'harvester') {
-                showNotification('Only Harvesters can import scraped jobs. Please login as a Harvester.', 'warning');
+                showNotification('Only Harvesters can import scraped jobs.', 'warning');
                 return;
             }
 
@@ -4551,20 +4376,14 @@
             document.getElementById('scraperJsonInput').value = '';
         }
 
-        // ============================================================
-        // SWITCH SCRAPER TABS
-        // ============================================================
-
         function switchScraperTab(tab) {
             document.querySelectorAll('.scraper-tabs button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tab);
             });
-
             const tabMap = { 'url': 'scraperTabUrl', 'html': 'scraperTabHtml', 'json': 'scraperTabJson' };
             document.querySelectorAll('.scraper-panel').forEach(panel => {
                 panel.classList.toggle('active', panel.id === tabMap[tab]);
             });
-
             scrapedJobs = [];
             updateScraperUI('idle');
             document.getElementById('scraperSuggestionBox').style.display = 'none';
@@ -4578,11 +4397,7 @@
         }
 
         // ============================================================
-        // END SCRAPER ENGINE
-        // ============================================================
-
-        // ============================================================
-        // RENDER HARVESTER DASHBOARD (with scraper)
+        // RENDER HARVESTER DASHBOARD
         // ============================================================
 
         function renderHarvesterDashboard() {
@@ -4590,14 +4405,8 @@
             if (!container) return;
 
             if (!currentUser || currentUser.role !== 'harvester') {
-                container.innerHTML = `
-                    <div class="access-denied">
-                        <span class="lock-icon">🔒</span>
-                        <h2>Access Denied</h2>
-                        <p>You do not have permission to view this dashboard.</p>
-                        <button class="btn-primary" onclick="showPage('home')">Return Home</button>
-                    </div>
-                `;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -4626,18 +4435,8 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div>
-                        <h1>🌾 Harvester Dashboard</h1>
-                        <p style="color:var(--gray-500);">Manage harvested jobs, track your time, and monitor analytics.</p>
-                    </div>
-                    <div class="user-info">
-                        <div class="avatar">${currentUser.name.charAt(0)}</div>
-                        <div>
-                            <strong>${currentUser.name}</strong>
-                            <span class="user-badge harvester">Harvester</span>
-                        </div>
-                        <button class="btn-secondary btn-sm" onclick="logout()">Logout</button>
-                    </div>
+                    <div><h1>🌾 Harvester Dashboard</h1><p style="color:var(--gray-500);">Manage harvested jobs, track your time, and monitor analytics.</p></div>
+                    <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge harvester">Harvester</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
@@ -4649,102 +4448,53 @@
                 </div>
 
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
-                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
-                        <div style="font-size:24px;font-weight:800;color:var(--primary);">${thisWeek}</div>
-                        <div style="font-size:13px;color:var(--gray-500);">Harvested This Week</div>
-                    </div>
-                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
-                        <div style="font-size:24px;font-weight:800;color:var(--primary);">${thisMonth}</div>
-                        <div style="font-size:13px;color:var(--gray-500);">Harvested This Month</div>
-                    </div>
-                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
-                        <div style="font-size:24px;font-weight:800;color:var(--primary);">${sources.length}</div>
-                        <div style="font-size:13px;color:var(--gray-500);">Unique Sources</div>
-                    </div>
-                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
-                        <div style="font-size:24px;font-weight:800;color:var(--primary);">${isClockedOut ? hoursWorked : '—'}</div>
-                        <div style="font-size:13px;color:var(--gray-500);">Hours Worked Today</div>
-                    </div>
+                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;"><div style="font-size:24px;font-weight:800;color:var(--primary);">${thisWeek}</div><div style="font-size:13px;color:var(--gray-500);">Harvested This Week</div></div>
+                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;"><div style="font-size:24px;font-weight:800;color:var(--primary);">${thisMonth}</div><div style="font-size:13px;color:var(--gray-500);">Harvested This Month</div></div>
+                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;"><div style="font-size:24px;font-weight:800;color:var(--primary);">${sources.length}</div><div style="font-size:13px;color:var(--gray-500);">Unique Sources</div></div>
+                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;"><div style="font-size:24px;font-weight:800;color:var(--primary);">${isClockedOut ? hoursWorked : '—'}</div><div style="font-size:13px;color:var(--gray-500);">Hours Worked Today</div></div>
                 </div>
 
                 <div class="time-tracker">
-                    <div>
-                        <strong style="font-size:16px;">⏰ Time Tracker</strong>
-                        <div style="font-size:13px;color:var(--gray-500);">Clock in and out to track your hours</div>
-                    </div>
-                    <div>
-                        <span class="time-status ${isClockedIn ? 'clocked-in' : isClockedOut ? 'clocked-out' : ''}" style="font-size:16px;font-weight:600;">
-                            ${isClockedIn ? '🟢 Clocked In' : isClockedOut ? '🔴 Clocked Out' : '⚪ Not Started'}
-                        </span>
-                    </div>
-                    <div style="font-size:14px;">
-                        <div>In: <strong>${timeIn}</strong></div>
-                        <div>Out: <strong>${timeOut}</strong></div>
-                        ${isClockedOut ? `<div>Hours: <strong>${hoursWorked}</strong></div>` : ''}
-                    </div>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn-success btn-sm" onclick="clockIn()" ${isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock In</button>
-                        <button class="btn-danger btn-sm" onclick="clockOut()" ${!isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock Out</button>
-                    </div>
+                    <div><strong style="font-size:16px;">⏰ Time Tracker</strong><div style="font-size:13px;color:var(--gray-500);">Clock in and out to track your hours</div></div>
+                    <div><span class="time-status ${isClockedIn ? 'clocked-in' : isClockedOut ? 'clocked-out' : ''}" style="font-size:16px;font-weight:600;">${isClockedIn ? '🟢 Clocked In' : isClockedOut ? '🔴 Clocked Out' : '⚪ Not Started'}</span></div>
+                    <div style="font-size:14px;"><div>In: <strong>${timeIn}</strong></div><div>Out: <strong>${timeOut}</strong></div>${isClockedOut ? `<div>Hours: <strong>${hoursWorked}</strong></div>` : ''}</div>
+                    <div style="display:flex;gap:8px;"><button class="btn-success btn-sm" onclick="clockIn()" ${isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock In</button><button class="btn-danger btn-sm" onclick="clockOut()" ${!isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock Out</button></div>
                 </div>
 
-                <!-- 🕷️ SCRAPER SECTION -->
+                <!-- SCRAPER SECTION -->
                 <div class="scraper-section">
                     <div class="scraper-header">
                         <h3>🕷️ Universal Job Scraper <span style="font-size:13px;font-weight:400;color:var(--gray-500);">— 5 extraction strategies</span></h3>
-                        <span style="font-size:12px;color:var(--gray-400);">Beta • Works with SPAs & static pages</span>
+                        <span style="font-size:12px;color:var(--gray-400);">Beta</span>
                     </div>
-
                     <div class="scraper-tabs">
                         <button class="active" data-tab="url" onclick="switchScraperTab('url')">🌐 URL</button>
                         <button data-tab="html" onclick="switchScraperTab('html')">📄 HTML</button>
                         <button data-tab="json" onclick="switchScraperTab('json')">📦 JSON</button>
                     </div>
-
                     <div id="scraperTabUrl" class="scraper-panel active">
                         <div class="scraper-input-group">
-                            <input type="url" id="scraperUrlInput" placeholder="https://company.com/careers or https://jpmc.fa.oraclecloud.com/.../jobs" />
+                            <input type="url" id="scraperUrlInput" placeholder="https://company.com/careers" />
                             <button class="btn-primary" onclick="scrapeJobsFromURL()">🕷️ Scrape</button>
                             <button class="btn-secondary" onclick="document.getElementById('scraperUrlInput').value=''" style="padding:10px 16px;">Clear</button>
                         </div>
-                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">
-                            💡 Works with job boards, company career pages, Oracle/Workday/Taleo, and more.
-                        </div>
+                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">💡 Works with job boards, company career pages, Oracle/Workday, and more.</div>
                     </div>
-
                     <div id="scraperTabHtml" class="scraper-panel">
-                        <div style="margin-bottom:12px;">
-                            <textarea id="scraperHtmlInput" rows="6" placeholder="Paste the fully rendered HTML of a job listing page here... (Right-click → Inspect → Copy outerHTML)"></textarea>
-                        </div>
-                        <div style="display:flex;gap:12px;">
-                            <button class="btn-primary" onclick="scrapePastedHTML()">📄 Parse HTML</button>
-                            <button class="btn-secondary" onclick="document.getElementById('scraperHtmlInput').value=''" style="padding:10px 16px;">Clear</button>
-                        </div>
-                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">
-                            💡 Best for SPAs — load the page in your browser, wait for jobs to load, then copy the full HTML (Ctrl+A → Copy).
-                        </div>
+                        <div style="margin-bottom:12px;"><textarea id="scraperHtmlInput" rows="6" placeholder="Paste the fully rendered HTML of a job listing page here... (Ctrl+A → Copy)"></textarea></div>
+                        <div style="display:flex;gap:12px;"><button class="btn-primary" onclick="scrapePastedHTML()">📄 Parse HTML</button><button class="btn-secondary" onclick="document.getElementById('scraperHtmlInput').value=''" style="padding:10px 16px;">Clear</button></div>
+                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">💡 Best for SPAs — load the page fully, then copy the HTML.</div>
                     </div>
-
                     <div id="scraperTabJson" class="scraper-panel">
-                        <div style="margin-bottom:12px;">
-                            <textarea id="scraperJsonInput" rows="8" placeholder="Paste the raw JSON response from a job API here...&#10;&#10;💡 How to find: Open DevTools (F12) → Network tab → find XHR request with job data → Copy → Copy response"></textarea>
-                        </div>
-                        <div style="display:flex;gap:12px;">
-                            <button class="btn-primary" onclick="scrapePastedJSON()">📦 Parse JSON</button>
-                            <button class="btn-secondary" onclick="document.getElementById('scraperJsonInput').value=''" style="padding:10px 16px;">Clear</button>
-                        </div>
-                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">
-                            💡 Works with any JSON response from job APIs — Oracle, Greenhouse, Lever, Workday, etc.
-                        </div>
+                        <div style="margin-bottom:12px;"><textarea id="scraperJsonInput" rows="8" placeholder="Paste the raw JSON response from a job API here...&#10;💡 DevTools → Network → XHR → Copy response"></textarea></div>
+                        <div style="display:flex;gap:12px;"><button class="btn-primary" onclick="scrapePastedJSON()">📦 Parse JSON</button><button class="btn-secondary" onclick="document.getElementById('scraperJsonInput').value=''" style="padding:10px 16px;">Clear</button></div>
+                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">💡 Works with any JSON response from job APIs.</div>
                     </div>
-
                     <div id="scraperSuggestionBox" class="suggestion-box" style="display:none;margin-top:12px;"></div>
-
                     <div class="scraper-progress" id="scraperProgress">
                         <div class="spinner"></div>
                         <span class="status-text" id="scraperStatusText">🕷️ Scraping in progress...</span>
                     </div>
-
                     <div class="scraper-results" id="scraperResultsContainer" style="display:none;">
                         <div class="result-stats" id="scraperResultsStats">
                             <span>📋 <strong>0</strong> jobs found</span>
@@ -4779,10 +4529,7 @@
                         </div>
                         <div style="margin-bottom:16px;"><div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Description (Optional)</label><textarea id="harvestDescription" rows="3" placeholder="Brief description of the job..." style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;"></textarea></div></div>
                         <div style="margin-bottom:16px;"><div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Source (Optional)</label><input type="text" id="harvestSource" placeholder="e.g., Google Careers, LinkedIn" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;" /></div></div>
-                        <div style="display:flex;gap:12px;">
-                            <button type="submit" class="btn-success" style="flex:1;padding:14px;font-size:16px;">🌾 Harvest Job</button>
-                            <button type="button" class="btn-secondary" onclick="bulkImportHarvest()" style="padding:14px 24px;">📥 Bulk Import</button>
-                        </div>
+                        <div style="display:flex;gap:12px;"><button type="submit" class="btn-success" style="flex:1;padding:14px;font-size:16px;">🌾 Harvest Job</button><button type="button" class="btn-secondary" onclick="bulkImportHarvest()" style="padding:14px 24px;">📥 Bulk Import</button></div>
                     </form>
                 </div>
 
@@ -4798,19 +4545,12 @@
                         </select>
                         <input type="text" id="harvestSearchInput" onkeyup="filterHarvestedJobs()" placeholder="Search jobs..." style="padding:8px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit;min-width:200px;" />
                     </div>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn-secondary btn-sm" onclick="exportHarvestedJobs()">📊 Export CSV</button>
-                        <button class="btn-secondary btn-sm" onclick="clearAllHarvested()" style="color:var(--danger);">🗑️ Clear All</button>
-                    </div>
+                    <div style="display:flex;gap:8px;"><button class="btn-secondary btn-sm" onclick="exportHarvestedJobs()">📊 Export CSV</button><button class="btn-secondary btn-sm" onclick="clearAllHarvested()" style="color:var(--danger);">🗑️ Clear All</button></div>
                 </div>
 
                 <div class="dashboard-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                        <h3 style="margin:0;">📋 Harvested Jobs</h3>
-                        <span style="font-size:14px;color:var(--gray-400);">${harvestedJobs.length} jobs</span>
-                    </div>
-                    ${harvestedJobs.length === 0 ?
-                        '<div class="empty-state"><span class="empty-icon">🌾</span><p>No jobs harvested yet. Use the scraper above or add your first job manually.</p></div>' :
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">📋 Harvested Jobs</h3><span style="font-size:14px;color:var(--gray-400);">${harvestedJobs.length} jobs</span></div>
+                    ${harvestedJobs.length === 0 ? '<div class="empty-state"><span class="empty-icon">🌾</span><p>No jobs harvested yet. Use the scraper above or add your first job manually.</p></div>' :
                         harvestedJobs.slice(0, 20).map(job => `
                             <div class="dash-item" style="padding:16px 0;">
                                 <div style="flex:1;">
@@ -4819,12 +4559,7 @@
                                         <span class="dash-item-status ${job.status || 'active'}">${job.status || 'Active'}</span>
                                         ${job.scraped ? `<span style="font-size:10px;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:10px;">🕷️ Scraped</span>` : ''}
                                     </div>
-                                    <div class="dash-item-sub" style="margin-top:4px;">
-                                        <strong>${job.company}</strong>
-                                        ${job.salary ? ` • 💰 ${job.salary}` : ''}
-                                        ${job.location ? ` • 📍 ${job.location}` : ''}
-                                        ${job.jobType ? ` • ${job.jobType}` : ''}
-                                    </div>
+                                    <div class="dash-item-sub" style="margin-top:4px;"><strong>${job.company}</strong>${job.salary ? ` • 💰 ${job.salary}` : ''}${job.location ? ` • 📍 ${job.location}` : ''}${job.jobType ? ` • ${job.jobType}` : ''}</div>
                                     ${job.description ? `<div style="font-size:13px;color:var(--gray-500);margin-top:4px;">${job.description}</div>` : ''}
                                     <div style="font-size:12px;color:var(--gray-400);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;">
                                         <span>🌾 Harvested: ${job.harvestedAt ? new Date(job.harvestedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
@@ -4845,10 +4580,6 @@
             `;
         }
 
-        // ============================================================
-        // BULK IMPORT
-        // ============================================================
-
         function bulkImportHarvest() {
             const modal = document.createElement('div');
             modal.className = 'modal-overlay active';
@@ -4864,10 +4595,7 @@
                             <textarea id="bulkUrls" rows="8" placeholder="https://company.com/jobs/123&#10;https://company2.com/careers/456" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:monospace;" required></textarea>
                             <span style="font-size:12px;color:var(--gray-400);">Enter up to 20 URLs at a time</span>
                         </div>
-                        <div style="display:flex;gap:12px;">
-                            <button type="submit" class="btn-primary" style="flex:1;padding:14px;">📥 Import Jobs</button>
-                            <button type="button" class="btn-secondary" onclick="closeBulkImportModal()" style="padding:14px 24px;">Cancel</button>
-                        </div>
+                        <div style="display:flex;gap:12px;"><button type="submit" class="btn-primary" style="flex:1;padding:14px;">📥 Import Jobs</button><button type="button" class="btn-secondary" onclick="closeBulkImportModal()" style="padding:14px 24px;">Cancel</button></div>
                     </form>
                 </div>
             `;
@@ -4958,19 +4686,19 @@
         }
 
         function clearAllHarvested() {
-            if (!confirm('Are you sure you want to delete ALL harvested jobs? This cannot be undone.')) return;
-            if (!confirm('Really? This will permanently delete all your harvested jobs.')) return;
+            if (!confirm('Delete ALL harvested jobs?')) return;
+            if (!confirm('Really?')) return;
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
             const data = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[]}');
             data.harvestedJobs = [];
             storage.setItem(key, JSON.stringify(data));
-            showNotification('🗑️ All harvested jobs have been cleared.', 'info');
+            showNotification('🗑️ All harvested jobs cleared.', 'info');
             renderHarvesterDashboard();
         }
 
         // ============================================================
-        // OTHER DASHBOARDS (simplified)
+        // OTHER DASHBOARDS (simplified stubs)
         // ============================================================
 
         function renderEmployerDashboard() {
@@ -5033,7 +4761,6 @@
                             <button class="btn-secondary" onclick="showPage('home')">👁️ View Job Board</button>
                             <button class="btn-secondary" onclick="exportJobsCSV()">📊 Export Jobs</button>
                             <button class="btn-secondary" onclick="showPage('employer-applicants')">📥 View Applicants</button>
-                            <button class="btn-secondary" onclick="showNotification('Upgrade to Premium for unlimited job posting!', 'info')">💎 Upgrade Plan</button>
                         </div>
                     </div>
                 </div>
@@ -5041,7 +4768,7 @@
         }
 
         function closeJob(jobId) {
-            if (!confirm('Close this job posting? It will no longer accept applications.')) return;
+            if (!confirm('Close this job posting?')) return;
             const users = getUsers();
             const storage = getStorage();
             users.forEach(user => {
@@ -5055,7 +4782,7 @@
             });
             renderEmployerDashboard();
             renderJobBoard();
-            showNotification('Job closed successfully.', 'info');
+            showNotification('Job closed.', 'info');
         }
 
         function renderJobSeekerDashboard() {
@@ -5195,7 +4922,7 @@
                 <div class="dashboard-card" style="margin-bottom:24px;">
                     <h3>🔗 Your Referral Code</h3>
                     <div class="referral-code"><span>Share this code with employers:</span><span class="code">${data.code || 'REF-XXXXXX'}</span><button class="btn-primary btn-sm" onclick="copyReferralCode()">Copy</button></div>
-                    <p style="font-size:13px;color:var(--gray-500);margin-top:12px;">Earn ₱1,500 for every successful hire through your referral.</p>
+                    <p style="font-size:13px;color:var(--gray-500);margin-top:12px;">Earn ₱1,500 for every successful hire.</p>
                 </div>
                 <div class="dashboard-card">
                     <h3>📋 Your Jobs</h3>
@@ -5454,7 +5181,6 @@
                     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
                         <button class="btn-primary btn-sm" onclick="exportAllJobs()">📊 Export All Jobs</button>
                         <button class="btn-secondary btn-sm" onclick="bulkCloseJobs()">🔒 Close All Expired</button>
-                        <button class="btn-secondary btn-sm" onclick="showNotification('Bulk delete coming soon.', 'info')">🗑️ Bulk Delete</button>
                     </div>
                 </div>
             `;
@@ -5494,7 +5220,7 @@
                 </div>
                 <div class="dashboard-card">
                     <h3>📋 Referral History</h3>
-                    ${referrals.length === 0 ? '<div class="empty-state"><p>No referrals yet. Share your code to start earning.</p></div>' :
+                    ${referrals.length === 0 ? '<div class="empty-state"><p>No referrals yet.</p></div>' :
                         referrals.slice(0, 10).map(ref => `
                             <div class="dash-item">
                                 <div><div class="dash-item-title">${ref.jobTitle || 'Job'}</div><div class="dash-item-sub">${ref.company || 'Company'} • ${ref.date ? new Date(ref.date).toLocaleDateString('en-PH') : 'Recently'}</div></div>
@@ -5563,7 +5289,6 @@
                     <div style="display:flex;gap:12px;flex-wrap:wrap;">
                         <button class="btn-primary btn-sm" onclick="showPage('post-job')">📝 Post a Job</button>
                         <button class="btn-secondary btn-sm" onclick="exportApplicantsCSV()">📊 Export Applicants</button>
-                        <button class="btn-secondary btn-sm" onclick="showNotification('Bulk actions coming soon.', 'info')">📋 Bulk Actions</button>
                     </div>
                 </div>
             `;
@@ -5744,8 +5469,8 @@
         }
 
         function clearAllData() {
-            if (!confirm('⚠️ Are you sure you want to clear ALL data? This cannot be undone!')) return;
-            if (!confirm('🔴 Really? This will delete all users, jobs, and applications.')) return;
+            if (!confirm('⚠️ Clear ALL data?')) return;
+            if (!confirm('🔴 Really?')) return;
             const storage = getStorage();
             ['primespheres_users', 'primespheres_current_user', 'primespheres_darkmode', 'apply4me_leads'].forEach(key =>
                 storage.removeItem(key));
@@ -5754,7 +5479,7 @@
                 const key = user.role + '_data_' + user.email;
                 storage.removeItem(key);
             });
-            showNotification('🗑️ All data has been cleared.', 'info');
+            showNotification('🗑️ All data cleared.', 'info');
             setTimeout(() => location.reload(), 1500);
         }
 
@@ -5966,7 +5691,6 @@
         animateCounters();
 
         console.log('🚀 Primespheres — Fixed Auth + Universal Scraper Loaded');
-        console.log('📋 Features: Animations, Dark Mode, 7 Roles, Full CRUD, Universal Scraper (5 strategies)');
         console.log('👤 Current User:', currentUser);
         console.log('💡 If login/register fails, check the error messages above the form.');
         console.log('🕷️ Scraper: URL, HTML, and JSON modes with 5 extraction strategies.');
