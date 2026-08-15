@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
         /* ============================================================
-           COMPLETE ANIMATED STYLESHEET
+           COMPLETE STYLESHEET – includes dark mode, animations, dashboards
            ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -2234,7 +2234,7 @@
     </div>
 
     <!-- ============================================================
-    PAGE: REGISTER (with id="registerForm")
+    PAGE: REGISTER
     ============================================================ -->
     <div id="page-register" class="page">
         <section class="auth-page">
@@ -2267,7 +2267,7 @@
     </div>
 
     <!-- ============================================================
-    PAGE: LOGIN (with id="loginForm")
+    PAGE: LOGIN
     ============================================================ -->
     <div id="page-login" class="page">
         <section class="auth-page">
@@ -2416,7 +2416,7 @@
     </footer>
 
     <!-- ============================================================
-    JAVASCRIPT — COMPLETE SYSTEM WITH ALL DASHBOARDS RESTORED
+    JAVASCRIPT – COMPLETE SYSTEM WITH UNIVERSAL SCRAPER
     ============================================================ -->
     <script>
         // ============================================================
@@ -2693,7 +2693,7 @@
         }
 
         // ============================================================
-        // REGISTER HANDLER (FIXED)
+        // REGISTER HANDLER
         // ============================================================
         function selectRole(role) {
             document.querySelectorAll('.role-option').forEach(el => {
@@ -2764,7 +2764,7 @@
         }
 
         // ============================================================
-        // LOGIN HANDLER (FIXED)
+        // LOGIN HANDLER
         // ============================================================
         function handleLogin(event) {
             event.preventDefault();
@@ -2868,7 +2868,7 @@
         }
 
         // ============================================================
-        // JOB BOARD FUNCTIONS (full)
+        // JOB BOARD FUNCTIONS
         // ============================================================
         function getAllJobs() {
             const allJobs = [];
@@ -3259,7 +3259,7 @@
 
         // ============================================================
         // ============================================================
-        // FULL DASHBOARD IMPLEMENTATIONS (RESTORED)
+        // FULL DASHBOARD IMPLEMENTATIONS
         // ============================================================
         // ============================================================
 
@@ -3411,7 +3411,398 @@
         }
 
         // ============================================================
-        // SCRAPER FUNCTIONS
+        // UNIVERSAL SCRAPER ENGINE
+        // ============================================================
+        function cleanText(text) {
+            if (!text) return '';
+            return text.replace(/\s+/g, ' ').replace(/[•\-*▶◆■]\s*/g, '').trim();
+        }
+
+        function extractJobsFromHTML(html, sourceUrl) {
+            const jobs = [];
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // 1. JSON-LD
+            const jsonLdJobs = extractJSONLDJobs(html);
+            jobs.push(...jsonLdJobs);
+
+            let origin = '';
+            if (sourceUrl && sourceUrl.startsWith('http')) {
+                try { origin = new URL(sourceUrl).origin; } catch (e) {}
+            }
+
+            const selectors = [
+                '.job-card', '.job-listing', '.job-item', '.job-post', '.job',
+                '.opening', '.position', '.vacancy', '.career-item', '.opportunity',
+                '.posting', '.posting-card', '.job-result', '.openings-list',
+                '.job-posting', '.job-tile', '.search-result',
+                '[data-qa="job"]', '[data-qa="job-listing"]',
+                '[data-automation-id="job"]', '[data-automation-id="job-listing"]',
+                '[data-job-id]', '[data-job-title]',
+                '[data-qa="posting"]', '[data-qa="position"]',
+                'article[role="listitem"]', 'article[role="article"]',
+                '[role="listitem"]', '[role="article"]',
+                'li.job', 'li.vacancy', 'li.position',
+                '.item', '.result', '.list-item', '.card'
+            ];
+
+            const foundElements = [];
+            selectors.forEach(selector => {
+                const elements = doc.querySelectorAll(selector);
+                elements.forEach(el => {
+                    const text = (el.textContent || '').trim();
+                    if (text.length > 20 && text.length < 2000) {
+                        const hasJobIndicators = /(hiring|job|position|role|career|opportunity|vacancy|apply|now)/i.test(text);
+                        const hasLocationOrSalary = /(remote|hybrid|onsite|₱|$|€|£|ph|manila|usa|uk|europe|asia)/i.test(text);
+                        if (hasJobIndicators || hasLocationOrSalary) {
+                            foundElements.push(el);
+                        }
+                    }
+                });
+            });
+
+            doc.querySelectorAll('ul, ol').forEach(list => {
+                const items = list.querySelectorAll('li');
+                items.forEach(li => {
+                    const text = (li.textContent || '').trim();
+                    if (text.length > 20 && text.length < 800) {
+                        const hasJob = /(hiring|job|position|role|career|opportunity|vacancy)/i.test(text);
+                        const hasCompany = /(inc|ltd|corp|co|ph|llc|company|agency|firm)/i.test(text);
+                        if (hasJob || hasCompany) {
+                            foundElements.push(li);
+                        }
+                    }
+                });
+            });
+
+            const uniqueElements = [];
+            const seenText = new Set();
+            foundElements.forEach(el => {
+                const text = (el.textContent || '').trim().substring(0, 100);
+                if (!seenText.has(text) && text.length > 20) {
+                    seenText.add(text);
+                    uniqueElements.push(el);
+                }
+            });
+
+            uniqueElements.forEach(el => {
+                const job = extractJobFromElement(el, origin);
+                if (job.title && job.title.length > 2) {
+                    const key = (job.title + '|' + job.company).toLowerCase().trim();
+                    if (!seenText.has(key)) {
+                        seenText.add(key);
+                        job.sourceUrl = sourceUrl;
+                        job.scrapedAt = new Date().toISOString();
+                        jobs.push(job);
+                    }
+                }
+            });
+
+            if (jobs.length === 0) {
+                const fallbackJobs = fallbackJobExtraction(html);
+                jobs.push(...fallbackJobs);
+            }
+
+            return jobs;
+        }
+
+        function extractJobFromElement(el, origin) {
+            const job = {
+                title: '',
+                company: '',
+                description: '',
+                location: '',
+                salary: '',
+                jobType: 'Remote',
+                source: 'HTML',
+                url: ''
+            };
+
+            const titleSelectors = [
+                'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                '.title', '.job-title', '.position-title', '.posting-title',
+                '.job-name', '.role-name', '.job-headline',
+                '[data-job-title]', '[data-position]', '[data-title]',
+                '.heading', '.headline', 'strong'
+            ];
+            for (const sel of titleSelectors) {
+                const found = el.querySelector(sel);
+                if (found) {
+                    const text = cleanText(found.textContent);
+                    if (text.length > 2 && text.length < 100) {
+                        job.title = text;
+                        break;
+                    }
+                }
+            }
+            if (!job.title) {
+                const lines = (el.textContent || '').split('\n').map(l => cleanText(l)).filter(l => l.length > 3 && l.length < 100);
+                if (lines.length > 0) job.title = lines[0];
+            }
+
+            const companySelectors = [
+                '.company', '.employer', '.org', '.organization',
+                '.hiring-company', '.business', '.department', '.team',
+                '[data-company]', '[data-employer]',
+                '.location-company', '.job-company'
+            ];
+            for (const sel of companySelectors) {
+                const found = el.querySelector(sel);
+                if (found) {
+                    const text = cleanText(found.textContent);
+                    if (text.length > 1 && text.length < 60) {
+                        job.company = text;
+                        break;
+                    }
+                }
+            }
+            if (!job.company && job.title) {
+                const atMatch = job.title.match(/\s+at\s+([A-Z][A-Za-z\s&]{2,40})/i);
+                if (atMatch) {
+                    job.company = cleanText(atMatch[1]);
+                    job.title = job.title.replace(/\s+at\s+[A-Z][A-Za-z\s&]{2,40}/i, '').trim();
+                } else {
+                    const dashMatch = job.title.match(/\s+[-–—]\s+([A-Z][A-Za-z\s&]{2,40})/);
+                    if (dashMatch) {
+                        job.company = cleanText(dashMatch[1]);
+                        job.title = job.title.replace(/\s+[-–—]\s+[A-Z][A-Za-z\s&]{2,40}/, '').trim();
+                    }
+                }
+            }
+
+            const locationSelectors = [
+                '.location', '.place', '.address', '.city', '.country', '.region',
+                '.workplace', '.remote-type', '.job-location',
+                '[data-location]', '[data-place]',
+                '.workplace-type', '.location-info'
+            ];
+            for (const sel of locationSelectors) {
+                const found = el.querySelector(sel);
+                if (found) {
+                    const text = cleanText(found.textContent);
+                    if (text.length > 1 && text.length < 100) {
+                        job.location = text;
+                        break;
+                    }
+                }
+            }
+            if (!job.location) {
+                const text = (el.textContent || '');
+                const locMatch = text.match(/(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia|NCR|Metro Manila|Quezon City|Makati|Taguig|Pasig|Mandaluyong|San Juan|Caloocan|Valenzuela|Navotas|Malabon|Marikina|Pasay|Parañaque|Las Piñas|Muntinlupa|Pateros|Selangor|Vietnam|Ho Chi Minh|Malaysia)/i);
+                if (locMatch) job.location = locMatch[0];
+            }
+
+            const salarySelectors = [
+                '.salary', '.pay', '.compensation', '.rate', '.remuneration',
+                '.salary-range', '[data-salary]', '.pay-rate'
+            ];
+            for (const sel of salarySelectors) {
+                const found = el.querySelector(sel);
+                if (found) {
+                    const text = cleanText(found.textContent);
+                    if (text.length > 1 && text.length < 50) {
+                        job.salary = text;
+                        break;
+                    }
+                }
+            }
+            if (!job.salary) {
+                const text = (el.textContent || '');
+                const salMatch = text.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to|–)\s*[₱$€£]?\s*[\d,]+/);
+                if (salMatch) job.salary = salMatch[0];
+            }
+
+            if (job.location && /remote/i.test(job.location)) job.jobType = 'Remote';
+            else if (job.location && /hybrid/i.test(job.location)) job.jobType = 'Hybrid';
+            else if (job.location && /on-site|onsite/i.test(job.location)) job.jobType = 'On-site';
+            else {
+                const text = (el.textContent || '');
+                if (/remote/i.test(text)) job.jobType = 'Remote';
+                else if (/hybrid/i.test(text)) job.jobType = 'Hybrid';
+                else if (/on-site|onsite/i.test(text)) job.jobType = 'On-site';
+            }
+
+            const descSelectors = [
+                '.description', '.details', '.summary', '.overview',
+                '.job-description', '.position-description', '.content',
+                '.info', '.body', '.text', '.job-summary',
+                '[data-description]', '[data-overview]'
+            ];
+            for (const sel of descSelectors) {
+                const found = el.querySelector(sel);
+                if (found) {
+                    const text = cleanText(found.textContent);
+                    if (text.length > 20) {
+                        job.description = text.substring(0, 500);
+                        break;
+                    }
+                }
+            }
+            if (!job.description) {
+                const text = (el.textContent || '');
+                if (text.length > 50) job.description = text.substring(0, 500);
+            }
+
+            const linkSelectors = [
+                'a[href*="/job/"]', 'a[href*="/position/"]', 'a[href*="/careers/"]',
+                'a[href*="/posting/"]', 'a[href*="/requisition/"]',
+                'a[href*="jobId"]', 'a[href*="job_id"]', 'a[href*="application"]',
+                'a[href*="/opportunities/"]', 'a[href*="/openings/"]'
+            ];
+            let bestLink = null;
+            for (const sel of linkSelectors) {
+                const links = el.querySelectorAll(sel);
+                for (const link of links) {
+                    let href = link.getAttribute('href');
+                    if (!href) continue;
+                    if (href.startsWith('/') && origin) href = origin + href;
+                    if (!href.startsWith('http') && !href.startsWith('//') && origin) {
+                        href = (href.startsWith('/') ? '' : '/') + href;
+                        href = origin + href;
+                    }
+                    const linkText = cleanText(link.textContent);
+                    if (linkText && job.title && (linkText.includes(job.title.substring(0, 20)) || job.title.includes(linkText.substring(0, 20)))) {
+                        bestLink = href;
+                        break;
+                    }
+                    if (!bestLink) bestLink = href;
+                }
+                if (bestLink) break;
+            }
+            if (!bestLink) {
+                const allLinks = el.querySelectorAll('a');
+                for (const link of allLinks) {
+                    const text = cleanText(link.textContent).toLowerCase();
+                    if (/view all|see all|apply now|learn more|read more|back to/i.test(text)) continue;
+                    let href = link.getAttribute('href');
+                    if (href) {
+                        if (href.startsWith('/') && origin) href = origin + href;
+                        if (!href.startsWith('http') && !href.startsWith('//') && origin) {
+                            href = (href.startsWith('/') ? '' : '/') + href;
+                            href = origin + href;
+                        }
+                        if (href && href.length > 10) {
+                            bestLink = href;
+                            break;
+                        }
+                    }
+                }
+            }
+            job.url = bestLink || '';
+
+            job.title = job.title.replace(/^[0-9]+\.\s*/, '').replace(/^[•\-*▶◆■]\s*/, '').trim();
+            job.company = job.company.replace(/^[•\-*▶◆■]\s*/, '').trim();
+
+            return job;
+        }
+
+        function extractJSONLDJobs(html) {
+            const jobs = [];
+            const scriptRegex = /<script\s+type="application\/ld\+json">(.*?)<\/script>/gis;
+            let match;
+            while ((match = scriptRegex.exec(html)) !== null) {
+                try {
+                    const data = JSON.parse(match[1]);
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            if (item['@type'] === 'JobPosting' || item['@type'] === 'Job') {
+                                jobs.push({
+                                    title: item.title || 'Untitled',
+                                    company: item.hiringOrganization?.name || 'Unknown',
+                                    description: item.description || '',
+                                    location: item.jobLocation?.address?.addressLocality || '',
+                                    salary: item.salary?.value?.value || '',
+                                    jobType: item.employmentType || 'Remote',
+                                    source: 'JSON-LD',
+                                    url: item.url || ''
+                                });
+                            }
+                        });
+                    } else if (data['@type'] === 'JobPosting' || data['@type'] === 'Job') {
+                        jobs.push({
+                            title: data.title || 'Untitled',
+                            company: data.hiringOrganization?.name || 'Unknown',
+                            description: data.description || '',
+                            location: data.jobLocation?.address?.addressLocality || '',
+                            salary: data.salary?.value?.value || '',
+                            jobType: data.employmentType || 'Remote',
+                            source: 'JSON-LD',
+                            url: data.url || ''
+                        });
+                    }
+                } catch (e) {}
+            }
+            return jobs;
+        }
+
+        function fallbackJobExtraction(html) {
+            const jobs = [];
+            const clean = html.replace(/<script[\s\S]*?<\/script>/gi, '')
+                              .replace(/<style[\s\S]*?<\/style>/gi, '')
+                              .replace(/<[^>]*>/g, ' ')
+                              .replace(/\s{2,}/g, ' ')
+                              .trim();
+
+            const pattern1 = /([A-Z][A-Za-z\s]{3,40})\s+(?:at|with|@)\s+([A-Z][A-Za-z\s&]{2,40})/g;
+            let match;
+            while ((match = pattern1.exec(clean)) !== null) {
+                let title = cleanText(match[1]);
+                let company = cleanText(match[2]);
+                if (title.length > 3 && company.length > 2 && !/^(hiring|jobs|careers|positions|opportunities|apply|now|we'?re|we are)$/i.test(title)) {
+                    jobs.push({ title, company, description: '', location: 'Remote', salary: '', jobType: 'Remote', source: 'regex', url: '' });
+                }
+            }
+
+            const pattern2 = /([A-Z][A-Za-z\s&]{2,40})\s+(?:is\s+hiring|hiring\s+a|looking\s+for|seeking)\s+([A-Z][A-Za-z\s]{3,40})/g;
+            while ((match = pattern2.exec(clean)) !== null) {
+                let company = cleanText(match[1]);
+                let title = cleanText(match[2]);
+                if (company.length > 2 && title.length > 3) {
+                    jobs.push({ title, company, description: '', location: 'Remote', salary: '', jobType: 'Remote', source: 'regex', url: '' });
+                }
+            }
+
+            const lines = clean.split('\n').filter(l => l.trim().length > 15 && l.trim().length < 300);
+            for (const line of lines) {
+                const hasJob = /(hiring|job|position|role|career|opportunity|vacancy|apply|now|open|we're|we are)/i.test(line);
+                const hasCompany = /(inc|ltd|corp|co|ph|llc|\.com|@|company|agency|firm)/i.test(line);
+                if (hasJob || hasCompany) {
+                    let title = '', company = '';
+                    const atMatch = line.match(/([A-Z][A-Za-z\s]{3,40})\s+at\s+([A-Z][A-Za-z\s&]{2,40})/i);
+                    if (atMatch) {
+                        title = cleanText(atMatch[1]);
+                        company = cleanText(atMatch[2]);
+                    } else {
+                        const parts = line.split(/[-–—|]/).map(p => cleanText(p));
+                        if (parts.length >= 2) {
+                            title = parts[0];
+                            company = parts[1];
+                        }
+                    }
+                    if (title && title.length > 3 && company && company.length > 2) {
+                        let location = 'Remote';
+                        const locMatch = line.match(/(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia|Malaysia|Vietnam|Ho Chi Minh|Selangor)/i);
+                        if (locMatch) location = locMatch[0];
+                        let salary = '';
+                        const salMatch = line.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to|–)\s*[₱$€£]?\s*[\d,]+/);
+                        if (salMatch) salary = salMatch[0];
+                        jobs.push({ title, company, description: '', location, salary, jobType: /remote/i.test(location) ? 'Remote' : 'Hybrid', source: 'regex', url: '' });
+                    }
+                }
+            }
+
+            const seen = new Set();
+            return jobs.filter(job => {
+                const key = (job.title + '|' + job.company).toLowerCase().trim();
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        // ============================================================
+        // SCRAPER UI FUNCTIONS
         // ============================================================
         let scrapedJobs = [];
         let scraperRunning = false;
@@ -3546,60 +3937,6 @@
                 }
             }
             throw new Error('All fetch sources failed — ' + errors.join(', '));
-        }
-
-        function extractJobsFromHTML(html, sourceUrl) {
-            const jobs = [];
-            const doc = document.createElement('div');
-            doc.innerHTML = html;
-            const selectors = ['.job-card', '.job-listing', '.job-item', '.job-post', '.job', '.vacancy', '.career-item', '.opportunity', '.position'];
-            let origin = '';
-            if (sourceUrl && sourceUrl.startsWith('http')) {
-                try { origin = new URL(sourceUrl).origin; } catch (e) {}
-            }
-            selectors.forEach(selector => {
-                doc.querySelectorAll(selector).forEach(el => {
-                    const title = el.querySelector('h1,h2,h3,h4,.title,.job-title')?.textContent?.trim() || el.textContent.trim().split('\n')[0]?.trim() || 'Untitled Job';
-                    const company = el.querySelector('.company,.employer,.org')?.textContent?.trim() || 'Unknown Company';
-                    const description = el.querySelector('.description,.details,.summary')?.textContent?.trim() || '';
-                    const location = el.querySelector('.location,.place')?.textContent?.trim() || 'Remote';
-                    const salary = el.querySelector('.salary,.pay')?.textContent?.trim() || '';
-                    let url = '';
-                    const link = el.querySelector('a[href*="/job/"], a[href*="/position/"], a[href*="/careers/"]');
-                    if (link) {
-                        let href = link.getAttribute('href');
-                        if (href) {
-                            if (href.startsWith('/') && origin) href = origin + href;
-                            url = href;
-                        }
-                    }
-                    if (title && title.length > 2) {
-                        jobs.push({ title, company, description, location, salary, jobType: location && /remote/i.test(location) ? 'Remote' : 'Hybrid', source: 'HTML', url });
-                    }
-                });
-            });
-            return jobs;
-        }
-
-        function extractJSONLDJobs(html) {
-            const jobs = [];
-            const scriptRegex = /<script\s+type="application\/ld\+json">(.*?)<\/script>/gis;
-            let match;
-            while ((match = scriptRegex.exec(html)) !== null) {
-                try {
-                    const data = JSON.parse(match[1]);
-                    if (Array.isArray(data)) {
-                        data.forEach(item => {
-                            if (item['@type'] === 'JobPosting' || item['@type'] === 'Job') {
-                                jobs.push({ title: item.title || 'Untitled', company: item.hiringOrganization?.name || 'Unknown', description: item.description || '', location: item.jobLocation?.address?.addressLocality || '', salary: item.salary?.value?.value || '', jobType: item.employmentType || 'Remote', source: 'JSON-LD', url: item.url || '' });
-                            }
-                        });
-                    } else if (data['@type'] === 'JobPosting' || data['@type'] === 'Job') {
-                        jobs.push({ title: data.title || 'Untitled', company: data.hiringOrganization?.name || 'Unknown', description: data.description || '', location: data.jobLocation?.address?.addressLocality || '', salary: data.salary?.value?.value || '', jobType: data.employmentType || 'Remote', source: 'JSON-LD', url: data.url || '' });
-                    }
-                } catch (e) {}
-            }
-            return jobs;
         }
 
         async function scrapeJobsFromURL() {
@@ -4092,7 +4429,7 @@
         }
 
         // ============================================================
-        // EMPLOYER DASHBOARD (FULL)
+        // EMPLOYER DASHBOARD
         // ============================================================
         function renderEmployerDashboard() {
             const container = document.getElementById('employerDashboardContent');
@@ -4194,7 +4531,7 @@
         }
 
         // ============================================================
-        // JOB SEEKER DASHBOARD (FULL)
+        // JOB SEEKER DASHBOARD
         // ============================================================
         function renderJobSeekerDashboard() {
             const container = document.getElementById('jobseekerDashboardContent');
@@ -4254,7 +4591,7 @@
         }
 
         // ============================================================
-        // MANAGER DASHBOARD (FULL)
+        // MANAGER DASHBOARD
         // ============================================================
         function renderManagerDashboard() {
             const container = document.getElementById('managerDashboardContent');
@@ -4299,7 +4636,7 @@
         }
 
         // ============================================================
-        // PARTNER DASHBOARD (FULL)
+        // PARTNER DASHBOARD
         // ============================================================
         function renderPartnerDashboard() {
             const container = document.getElementById('partnerDashboardContent');
@@ -4358,7 +4695,7 @@
         }
 
         // ============================================================
-        // EMPLOYEE DASHBOARD (FULL)
+        // EMPLOYEE DASHBOARD
         // ============================================================
         function renderEmployeeDashboard() {
             const container = document.getElementById('employeeDashboardContent');
@@ -4480,7 +4817,7 @@
         }
 
         // ============================================================
-        // OWNER ANALYTICS (FULL)
+        // OWNER ANALYTICS
         // ============================================================
         function renderOwnerAnalytics() {
             const container = document.getElementById('ownerAnalyticsContent');
@@ -4565,7 +4902,7 @@
         }
 
         // ============================================================
-        // MANAGER ANALYTICS (FULL)
+        // MANAGER ANALYTICS
         // ============================================================
         function renderManagerAnalytics() {
             const container = document.getElementById('managerAnalyticsContent');
@@ -4651,7 +4988,7 @@
         }
 
         // ============================================================
-        // PARTNER REFERRAL DASHBOARD (FULL)
+        // PARTNER REFERRAL DASHBOARD
         // ============================================================
         function renderPartnerReferralDashboard() {
             const container = document.getElementById('partnerReferralContent');
@@ -4700,7 +5037,7 @@
         }
 
         // ============================================================
-        // EMPLOYER APPLICANT MANAGEMENT (FULL)
+        // EMPLOYER APPLICANT MANAGEMENT
         // ============================================================
         function renderEmployerApplicantManagement() {
             const container = document.getElementById('employerApplicantContent');
@@ -4849,7 +5186,7 @@
         }
 
         // ============================================================
-        // EMPLOYEE APPLICATION TRACKER (FULL)
+        // EMPLOYEE APPLICATION TRACKER
         // ============================================================
         function renderEmployeeApplicationTracker() {
             const container = document.getElementById('employeeApplicationTracker');
@@ -5206,7 +5543,7 @@
 
         renderJobBoard();
         animateCounters();
-        console.log('🚀 Primespheres — All dashboards restored! Login & Registration fixed.');
+        console.log('🚀 Primespheres — Full system ready. Universal scraper active.');
     </script>
 </body>
 </html>
