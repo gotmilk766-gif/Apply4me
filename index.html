@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
         /* ============================================================
-           COMPLETE STYLESHEET – includes dark mode, animations, dashboards
+           COMPLETE STYLESHEET
            ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -805,6 +805,14 @@
             font-size: 14px;
             margin-bottom: 16px;
             line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .job-card .job-description.expanded {
+            -webkit-line-clamp: unset;
+            overflow: visible;
         }
         .job-card .job-salary {
             font-size: 14px;
@@ -860,6 +868,24 @@
             background: var(--gray-100);
             padding: 2px 10px;
             border-radius: 12px;
+        }
+        .job-card .harvested-badge {
+            font-size: 10px;
+            background: #ede9fe;
+            color: #7c3aed;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        body.dark-mode .job-card .harvested-badge {
+            background: rgba(124,58,237,0.2);
+            color: #a78bfa;
+        }
+        .job-card .job-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
         }
 
         .stats {
@@ -1194,6 +1220,163 @@
             transform: rotate(90deg);
         }
         body.dark-mode .modal-close:hover { color: #f1f5f9; }
+
+        /* Resume Builder Styles */
+        .resume-builder {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .resume-builder .resume-form {
+            background: var(--gray-50);
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--gray-200);
+        }
+        body.dark-mode .resume-builder .resume-form {
+            background: var(--gray-700);
+            border-color: var(--gray-600);
+        }
+        .resume-builder .resume-preview {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: var(--radius);
+            border: 2px solid var(--gray-200);
+            min-height: 400px;
+        }
+        body.dark-mode .resume-builder .resume-preview {
+            background: var(--gray-800);
+            border-color: var(--gray-700);
+        }
+        .resume-builder .form-group {
+            margin-bottom: 12px;
+        }
+        .resume-builder .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            display: block;
+            margin-bottom: 3px;
+        }
+        .resume-builder .form-group input,
+        .resume-builder .form-group textarea,
+        .resume-builder .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #ffffff;
+            transition: all var(--transition);
+        }
+        body.dark-mode .resume-builder .form-group input,
+        body.dark-mode .resume-builder .form-group textarea,
+        body.dark-mode .resume-builder .form-group select {
+            background: var(--gray-700);
+            border-color: var(--gray-600);
+            color: #f1f5f9;
+        }
+        .resume-builder .form-group input:focus,
+        .resume-builder .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+        }
+        .resume-preview .preview-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--gray-900);
+        }
+        body.dark-mode .resume-preview .preview-name {
+            color: #f1f5f9;
+        }
+        .resume-preview .preview-contact {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin: 4px 0 12px;
+        }
+        .resume-preview .preview-section {
+            margin-top: 16px;
+        }
+        .resume-preview .preview-section h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            border-bottom: 2px solid var(--gray-200);
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+        }
+        .resume-preview .preview-section p,
+        .resume-preview .preview-section li {
+            font-size: 13px;
+            color: var(--gray-600);
+            line-height: 1.5;
+        }
+        body.dark-mode .resume-preview .preview-section p,
+        body.dark-mode .resume-preview .preview-section li {
+            color: var(--gray-400);
+        }
+        .resume-preview .preview-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .resume-preview .preview-section ul li {
+            padding: 2px 0;
+        }
+        .resume-preview .preview-section ul li::before {
+            content: '• ';
+            color: var(--primary);
+        }
+
+        /* Job Detail Modal */
+        .job-detail-modal .job-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .job-detail-modal .job-company {
+            font-size: 18px;
+            color: var(--gray-500);
+            margin-bottom: 12px;
+        }
+        .job-detail-modal .job-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: var(--gray-500);
+        }
+        .job-detail-modal .job-meta span {
+            background: var(--gray-50);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        body.dark-mode .job-detail-modal .job-meta span {
+            background: var(--gray-700);
+        }
+        .job-detail-modal .job-full-description {
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.7;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        body.dark-mode .job-detail-modal .job-full-description {
+            background: var(--gray-700);
+        }
+        .job-detail-modal .job-url-link {
+            word-break: break-all;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .job-detail-modal .job-url-link:hover {
+            text-decoration: underline;
+        }
 
         .file-upload-wrapper {
             border: 2px dashed var(--gray-200);
@@ -1804,6 +1987,12 @@
             color: var(--gray-500);
         }
 
+        @media (max-width: 1024px) {
+            .resume-builder {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
             .menu-toggle { display: block; }
             .nav-links {
@@ -1888,6 +2077,9 @@
             .scraper-job-item .job-actions {
                 justify-content: flex-start;
                 margin-top: 8px;
+            }
+            .resume-builder {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -2312,7 +2504,7 @@
     </div>
 
     <!-- ============================================================
-    PAGE: JOB SEEKER DASHBOARD (ENHANCED WITH ALL FEATURES)
+    PAGE: JOB SEEKER DASHBOARD
     ============================================================ -->
     <div id="page-jobseeker-dashboard" class="page">
         <section class="dashboard-page"><div class="container"><div id="jobseekerDashboardContent"></div></div></section>
@@ -2401,6 +2593,18 @@
     </div>
 
     <!-- ============================================================
+    JOB DETAIL MODAL (Hidden by default)
+    ============================================================ -->
+    <div class="modal-overlay" id="jobDetailModal">
+        <div class="modal job-detail-modal">
+            <button class="modal-close" onclick="closeJobDetailModal()">&times;</button>
+            <div id="jobDetailContent">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
     FOOTER
     ============================================================ -->
     <footer>
@@ -2416,7 +2620,7 @@
     </footer>
 
     <!-- ============================================================
-    JAVASCRIPT – COMPLETE SYSTEM WITH ENHANCED JOB SEEKER FEATURES
+    JAVASCRIPT – COMPLETE SYSTEM WITH RESUME BUILDER + JOB DETAIL + DIRECT APPLY
     ============================================================ -->
     <script>
         // ============================================================
@@ -2751,7 +2955,8 @@
                         timeIn: null,
                         timeOut: null,
                         lastPostDate: null,
-                        postCountToday: 0
+                        postCountToday: 0,
+                        resume: null
                     }));
                 }
 
@@ -2925,10 +3130,14 @@
                 return;
             }
             document.getElementById('noJobsMessage').style.display = 'none';
+
             container.innerHTML = filteredJobs.map(job => {
                 const isOwner = currentUser && currentUser.email === job.postedByEmail;
                 const canDelete = currentUser && ['owner', 'manager', 'employer'].includes(currentUser.role) && isOwner;
                 const isSaved = currentUser && isJobSaved(job.id);
+                const isHarvested = job.harvested === true;
+                const jobUrl = job.url || '';
+
                 let expiryWarning = '';
                 if (job.expiresAt) {
                     const daysLeft = Math.ceil((new Date(job.expiresAt) - new Date()) / (1000 * 60 * 60 * 24));
@@ -2938,11 +3147,13 @@
                         expiryWarning = `<span class="expiry-badge" style="background:#fee2e2;color:#dc2626;">Expired</span>`;
                     }
                 }
+
                 return `
                     <div class="job-card" style="border-left-color: ${job.status === 'active' ? '#16a34a' : '#94a3b8'};">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                                 <span class="job-type-badge ${job.jobType === 'Remote' ? 'remote' : job.jobType === 'Hybrid' ? 'hybrid' : 'onsite'}">${job.jobType}</span>
+                                ${isHarvested ? `<span class="harvested-badge">🌾 Harvested</span>` : ''}
                                 ${expiryWarning}
                             </div>
                             <div style="display:flex;gap:8px;align-items:center;">
@@ -2960,16 +3171,163 @@
                                 <span class="job-applicants">${job.applicants || 0} applicants</span>
                                 <span class="job-views">${job.views || 0} views</span>
                             </div>
-                            <div style="display:flex;gap:8px;">
-                                ${canDelete ? `<button class="btn-danger btn-sm" onclick="deleteJob('${job.id}')">Delete</button>` : ''}
-                                <button class="btn-primary btn-sm" onclick="applyToJob('${job.id}')">Apply</button>
-                            </div>
+                        </div>
+                        <div class="job-actions">
+                            <button class="btn-secondary btn-sm" onclick="viewJobDetails('${job.id}')">👁️ View Details</button>
+                            ${canDelete ? `<button class="btn-danger btn-sm" onclick="deleteJob('${job.id}')">Delete</button>` : ''}
+                            ${isHarvested && jobUrl ? 
+                                `<button class="btn-primary btn-sm" onclick="applyToHarvestedJob('${job.id}')">🚀 Apply Now</button>` :
+                                `<button class="btn-primary btn-sm" onclick="applyToJob('${job.id}')">Apply</button>`
+                            }
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
+        // ============================================================
+        // JOB DETAIL MODAL
+        // ============================================================
+        function viewJobDetails(jobId) {
+            const allJobs = getAllJobs();
+            const job = allJobs.find(j => j.id == jobId);
+            if (!job) {
+                showNotification('Job not found.', 'error');
+                return;
+            }
+
+            const isHarvested = job.harvested === true;
+            const jobUrl = job.url || '';
+            const modal = document.getElementById('jobDetailModal');
+            const content = document.getElementById('jobDetailContent');
+
+            content.innerHTML = `
+                <div class="job-title">${job.title}</div>
+                <div class="job-company">🏢 ${job.company}</div>
+                <div class="job-meta">
+                    <span>${job.jobType || 'Remote'}</span>
+                    <span>📅 ${job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
+                    ${job.salaryMin && job.salaryMax ? `<span>💰 ₱${Number(job.salaryMin).toLocaleString()} - ₱${Number(job.salaryMax).toLocaleString()}</span>` : ''}
+                    ${isHarvested ? `<span>🌾 Harvested Job</span>` : ''}
+                    ${job.category ? `<span>📁 ${job.category}</span>` : ''}
+                </div>
+                ${job.tags ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;">${job.tags.split(',').map(t => `<span style="background:var(--gray-100);padding:2px 10px;border-radius:12px;font-size:12px;">#${t.trim()}</span>`).join('')}</div>` : ''}
+                <div style="font-size:14px;color:var(--gray-500);margin-bottom:8px;">📄 Job Description</div>
+                <div class="job-full-description">${job.description || 'No description provided.'}</div>
+                ${jobUrl ? `
+                    <div style="margin:12px 0;padding:12px;background:var(--gray-50);border-radius:8px;border:1px solid var(--gray-200);">
+                        <div style="font-size:13px;color:var(--gray-500);">🔗 Direct Job Link</div>
+                        <a href="${jobUrl}" target="_blank" class="job-url-link">${jobUrl}</a>
+                    </div>
+                ` : ''}
+                <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;margin-top:16px;">
+                    <button class="btn-secondary" onclick="closeJobDetailModal()">Close</button>
+                    ${isHarvested && jobUrl ? 
+                        `<button class="btn-primary" onclick="closeJobDetailModal(); applyToHarvestedJob('${job.id}')">🚀 Apply on Company Site</button>` :
+                        `<button class="btn-primary" onclick="closeJobDetailModal(); applyToJob('${job.id}')">Apply</button>`
+                    }
+                </div>
+            `;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeJobDetailModal() {
+            const modal = document.getElementById('jobDetailModal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close modal on background click
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('jobDetailModal');
+            if (e.target === modal) {
+                closeJobDetailModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeJobDetailModal();
+            }
+        });
+
+        // ============================================================
+        // APPLY TO HARVESTED JOB (Redirect to Company URL)
+        // ============================================================
+        function applyToHarvestedJob(jobId) {
+            if (!currentUser) {
+                showNotification('Please login to apply.', 'warning');
+                showPage('login');
+                return;
+            }
+
+            if (!['employee', 'job-seeker'].includes(currentUser.role)) {
+                showNotification('Please register as a Job Seeker or Employee.', 'warning');
+                showPage('register');
+                return;
+            }
+
+            const allJobs = getAllJobs();
+            const job = allJobs.find(j => j.id == jobId);
+            if (!job) {
+                showNotification('Job not found.', 'error');
+                return;
+            }
+
+            const jobUrl = job.url || '';
+            if (!jobUrl) {
+                showNotification('No application URL available for this job.', 'error');
+                return;
+            }
+
+            // Record the application in the user's history
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const storage = getStorage();
+            const data = JSON.parse(storage.getItem(key) || '{"applications":[]}');
+            if (!data.applications) data.applications = [];
+
+            // Check if already applied
+            if (data.applications.find(a => a.jobId == jobId)) {
+                // Still redirect them
+                showNotification('🔗 Redirecting to company website...', 'info');
+                setTimeout(() => {
+                    window.open(jobUrl, '_blank');
+                }, 500);
+                return;
+            }
+
+            data.applications.push({
+                jobId: jobId,
+                jobTitle: job.title,
+                company: job.company,
+                appliedAt: new Date().toISOString(),
+                status: 'seen',
+                notes: 'Applied via company website: ' + jobUrl
+            });
+
+            storage.setItem(key, JSON.stringify(data));
+            incrementApplicantCount(jobId);
+            incrementJobViews(jobId);
+
+            showNotification('✅ Application recorded! Redirecting to company website...', 'success');
+
+            // Redirect to the job URL after a short delay
+            setTimeout(() => {
+                window.open(jobUrl, '_blank');
+            }, 800);
+
+            renderJobBoard();
+            renderJobSeekerDashboard();
+        }
+
+        // ============================================================
+        // SAVED JOBS
+        // ============================================================
         function isJobSaved(jobId) {
             if (!currentUser) return false;
             const key = currentUser.role + '_data_' + currentUser.email;
@@ -3002,8 +3360,12 @@
             }
             storage.setItem(key, JSON.stringify(data));
             renderJobBoard();
+            renderJobSeekerDashboard();
         }
 
+        // ============================================================
+        // APPLY TO REGULAR JOB (Internal Application)
+        // ============================================================
         function applyToJob(jobId) {
             if (!currentUser) {
                 showNotification('Please login to apply for this job.', 'warning');
@@ -3021,6 +3383,13 @@
                 showNotification('Job not found.', 'error');
                 return;
             }
+
+            // Check if it's a harvested job with a URL - if so, use the harvested flow
+            if (job.harvested === true && job.url) {
+                applyToHarvestedJob(jobId);
+                return;
+            }
+
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
             const data = JSON.parse(storage.getItem(key) || '{"applications":[]}');
@@ -3029,6 +3398,8 @@
                 showNotification('You have already applied to this job.', 'warning');
                 return;
             }
+
+            // For regular jobs, we just track the application
             data.applications.push({
                 jobId: jobId,
                 jobTitle: job.title,
@@ -3037,6 +3408,7 @@
                 status: 'pending',
                 notes: ''
             });
+
             storage.setItem(key, JSON.stringify(data));
             incrementApplicantCount(jobId);
             incrementJobViews(jobId);
@@ -3100,9 +3472,10 @@
                 showNotification('No active jobs to export.', 'warning');
                 return;
             }
-            let csv = 'Title,Company,Type,Category,Salary Min,Salary Max,Applicants,Views,Posted Date\n';
+            let csv = 'Title,Company,Type,Category,Salary Min,Salary Max,Applicants,Views,Posted Date,Harvested,URL\n';
             activeJobs.forEach(job => {
-                csv += `"${job.title}","${job.company}","${job.jobType}","${job.category || ''}",${job.salaryMin || ''},${job.salaryMax || ''},${job.applicants || 0},${job.views || 0},"${new Date(job.postedAt).toLocaleDateString('en-PH')}"\n`;
+                csv +=
+                    `"${job.title}","${job.company}","${job.jobType}","${job.category || ''}",${job.salaryMin || ''},${job.salaryMax || ''},${job.applicants || 0},${job.views || 0},"${new Date(job.postedAt).toLocaleDateString('en-PH')}",${job.harvested ? 'Yes' : 'No'},"${job.url || ''}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -3194,7 +3567,9 @@
                 applicants: 0,
                 views: 0,
                 postedAt: new Date().toISOString(),
-                expiresAt: expiresAt.toISOString()
+                expiresAt: expiresAt.toISOString(),
+                harvested: false,
+                url: ''
             });
 
             if (currentUser.role === 'employer') {
@@ -3266,7 +3641,7 @@
         // ============================================================
 
         // ============================================================
-        // HARVESTER DASHBOARD (FULL)
+        // HARVESTER DASHBOARD
         // ============================================================
         function renderHarvesterDashboard() {
             const container = document.getElementById('harvesterDashboardContent');
@@ -3353,7 +3728,7 @@
                 </div>
                 <div class="dashboard-card" style="margin-bottom:24px;">
                     <h3>📥 Add Harvested Job (Manual)</h3>
-                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">Harvested jobs will automatically appear on the job board.</p>
+                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">Harvested jobs will automatically appear on the job board with a "🌾 Harvested" badge.</p>
                     <form onsubmit="addHarvestedJob(event)" style="margin-top:16px;">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
                             <div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Title <span style="color:var(--danger);">*</span></label><input type="text" id="harvestTitle" placeholder="e.g., Virtual Assistant" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;" required /></div>
@@ -3740,10 +4115,10 @@
         function fallbackJobExtraction(html) {
             const jobs = [];
             const clean = html.replace(/<script[\s\S]*?<\/script>/gi, '')
-                              .replace(/<style[\s\S]*?<\/style>/gi, '')
-                              .replace(/<[^>]*>/g, ' ')
-                              .replace(/\s{2,}/g, ' ')
-                              .trim();
+                .replace(/<style[\s\S]*?<\/style>/gi, '')
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
 
             const pattern1 = /([A-Z][A-Za-z\s]{3,40})\s+(?:at|with|@)\s+([A-Z][A-Za-z\s&]{2,40})/g;
             let match;
@@ -3769,7 +4144,8 @@
                 const hasJob = /(hiring|job|position|role|career|opportunity|vacancy|apply|now|open|we're|we are)/i.test(line);
                 const hasCompany = /(inc|ltd|corp|co|ph|llc|\.com|@|company|agency|firm)/i.test(line);
                 if (hasJob || hasCompany) {
-                    let title = '', company = '';
+                    let title = '',
+                        company = '';
                     const atMatch = line.match(/([A-Z][A-Za-z\s]{3,40})\s+at\s+([A-Z][A-Za-z\s&]{2,40})/i);
                     if (atMatch) {
                         title = cleanText(atMatch[1]);
@@ -3857,11 +4233,12 @@
                 return;
             }
             if (stats) {
-                stats.innerHTML = `<span>📋 <strong>${scrapedJobs.length}</strong> jobs found</span><span>✅ <span id="scraperSelectedCount">0</span> selected</span><button class="btn-secondary btn-sm" onclick="selectAllScraped()" id="scraperSelectAllBtn">Select All</button><button class="btn-secondary btn-sm" onclick="deselectAllScraped()">Deselect All</button>`;
+                stats.innerHTML =
+                    `<span>📋 <strong>${scrapedJobs.length}</strong> jobs found</span><span>✅ <span id="scraperSelectedCount">0</span> selected</span><button class="btn-secondary btn-sm" onclick="selectAllScraped()" id="scraperSelectAllBtn">Select All</button><button class="btn-secondary btn-sm" onclick="deselectAllScraped()">Deselect All</button>`;
             }
             list.innerHTML = scrapedJobs.map((job, index) => `
                 <div class="scraper-job-item">
-                    <div class="job-info"><div class="title">${job.title}</div><div class="meta">🏢 ${job.company}${job.location ? `• 📍 ${job.location}` : ''}${job.salary ? `• 💰 ${job.salary}` : ''}${job.jobType ? `• ${job.jobType}` : ''}</div></div>
+                    <div class="job-info"><div class="title">${job.title}</div><div class="meta">🏢 ${job.company}${job.location ? `• 📍 ${job.location}` : ''}${job.salary ? `• 💰 ${job.salary}` : ''}${job.jobType ? `• ${job.jobType}` : ''}${job.url ? `• 🔗 ${job.url}` : ''}</div></div>
                     <div class="job-actions"><input type="checkbox" class="scraper-checkbox" data-index="${index}" checked onchange="updateScraperSelection()" /><button class="btn-secondary btn-sm" onclick="previewScrapedJob(${index})" title="Preview">👁️</button></div>
                 </div>
             `).join('');
@@ -3875,8 +4252,11 @@
             if (countEl) countEl.textContent = selected;
         }
 
-        function selectAllScraped() { document.querySelectorAll('.scraper-checkbox').forEach(cb => cb.checked = true); updateScraperSelection(); }
-        function deselectAllScraped() { document.querySelectorAll('.scraper-checkbox').forEach(cb => cb.checked = false); updateScraperSelection(); }
+        function selectAllScraped() { document.querySelectorAll('.scraper-checkbox').forEach(cb => cb.checked = true);
+            updateScraperSelection(); }
+
+        function deselectAllScraped() { document.querySelectorAll('.scraper-checkbox').forEach(cb => cb.checked = false);
+            updateScraperSelection(); }
 
         function previewScrapedJob(index) {
             const job = scrapedJobs[index];
@@ -3909,7 +4289,8 @@
 
         function closeScraperPreview() {
             const modal = document.getElementById('scraperPreviewModal');
-            if (modal) { modal.remove(); document.body.style.overflow = 'auto'; }
+            if (modal) { modal.remove();
+                document.body.style.overflow = 'auto'; }
         }
 
         const CORS_PROXIES = [
@@ -3958,7 +4339,8 @@
                     if (jsonLd.length > 0) extracted = jsonLd;
                 }
                 scrapedJobs = extracted;
-                scrapedJobs.forEach(job => { job.sourceUrl = url; job.scrapedAt = new Date().toISOString(); });
+                scrapedJobs.forEach(job => { job.sourceUrl = url;
+                    job.scrapedAt = new Date().toISOString(); });
                 showNotification(`✅ Found ${scrapedJobs.length} job listings!`, 'success');
                 updateScraperUI('results');
             } catch (error) {
@@ -3984,7 +4366,8 @@
                     if (jsonLd.length > 0) extracted = jsonLd;
                 }
                 scrapedJobs = extracted;
-                scrapedJobs.forEach(job => { job.sourceUrl = 'pasted-html'; job.scrapedAt = new Date().toISOString(); });
+                scrapedJobs.forEach(job => { job.sourceUrl = 'pasted-html';
+                    job.scrapedAt = new Date().toISOString(); });
                 showNotification(`✅ Found ${scrapedJobs.length} job listings!`, 'success');
                 updateScraperUI('results');
             } catch (error) {
@@ -4096,11 +4479,13 @@
                     applicants: 0,
                     views: 0,
                     postedAt: new Date().toISOString(),
-                    expiresAt: (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString(); })(),
+                    expiresAt: (() => { const d = new Date();
+                        d.setDate(d.getDate() + 30); return d.toISOString(); })(),
                     postedBy: currentUser.name,
                     postedByEmail: currentUser.email,
                     postedByRole: currentUser.role,
-                    harvested: true
+                    harvested: true,
+                    url: harvestedJob.url
                 };
                 userData.jobs.unshift(boardJob);
                 imported++;
@@ -4132,7 +4517,8 @@
             const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
             if (!userData.harvestedJobs) userData.harvestedJobs = [];
             const jobId = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-            const harvestedJob = { id: jobId, title, company, url, description, salary, location: location || 'Remote', jobType, status, source, harvestedAt: new Date().toISOString() };
+            const harvestedJob = { id: jobId, title, company, url, description, salary, location: location || 'Remote',
+                jobType, status, source, harvestedAt: new Date().toISOString() };
             userData.harvestedJobs.unshift(harvestedJob);
             const boardJob = {
                 id: harvestedJob.id,
@@ -4148,11 +4534,13 @@
                 applicants: 0,
                 views: 0,
                 postedAt: new Date().toISOString(),
-                expiresAt: (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString(); })(),
+                expiresAt: (() => { const d = new Date();
+                    d.setDate(d.getDate() + 30); return d.toISOString(); })(),
                 postedBy: currentUser.name,
                 postedByEmail: currentUser.email,
                 postedByRole: currentUser.role,
-                harvested: true
+                harvested: true,
+                url: harvestedJob.url
             };
             userData.jobs.unshift(boardJob);
             storage.setItem(key, JSON.stringify(userData));
@@ -4208,7 +4596,8 @@
 
         function closeEditHarvestModal() {
             const modal = document.getElementById('editHarvestModal');
-            if (modal) { modal.remove(); document.body.style.overflow = 'auto'; }
+            if (modal) { modal.remove();
+                document.body.style.overflow = 'auto'; }
         }
 
         function saveHarvestedJob(event, jobId) {
@@ -4241,7 +4630,11 @@
             harvestedJob.updatedAt = new Date().toISOString();
 
             const boardJob = userData.jobs.find(j => j.id === jobId);
-            if (boardJob) { boardJob.title = title; boardJob.company = company; boardJob.description = description; boardJob.jobType = jobType; }
+            if (boardJob) { boardJob.title = title;
+                boardJob.company = company;
+                boardJob.description = description;
+                boardJob.jobType = jobType;
+                boardJob.url = url; }
             storage.setItem(key, JSON.stringify(userData));
             closeEditHarvestModal();
             showNotification('✅ Job updated successfully!', 'success');
@@ -4307,7 +4700,8 @@
 
         function closeBulkImportModal() {
             const modal = document.getElementById('bulkImportModal');
-            if (modal) { modal.remove(); document.body.style.overflow = 'auto'; }
+            if (modal) { modal.remove();
+                document.body.style.overflow = 'auto'; }
         }
 
         function processBulkImport(event) {
@@ -4327,7 +4721,9 @@
                 const domain = url.replace(/https?:\/\//, '').split('/')[0];
                 const company = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
                 const jobId = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-                const harvestedJob = { id: jobId, title: 'Job from ' + company, company: company, url: url, description: '', salary: '', location: 'Remote', jobType: 'Remote', status: 'pending', source: domain, harvestedAt: new Date().toISOString(), bulkImported: true };
+                const harvestedJob = { id: jobId, title: 'Job from ' + company, company: company, url: url,
+                    description: '', salary: '', location: 'Remote', jobType: 'Remote', status: 'pending',
+                    source: domain, harvestedAt: new Date().toISOString(), bulkImported: true };
                 userData.harvestedJobs.unshift(harvestedJob);
                 const boardJob = {
                     id: harvestedJob.id,
@@ -4343,11 +4739,13 @@
                     applicants: 0,
                     views: 0,
                     postedAt: new Date().toISOString(),
-                    expiresAt: (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString(); })(),
+                    expiresAt: (() => { const d = new Date();
+                        d.setDate(d.getDate() + 30); return d.toISOString(); })(),
                     postedBy: currentUser.name,
                     postedByEmail: currentUser.email,
                     postedByRole: currentUser.role,
-                    harvested: true
+                    harvested: true,
+                    url: harvestedJob.url
                 };
                 userData.jobs.unshift(boardJob);
                 imported++;
@@ -4371,7 +4769,8 @@
             if (jobs.length === 0) { showNotification('No harvested jobs to export.', 'warning'); return; }
             let csv = 'Title,Company,URL,Salary,Location,Job Type,Status,Source,Harvested Date\n';
             jobs.forEach(job => {
-                csv += `"${job.title}","${job.company}","${job.url}","${job.salary || ''}","${job.location || 'Remote'}","${job.jobType || 'Remote'}","${job.status || 'active'}","${job.source || ''}","${new Date(job.harvestedAt).toLocaleDateString('en-PH')}"\n`;
+                csv +=
+                    `"${job.title}","${job.company}","${job.url}","${job.salary || ''}","${job.location || 'Remote'}","${job.jobType || 'Remote'}","${job.status || 'active'}","${job.source || ''}","${new Date(job.harvestedAt).toLocaleDateString('en-PH')}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -4395,7 +4794,8 @@
             if (data.timeIn && !data.timeOut) { showNotification('You are already clocked in.', 'warning'); return; }
             const now = new Date();
             data.timeIn = now.toISOString();
-            data.timeInDisplay = now.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            data.timeInDisplay = now.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit',
+                minute: '2-digit', second: '2-digit' });
             data.timeOut = null;
             data.timeOutDisplay = null;
             data.hoursWorked = null;
@@ -4415,7 +4815,8 @@
             if (data.timeOut) { showNotification('You are already clocked out.', 'warning'); return; }
             const now = new Date();
             data.timeOut = now.toISOString();
-            data.timeOutDisplay = now.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            data.timeOutDisplay = now.toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: '2-digit',
+                minute: '2-digit', second: '2-digit' });
             const timeIn = new Date(data.timeIn);
             const timeOut = new Date(data.timeOut);
             const diffMs = timeOut - timeIn;
@@ -4436,7 +4837,8 @@
             const container = document.getElementById('employerDashboardContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'employer') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -4452,7 +4854,8 @@
             const lastPostDate = data.lastPostDate ? new Date(data.lastPostDate).toDateString() : null;
             const postedToday = (lastPostDate === today) ? (data.postCountToday || 0) : 0;
             const employerJobIds = jobs.map(j => j.id);
-            const employerApplicants = allJobs.filter(j => employerJobIds.includes(j.id)).reduce((sum, j) => sum + (j.applicants || 0), 0);
+            const employerApplicants = allJobs.filter(j => employerJobIds.includes(j.id)).reduce((sum, j) => sum + (j
+                .applicants || 0), 0);
 
             container.innerHTML = `
                 <div class="dashboard-header">
@@ -4523,7 +4926,8 @@
                 const data = JSON.parse(storage.getItem(key) || '{"jobs":[]}');
                 if (data.jobs) {
                     const job = data.jobs.find(j => j.id == jobId);
-                    if (job) { job.status = 'closed'; storage.setItem(key, JSON.stringify(data)); }
+                    if (job) { job.status = 'closed';
+                        storage.setItem(key, JSON.stringify(data)); }
                 }
             });
             renderEmployerDashboard();
@@ -4532,24 +4936,23 @@
         }
 
         // ============================================================
-        // JOB SEEKER DASHBOARD (ENHANCED WITH ALL FEATURES)
-        // ============================================================
-        // ============================================================
-        // ENHANCED JOB SEEKER DASHBOARD
+        // JOB SEEKER DASHBOARD (ENHANCED WITH RESUME BUILDER)
         // ============================================================
         function renderJobSeekerDashboard() {
             const container = document.getElementById('jobseekerDashboardContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'job-seeker') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"applications":[],"savedJobs":[],"timeIn":null,"timeOut":null}');
+            const data = JSON.parse(storage.getItem(key) || '{"applications":[],"savedJobs":[],"resume":null}');
             const applications = data.applications || [];
             const savedJobs = data.savedJobs || [];
+            const resume = data.resume || {};
             const allJobs = getAllJobs();
             const appliedJobIds = applications.map(a => a.jobId);
             const recommendedJobs = allJobs.filter(j => !appliedJobIds.includes(j.id) && j.status === 'active').slice(0, 3);
@@ -4574,6 +4977,17 @@
                 'rejected': '❌ Rejected'
             };
 
+            // Resume data
+            const resumeName = resume.name || currentUser.name || '';
+            const resumeEmail = resume.email || currentUser.email || '';
+            const resumePhone = resume.phone || '';
+            const resumeLocation = resume.location || '';
+            const resumeSummary = resume.summary || '';
+            const resumeSkills = resume.skills || '';
+            const resumeExperience = resume.experience || '';
+            const resumeEducation = resume.education || '';
+            const resumeCertifications = resume.certifications || '';
+
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
@@ -4587,7 +5001,7 @@
                     </div>
                 </div>
 
-                <!-- Enhanced Stats with Analytics -->
+                <!-- Enhanced Stats -->
                 <div class="dashboard-stats">
                     <div class="dashboard-stat-card"><span class="number">${totalApps}</span><span class="label">📤 Applications</span></div>
                     <div class="dashboard-stat-card"><span class="number">${pending}</span><span class="label">⏳ Pending</span></div>
@@ -4614,6 +5028,77 @@
                     <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
                         <div style="font-size:28px;font-weight:800;color:var(--gray-700);">${savedJobs.length}</div>
                         <div style="font-size:13px;color:var(--gray-500);">⭐ Saved Jobs</div>
+                    </div>
+                </div>
+
+                <!-- RESUME BUILDER SECTION -->
+                <div class="dashboard-card" style="margin-bottom:24px;border:2px solid var(--primary);">
+                    <h3>📄 Resume Builder</h3>
+                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">Build and manage your professional resume. This information will be used when you apply to jobs.</p>
+
+                    <div class="resume-builder">
+                        <!-- Resume Form -->
+                        <div class="resume-form">
+                            <form id="resumeForm" onsubmit="saveResume(event)">
+                                <div class="form-group">
+                                    <label>Full Name *</label>
+                                    <input type="text" id="resumeName" value="${resumeName}" placeholder="Your full name" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Email *</label>
+                                    <input type="email" id="resumeEmail" value="${resumeEmail}" placeholder="your@email.com" required />
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="text" id="resumePhone" value="${resumePhone}" placeholder="+63 912 345 6789" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Location</label>
+                                    <input type="text" id="resumeLocation" value="${resumeLocation}" placeholder="City, Country" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Professional Summary</label>
+                                    <textarea id="resumeSummary" rows="3" placeholder="Brief summary of your professional background...">${resumeSummary}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Skills (comma-separated)</label>
+                                    <input type="text" id="resumeSkills" value="${resumeSkills}" placeholder="Python, React, Project Management, ..." />
+                                </div>
+                                <div class="form-group">
+                                    <label>Work Experience</label>
+                                    <textarea id="resumeExperience" rows="4" placeholder="Company A - Software Engineer (2020-2024)&#10;• Developed features for X&#10;• Led team of 5&#10;&#10;Company B - Junior Developer (2018-2020)&#10;• Built Y application">${resumeExperience}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Education</label>
+                                    <textarea id="resumeEducation" rows="3" placeholder="University of XYZ - BS Computer Science (2014-2018)&#10;• GPA: 3.8">${resumeEducation}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Certifications</label>
+                                    <textarea id="resumeCertifications" rows="2" placeholder="AWS Certified, Google Analytics, ...">${resumeCertifications}</textarea>
+                                </div>
+                                <button type="submit" class="btn-primary" style="width:100%;padding:12px;">💾 Save Resume</button>
+                            </form>
+                        </div>
+
+                        <!-- Resume Preview -->
+                        <div class="resume-preview">
+                            <h4 style="margin-bottom:12px;font-size:14px;color:var(--gray-500);">📄 Resume Preview</h4>
+                            <div id="resumePreviewContent">
+                                ${resumeName ? `
+                                    <div class="preview-name">${resumeName}</div>
+                                    <div class="preview-contact">${resumeEmail}${resumePhone ? ` • ${resumePhone}` : ''}${resumeLocation ? ` • ${resumeLocation}` : ''}</div>
+                                    ${resumeSummary ? `<div class="preview-section"><h4>Summary</h4><p>${resumeSummary}</p></div>` : ''}
+                                    ${resumeSkills ? `<div class="preview-section"><h4>Skills</h4><p>${resumeSkills.split(',').map(s => s.trim()).join(' • ')}</p></div>` : ''}
+                                    ${resumeExperience ? `<div class="preview-section"><h4>Experience</h4><pre style="white-space:pre-wrap;font-size:13px;font-family:inherit;color:var(--gray-600);margin:0;">${resumeExperience}</pre></div>` : ''}
+                                    ${resumeEducation ? `<div class="preview-section"><h4>Education</h4><pre style="white-space:pre-wrap;font-size:13px;font-family:inherit;color:var(--gray-600);margin:0;">${resumeEducation}</pre></div>` : ''}
+                                    ${resumeCertifications ? `<div class="preview-section"><h4>Certifications</h4><pre style="white-space:pre-wrap;font-size:13px;font-family:inherit;color:var(--gray-600);margin:0;">${resumeCertifications}</pre></div>` : ''}
+                                ` : `<div class="empty-state" style="padding:20px 0;"><p>No resume data yet. Fill out the form and click "Save Resume".</p></div>`}
+                            </div>
+                            ${resumeName ? `<div style="margin-top:16px;border-top:1px solid var(--gray-200);padding-top:12px;display:flex;gap:12px;">
+                                <button class="btn-secondary btn-sm" onclick="exportResume()">📥 Export PDF</button>
+                                <button class="btn-secondary btn-sm" onclick="clearResume()">🗑️ Clear Resume</button>
+                            </div>` : ''}
+                        </div>
                     </div>
                 </div>
 
@@ -4659,7 +5144,7 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions Section -->
+                <!-- Quick Actions -->
                 <div class="dashboard-card" style="margin-top:24px;background:var(--primary-light);border:2px solid var(--primary);">
                     <h3>⚡ Quick Actions</h3>
                     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
@@ -4690,17 +5175,107 @@
         }
 
         // ============================================================
+        // RESUME FUNCTIONS
+        // ============================================================
+        function saveResume(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('resumeName').value.trim();
+            const email = document.getElementById('resumeEmail').value.trim();
+            const phone = document.getElementById('resumePhone').value.trim();
+            const location = document.getElementById('resumeLocation').value.trim();
+            const summary = document.getElementById('resumeSummary').value.trim();
+            const skills = document.getElementById('resumeSkills').value.trim();
+            const experience = document.getElementById('resumeExperience').value.trim();
+            const education = document.getElementById('resumeEducation').value.trim();
+            const certifications = document.getElementById('resumeCertifications').value.trim();
+
+            if (!name || !email) {
+                showNotification('Name and Email are required.', 'error');
+                return;
+            }
+
+            const resume = { name, email, phone, location, summary, skills, experience, education, certifications };
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const storage = getStorage();
+            const data = JSON.parse(storage.getItem(key) || '{"resume":null}');
+            data.resume = resume;
+            storage.setItem(key, JSON.stringify(data));
+
+            showNotification('✅ Resume saved successfully!', 'success');
+            renderJobSeekerDashboard();
+        }
+
+        function exportResume() {
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const storage = getStorage();
+            const data = JSON.parse(storage.getItem(key) || '{"resume":null}');
+            const resume = data.resume || {};
+
+            if (!resume.name) {
+                showNotification('No resume data to export.', 'warning');
+                return;
+            }
+
+            // Generate a simple text resume
+            let text = '';
+            text += `${resume.name}\n`;
+            text += `${resume.email}${resume.phone ? ` | ${resume.phone}` : ''}${resume.location ? ` | ${resume.location}` : ''}\n`;
+            text += '='.repeat(50) + '\n\n';
+
+            if (resume.summary) {
+                text += `SUMMARY\n${resume.summary}\n\n`;
+            }
+            if (resume.skills) {
+                text += `SKILLS\n${resume.skills.split(',').map(s => `• ${s.trim()}`).join('\n')}\n\n`;
+            }
+            if (resume.experience) {
+                text += `EXPERIENCE\n${resume.experience}\n\n`;
+            }
+            if (resume.education) {
+                text += `EDUCATION\n${resume.education}\n\n`;
+            }
+            if (resume.certifications) {
+                text += `CERTIFICATIONS\n${resume.certifications}\n\n`;
+            }
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `resume_${resume.name.replace(/\s/g, '_')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showNotification('📄 Resume exported as text file!', 'success');
+        }
+
+        function clearResume() {
+            if (!confirm('Clear all resume data?')) return;
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const storage = getStorage();
+            const data = JSON.parse(storage.getItem(key) || '{"resume":null}');
+            data.resume = null;
+            storage.setItem(key, JSON.stringify(data));
+
+            showNotification('🗑️ Resume cleared.', 'info');
+            renderJobSeekerDashboard();
+        }
+
+        // ============================================================
         // JOB SEEKER ADDITIONAL FUNCTIONS
         // ============================================================
 
-        // Add Application Note
         function addApplicationNote(jobId) {
             if (!currentUser) {
                 showNotification('Please login first.', 'warning');
                 return;
             }
 
-            const note = prompt('Add a note about this application (e.g., "Followed up on 3/15", "Had interview on 3/10"):');
+            const note = prompt(
+            'Add a note about this application (e.g., "Followed up on 3/15", "Had interview on 3/10"):');
             if (note === null) return;
             if (!note.trim()) {
                 showNotification('Note cannot be empty.', 'warning');
@@ -4722,7 +5297,6 @@
             }
         }
 
-        // Render Job Seeker Analytics (Detailed Modal)
         function renderJobSeekerAnalytics() {
             if (!currentUser || currentUser.role !== 'job-seeker') {
                 showNotification('Please login as a Job Seeker.', 'warning');
@@ -4746,7 +5320,6 @@
             const interviewRate = total > 0 ? Math.round((interviews / total) * 100) : 0;
             const successRate = total > 0 ? Math.round((hired / total) * 100) : 0;
 
-            // Calculate this week's activity
             const now = new Date();
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             const thisWeek = apps.filter(a => new Date(a.appliedAt) >= weekAgo).length;
@@ -4818,10 +5391,10 @@
 
         function closeAnalyticsModal() {
             const modal = document.getElementById('analyticsModal');
-            if (modal) { modal.remove(); document.body.style.overflow = 'auto'; }
+            if (modal) { modal.remove();
+                document.body.style.overflow = 'auto'; }
         }
 
-        // Export Job Seeker Applications
         function exportJobSeekerApplications() {
             if (!currentUser) {
                 showNotification('Please login first.', 'warning');
@@ -4840,7 +5413,8 @@
 
             let csv = 'Job Title,Company,Status,Applied Date,Notes\n';
             applications.forEach(app => {
-                csv += `"${app.jobTitle || ''}","${app.company || ''}","${app.status || 'pending'}","${new Date(app.appliedAt).toLocaleDateString('en-PH')}","${app.notes || ''}"\n`;
+                csv +=
+                    `"${app.jobTitle || ''}","${app.company || ''}","${app.status || 'pending'}","${new Date(app.appliedAt).toLocaleDateString('en-PH')}","${app.notes || ''}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -4861,7 +5435,8 @@
             const container = document.getElementById('managerDashboardContent');
             if (!container) return;
             if (!currentUser || !['owner', 'manager'].includes(currentUser.role)) {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -4906,7 +5481,8 @@
             const container = document.getElementById('partnerDashboardContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'business-partner') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -4946,7 +5522,8 @@
             if (!codeElement) return;
             const code = codeElement.textContent;
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(code).then(() => showNotification('Referral code copied: ' + code, 'success'));
+                navigator.clipboard.writeText(code).then(() => showNotification('Referral code copied: ' + code,
+                'success'));
             } else {
                 const textArea = document.createElement('textarea');
                 textArea.value = code;
@@ -4965,7 +5542,8 @@
             const container = document.getElementById('employeeDashboardContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'employee') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5071,7 +5649,8 @@
 
         function closeClientProfileModal() {
             const modal = document.getElementById('clientProfileModal');
-            if (modal) { modal.remove(); document.body.style.overflow = 'auto'; }
+            if (modal) { modal.remove();
+                document.body.style.overflow = 'auto'; }
         }
 
         function contactClient(email) {
@@ -5087,7 +5666,8 @@
             const container = document.getElementById('ownerAnalyticsContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'owner') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5145,7 +5725,8 @@
         }
 
         function exportAllData() {
-            const data = { users: getUsers(), jobs: getAllJobs(), leads: JSON.parse(getStorage().getItem('apply4me_leads') || '[]'), exportedAt: new Date().toISOString() };
+            const data = { users: getUsers(), jobs: getAllJobs(), leads: JSON.parse(getStorage().getItem(
+                    'apply4me_leads') || '[]'), exportedAt: new Date().toISOString() };
             const json = JSON.stringify(data, null, 2);
             const blob = new Blob([json], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -5172,7 +5753,8 @@
             const container = document.getElementById('managerAnalyticsContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'manager') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5181,7 +5763,8 @@
             const totalApplicants = allJobs.reduce((sum, j) => sum + (j.applicants || 0), 0);
             const totalViews = allJobs.reduce((sum, j) => sum + (j.views || 0), 0);
             const categoryCounts = {};
-            activeJobs.forEach(j => { const cat = j.category || 'Uncategorized'; categoryCounts[cat] = (categoryCounts[cat] || 0) + 1; });
+            activeJobs.forEach(j => { const cat = j.category || 'Uncategorized';
+                categoryCounts[cat] = (categoryCounts[cat] || 0) + 1; });
             const typeCounts = {};
             activeJobs.forEach(j => { typeCounts[j.jobType] = (typeCounts[j.jobType] || 0) + 1; });
 
@@ -5214,9 +5797,10 @@
         function exportAllJobs() {
             const allJobs = getAllJobs();
             if (allJobs.length === 0) { showNotification('No jobs to export.', 'warning'); return; }
-            let csv = 'Title,Company,Type,Category,Salary Min,Salary Max,Applicants,Views,Status,Posted Date\n';
+            let csv = 'Title,Company,Type,Category,Salary Min,Salary Max,Applicants,Views,Status,Posted Date,Harvested,URL\n';
             allJobs.forEach(job => {
-                csv += `"${job.title}","${job.company}","${job.jobType}","${job.category || ''}","${job.salaryMin || ''}","${job.salaryMax || ''}","${job.applicants || 0}","${job.views || 0}","${job.status || 'active'}","${new Date(job.postedAt).toLocaleDateString('en-PH')}"\n`;
+                csv +=
+                    `"${job.title}","${job.company}","${job.jobType}","${job.category || ''}","${job.salaryMin || ''}","${job.salaryMax || ''}","${job.applicants || 0}","${job.views || 0}","${job.status || 'active'}","${new Date(job.postedAt).toLocaleDateString('en-PH')}",${job.harvested ? 'Yes' : 'No'},"${job.url || ''}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -5258,7 +5842,8 @@
             const container = document.getElementById('partnerReferralContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'business-partner') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5307,7 +5892,8 @@
             const container = document.getElementById('employerApplicantContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'employer') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5413,14 +5999,16 @@
 
         function closeApplicantModal() {
             const modal = document.getElementById('applicantModal');
-            if (modal) { modal.remove(); document.body.style.overflow = 'auto'; }
+            if (modal) { modal.remove();
+                document.body.style.overflow = 'auto'; }
         }
 
         function updateApplicantStatus(jobId, applicantId, appliedAt, status) {
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
             const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"applicants":[]}');
-            const applicant = data.applicants.find(a => a.jobId === jobId && a.name === applicantId && a.appliedAt === appliedAt);
+            const applicant = data.applicants.find(a => a.jobId === jobId && a.name === applicantId && a.appliedAt ===
+                appliedAt);
             if (applicant) {
                 applicant.status = status;
                 storage.setItem(key, JSON.stringify(data));
@@ -5437,7 +6025,8 @@
             if (applicants.length === 0) { showNotification('No applicants to export.', 'warning'); return; }
             let csv = 'Name,Email,Job Title,Status,Applied Date\n';
             applicants.forEach(app => {
-                csv += `"${app.name || 'Anonymous'}","${app.email || ''}","${app.jobTitle || ''}","${app.status || 'pending'}","${new Date(app.appliedAt).toLocaleDateString('en-PH')}"\n`;
+                csv +=
+                    `"${app.name || 'Anonymous'}","${app.email || ''}","${app.jobTitle || ''}","${app.status || 'pending'}","${new Date(app.appliedAt).toLocaleDateString('en-PH')}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -5456,7 +6045,8 @@
             const container = document.getElementById('employeeApplicationTracker');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'employee') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML =
+                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5525,7 +6115,8 @@
 
         function closeInterviewModal() {
             const modal = document.getElementById('interviewModal');
-            if (modal) { modal.remove(); document.body.style.overflow = 'auto'; }
+            if (modal) { modal.remove();
+                document.body.style.overflow = 'auto'; }
         }
 
         function saveInterview(event, jobId) {
@@ -5562,7 +6153,8 @@
             const planDisplay = document.getElementById('apply4meSelectedPlan');
             const planName = document.getElementById('apply4mePlanName');
             if (plan && planDisplay) {
-                const planNames = { 'starter': 'Starter (₱5,350/mo)', 'pro': 'Pro (₱10,850/mo) — Best Value', 'executive': 'Executive (₱21,900/mo)' };
+                const planNames = { 'starter': 'Starter (₱5,350/mo)', 'pro': 'Pro (₱10,850/mo) — Best Value',
+                    'executive': 'Executive (₱21,900/mo)' };
                 planName.textContent = planNames[plan] || 'Pro';
                 planDisplay.style.display = 'block';
                 const planSelect = document.getElementById('apply4mePlan');
@@ -5575,7 +6167,8 @@
             const uploadName = document.getElementById('apply4meResumeName');
             const preview = document.getElementById('parsedDataPreview');
             if (uploadWrapper) uploadWrapper.classList.remove('has-file');
-            if (uploadName) { uploadName.classList.remove('visible'); uploadName.textContent = ''; }
+            if (uploadName) { uploadName.classList.remove('visible');
+                uploadName.textContent = ''; }
             if (preview) preview.style.display = 'none';
 
             modal.classList.add('active');
@@ -5608,8 +6201,14 @@
             if (!resumeFile) { showNotification('Please upload your resume.', 'error'); return; }
 
             const leadData = {
-                name, email, phone, role, message, plan,
-                planName: document.getElementById('apply4mePlan')?.options[document.getElementById('apply4mePlan')?.selectedIndex]?.text || plan,
+                name,
+                email,
+                phone,
+                role,
+                message,
+                plan,
+                planName: document.getElementById('apply4mePlan')?.options[document.getElementById('apply4mePlan')
+                    ?.selectedIndex]?.text || plan,
                 portfolio: portfolio || null,
                 linkedin: linkedin || null,
                 resume: { name: resumeFile.name, size: resumeFile.size, type: resumeFile.type },
@@ -5636,7 +6235,10 @@
             apply4meResumeInput.addEventListener('change', function() {
                 const file = this.files[0];
                 if (file) {
-                    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+                    const validTypes = ['application/pdf', 'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'text/plain'
+                    ];
                     if (!validTypes.includes(file.type) && !file.name.endsWith('.txt')) {
                         showNotification('Please upload a PDF, DOC, DOCX, or TXT file.', 'error');
                         this.value = '';
@@ -5650,18 +6252,22 @@
                     let fileSize = (file.size / 1024).toFixed(1) + ' KB';
                     if (file.size > 1024 * 1024) fileSize = (file.size / 1024 / 1024).toFixed(1) + ' MB';
                     if (wrapper) wrapper.classList.add('has-file');
-                    if (nameDisplay) { nameDisplay.textContent = '✓ ' + file.name + ' (' + fileSize + ')'; nameDisplay.classList.add('visible'); }
+                    if (nameDisplay) { nameDisplay.textContent = '✓ ' + file.name + ' (' + fileSize + ')';
+                        nameDisplay.classList.add('visible'); }
                     parseResume(file);
                 } else {
                     if (wrapper) wrapper.classList.remove('has-file');
-                    if (nameDisplay) { nameDisplay.classList.remove('visible'); nameDisplay.textContent = ''; }
+                    if (nameDisplay) { nameDisplay.classList.remove('visible');
+                        nameDisplay.textContent = ''; }
                     const preview = document.getElementById('parsedDataPreview');
                     if (preview) preview.style.display = 'none';
                 }
             });
             if (wrapper) {
-                wrapper.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('dragover'); });
-                wrapper.addEventListener('dragleave', function(e) { e.preventDefault(); this.classList.remove('dragover'); });
+                wrapper.addEventListener('dragover', function(e) { e.preventDefault();
+                    this.classList.add('dragover'); });
+                wrapper.addEventListener('dragleave', function(e) { e.preventDefault();
+                    this.classList.remove('dragover'); });
                 wrapper.addEventListener('drop', function(e) {
                     e.preventDefault();
                     this.classList.remove('dragover');
@@ -5678,19 +6284,24 @@
             const statusDiv = document.getElementById('parseStatus');
             const previewDiv = document.getElementById('parsedDataPreview');
             const contentDiv = document.getElementById('parsedDataContent');
-            if (statusDiv) { statusDiv.style.display = 'block'; statusDiv.textContent = '🔄 Parsing resume...'; }
+            if (statusDiv) { statusDiv.style.display = 'block';
+                statusDiv.textContent = '🔄 Parsing resume...'; }
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
                 const parsedData = extractInfoFromText(text);
-                if (parsedData.name && document.getElementById('apply4meName')) document.getElementById('apply4meName').value = parsedData.name;
-                if (parsedData.email && document.getElementById('apply4meEmail')) document.getElementById('apply4meEmail').value = parsedData.email;
-                if (parsedData.phone && document.getElementById('apply4mePhone')) document.getElementById('apply4mePhone').value = parsedData.phone;
+                if (parsedData.name && document.getElementById('apply4meName')) document.getElementById('apply4meName')
+                    .value = parsedData.name;
+                if (parsedData.email && document.getElementById('apply4meEmail')) document.getElementById('apply4meEmail')
+                    .value = parsedData.email;
+                if (parsedData.phone && document.getElementById('apply4mePhone')) document.getElementById('apply4mePhone')
+                    .value = parsedData.phone;
                 if (parsedData.role && document.getElementById('apply4meRole')) {
                     const roleSelect = document.getElementById('apply4meRole');
                     const options = roleSelect.options;
                     for (let i = 0; i < options.length; i++) {
-                        if (options[i].value.toLowerCase().includes(parsedData.role.toLowerCase()) || parsedData.role.toLowerCase().includes(options[i].value.toLowerCase())) {
+                        if (options[i].value.toLowerCase().includes(parsedData.role.toLowerCase()) || parsedData
+                            .role.toLowerCase().includes(options[i].value.toLowerCase())) {
                             roleSelect.value = options[i].value;
                             break;
                         }
@@ -5704,7 +6315,8 @@
                     if (parsedData.email) previewHtml += `<div><strong>Email:</strong> ${parsedData.email}</div>`;
                     if (parsedData.phone) previewHtml += `<div><strong>Phone:</strong> ${parsedData.phone}</div>`;
                     if (parsedData.role) previewHtml += `<div><strong>Detected Role:</strong> ${parsedData.role}</div>`;
-                    if (parsedData.skills && parsedData.skills.length > 0) previewHtml += `<div><strong>Skills:</strong> ${parsedData.skills.slice(0, 5).join(', ')}</div>`;
+                    if (parsedData.skills && parsedData.skills.length > 0) previewHtml +=
+                        `<div><strong>Skills:</strong> ${parsedData.skills.slice(0, 5).join(', ')}</div>`;
                     contentDiv.innerHTML = previewHtml;
                 }
             };
@@ -5742,7 +6354,9 @@
                     }
                 }
             }
-            const roleKeywords = ['virtual assistant', 'customer service', 'web developer', 'graphic designer', 'content writer', 'social media manager', 'bookkeeper', 'project manager', 'seo specialist'];
+            const roleKeywords = ['virtual assistant', 'customer service', 'web developer', 'graphic designer',
+                'content writer', 'social media manager', 'bookkeeper', 'project manager', 'seo specialist'
+            ];
             for (const keyword of roleKeywords) {
                 const regex = new RegExp(keyword, 'gi');
                 const match = text.match(regex);
@@ -5807,8 +6421,9 @@
 
         renderJobBoard();
         animateCounters();
-        console.log('🚀 Primespheres — Enhanced Job Seeker features active!');
-        console.log('📊 New features: Application notes, analytics, export, quick actions.');
+        console.log('🚀 Primespheres — Complete system with Resume Builder + Job Detail + Direct Apply!');
+        console.log('📄 New features: Resume Builder, Job Detail Modal, Direct Apply to Company URLs');
+        console.log('🌾 Harvested jobs now show "🌾 Harvested" badge and redirect to company site on Apply.');
     </script>
 </body>
 </html>
