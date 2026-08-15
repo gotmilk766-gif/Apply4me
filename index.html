@@ -3196,7 +3196,7 @@
     </footer>
 
     <!-- ============================================================
-    JAVASCRIPT — COMPLETE SYSTEM + SCRAPER BACK
+    JAVASCRIPT — COMPLETE SYSTEM + FIXED SCRAPER (captures individual job URLs)
     ============================================================ -->
     <script>
         // ============================================================
@@ -4798,7 +4798,7 @@
 
         // ============================================================
         // ═══════════════════════════════════════════════════════════════
-        // 🕷️ SCRAPER ENGINE — BACK IN FULL
+        // 🕷️ SCRAPER ENGINE — FIXED to capture individual job URLs
         // ═══════════════════════════════════════════════════════════════
         // ============================================================
 
@@ -4871,7 +4871,7 @@
                     title: j.text || 'Untitled Job',
                     company: token,
                     description: (j.descriptionPlain || j.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
-                    .trim().substring(0, 500),
+                        .trim().substring(0, 500),
                     location: j.categories?.location || '',
                     salary: '',
                     jobType: j.categories?.commitment || 'Remote',
@@ -4950,7 +4950,10 @@
                 }
 
                 scrapedJobs.forEach(job => {
-                    job.sourceUrl = url;
+                    // Preserve the applyUrl if it exists, otherwise use the sourceUrl
+                    if (!job.applyUrl && job.sourceUrl) {
+                        job.applyUrl = job.sourceUrl;
+                    }
                     job.scrapedAt = new Date().toISOString();
                 });
 
@@ -5004,7 +5007,57 @@
                 }
 
                 scrapedJobs.forEach(job => {
-                    job.sourceUrl = 'pasted-html';
+                    if (!job.applyUrl && job.sourceUrl) {
+                        job.applyUrl = job.sourceUrl;
+                    }
+                    job.scrapedAt = new Date().toISOString();
+                });
+
+                showNotification(`✅ Found ${scrapedJobs.length} job listings!`, 'success');
+                updateScraperUI('results');
+
+            } catch (error) {
+                console.error('Scraper error:', error);
+                showNotification('❌ Scraper error: ' + error.message, 'error');
+                updateScraperUI('error');
+            } finally {
+                scraperRunning = false;
+            }
+        }
+
+        function scrapePastedJSON() {
+            const textarea = document.getElementById('scraperJsonInput');
+            const jsonText = textarea?.value?.trim();
+
+            if (!jsonText || jsonText.length < 10) {
+                showNotification('Please paste a JSON response (at least 10 characters).', 'warning');
+                return;
+            }
+
+            if (scraperRunning) {
+                showNotification('Scraper is already running. Please wait.', 'warning');
+                return;
+            }
+
+            scrapedJobs = [];
+            scraperRunning = true;
+            updateScraperUI('loading');
+
+            try {
+                let data;
+                try { data = JSON.parse(jsonText); } catch (e) { throw new Error('Invalid JSON format.'); }
+
+                const jobs = extractJobsFromJSON(data);
+
+                if (jobs.length === 0) {
+                    throw new Error('No job listings found in the JSON data.');
+                }
+
+                scrapedJobs = jobs;
+                scrapedJobs.forEach(job => {
+                    if (!job.applyUrl && job.sourceUrl) {
+                        job.applyUrl = job.sourceUrl;
+                    }
                     job.scrapedAt = new Date().toISOString();
                 });
 
@@ -5088,20 +5141,29 @@
                 salary: item.salary?.value?.value || item.baseSalary?.value?.value || item.salary || '',
                 jobType: item.employmentType || item.jobType || 'Remote',
                 postedAt: item.datePosted || item.postedDate || new Date().toISOString(),
-                source: 'JSON-LD'
+                source: 'JSON-LD',
+                applyUrl: item.url || item.absoluteUrl || item.jobLocation?.url || ''
             };
         }
 
+        /**
+         * ═══════════════════════════════════════════════════════════════
+         * FIXED: Extract individual job URLs from job cards
+         * ═══════════════════════════════════════════════════════════════
+         */
         function extractJobCards(html) {
             const jobs = [];
             const doc = document.createElement('div');
             doc.innerHTML = html;
 
+            // Look for common job card selectors
             const selectors = [
                 '.job-card', '.job-listing', '.job-item', '.job-post', '.job',
                 '.vacancy', '.career-item', '.opportunity', '.position',
                 '[data-job]', '[data-position]', '[role="article"]',
-                '.listing-item', '.job-result', '.search-result'
+                '.listing-item', '.job-result', '.search-result',
+                '.job-result-item', '.job-list-item', '.job-posting',
+                '.job-offer', '.job-ad'
             ];
 
             selectors.forEach(selector => {
@@ -5114,16 +5176,47 @@
                 });
             });
 
-            return jobs;
+            // Also look for any link that contains "/job/" or "/position/" or "/careers/"
+            // This catches jobs that aren't in standard card containers
+            const jobLinks = doc.querySelectorAll('a[href*="/job/"], a[href*="/position/"], a[href*="/careers/"], a[href*="/requisition/"]');
+            jobLinks.forEach(link => {
+                const parent = link.closest('div, li, article, section');
+                if (parent) {
+                    // Check if this parent already has a job extracted
+                    const alreadyExtracted = jobs.some(j => j.title && parent.textContent.includes(j.title) && j
+                        .company && parent.textContent.includes(j.company));
+                    if (!alreadyExtracted) {
+                        const job = extractJobFromElement(parent);
+                        if (job.title) {
+                            jobs.push(job);
+                        }
+                    }
+                }
+            });
+
+            // Deduplicate by URL if available
+            const seenUrls = new Set();
+            return jobs.filter(job => {
+                if (job.applyUrl) {
+                    if (seenUrls.has(job.applyUrl)) return false;
+                    seenUrls.add(job.applyUrl);
+                }
+                return true;
+            });
         }
 
+        /**
+         * ═══════════════════════════════════════════════════════════════
+         * FIXED: Extract job from a DOM element — now captures the job URL
+         * ═══════════════════════════════════════════════════════════════
+         */
         function extractJobFromElement(el) {
             const text = el.textContent || '';
             const html = el.innerHTML || '';
 
             let title = '';
-            const titleSelectors = ['h1', 'h2', 'h3', 'h4', '.title', '.job-title', '.position-title', '[data-title]',
-                '.heading'
+            const titleSelectors = ['h1', 'h2', 'h3', 'h4', 'h5', '.title', '.job-title', '.position-title', '[data-title]',
+                '.heading', '.name', '.role', '.job-name', '.position-name'
             ];
             for (const sel of titleSelectors) {
                 const found = el.querySelector(sel);
@@ -5140,7 +5233,9 @@
             }
 
             let company = '';
-            const companySelectors = ['.company', '.employer', '.org', '.organization', '[data-company]', '.business'];
+            const companySelectors = ['.company', '.employer', '.org', '.organization', '[data-company]', '.business',
+                '.agency', '.hiring-company', '.department'
+            ];
             for (const sel of companySelectors) {
                 const found = el.querySelector(sel);
                 if (found) {
@@ -5151,12 +5246,17 @@
             if (!company) {
                 const lines = text.split('\n').filter(l => l.trim().length > 2);
                 if (lines.length > 1) {
-                    company = lines[1].trim();
+                    const secondLine = lines[1].trim();
+                    if (secondLine.length < 50 && !/^[0-9]/.test(secondLine)) {
+                        company = secondLine;
+                    }
                 }
             }
 
             let description = '';
-            const descSelectors = ['.description', '.details', '.summary', '.overview', '.info', '.content'];
+            const descSelectors = ['.description', '.details', '.summary', '.overview', '.info', '.content', '.text',
+                '.body', '.job-description'
+            ];
             for (const sel of descSelectors) {
                 const found = el.querySelector(sel);
                 if (found) {
@@ -5169,7 +5269,9 @@
             }
 
             let location = '';
-            const locSelectors = ['.location', '.place', '.address', '[data-location]', '.city', '.country'];
+            const locSelectors = ['.location', '.place', '.address', '[data-location]', '.city', '.country', '.region',
+                '.job-location'
+            ];
             for (const sel of locSelectors) {
                 const found = el.querySelector(sel);
                 if (found) {
@@ -5178,14 +5280,18 @@
                 }
             }
             if (!location) {
-                const locMatch = text.match(/(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia)/i);
+                const locMatch = text.match(
+                    /(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia|NCR|Metro Manila|Quezon City|Makati|Taguig|Pasig|Mandaluyong|San Juan|Caloocan|Valenzuela|Navotas|Malabon|Marikina|Pasay|Parañaque|Las Piñas|Muntinlupa|Pateros)/
+                    i);
                 if (locMatch) {
                     location = locMatch[0];
                 }
             }
 
             let salary = '';
-            const salarySelectors = ['.salary', '.pay', '.compensation', '.rate', '[data-salary]'];
+            const salarySelectors = ['.salary', '.pay', '.compensation', '.rate', '[data-salary]', '.remuneration',
+                '.wage'
+            ];
             for (const sel of salarySelectors) {
                 const found = el.querySelector(sel);
                 if (found) {
@@ -5194,18 +5300,79 @@
                 }
             }
             if (!salary) {
-                const salMatch = text.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to)\s*[₱$€£]?\s*[\d,]+/);
+                const salMatch = text.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to|–)\s*[₱$€£]?\s*[\d,]+/);
                 if (salMatch) {
                     salary = salMatch[0];
                 }
             }
 
-            title = title.replace(/^\d+\.\s*/, '').replace(/^[•\-*]\s*/, '').trim();
-            company = company.replace(/^[•\-*]\s*/, '').trim();
-            description = description.replace(/\s+/g, ' ').trim();
-            location = location.replace(/^[•\-*]\s*/, '').trim();
-            salary = salary.replace(/^[•\-*]\s*/, '').trim();
+            /**
+             * ═══════════════════════════════════════════════════════════════
+             * CRITICAL FIX: Extract the individual job URL
+             * ═══════════════════════════════════════════════════════════════
+             */
+            let applyUrl = '';
+            // Look for an <a> tag inside the job element that points to a job detail page
+            const linkSelectors = [
+                'a[href*="/job/"]',
+                'a[href*="/position/"]',
+                'a[href*="/careers/"]',
+                'a[href*="/requisition/"]',
+                'a[href*="/posting/"]',
+                'a[href*="/opportunity/"]',
+                'a[href*="/apply/"]',
+                'a[href*="/candidate/"]',
+                'a[href*="/vacancy/"]'
+            ];
 
+            for (const sel of linkSelectors) {
+                const linkEl = el.querySelector(sel);
+                if (linkEl) {
+                    let href = linkEl.getAttribute('href');
+                    if (href) {
+                        // If it's a relative URL, make it absolute using the current page's base URL
+                        if (href.startsWith('/')) {
+                            // Use the base URL from the page (e.g., https://www.jobs.abbott)
+                            // We'll store it as relative and fix it later when importing
+                            applyUrl = href;
+                        } else if (href.startsWith('http://') || href.startsWith('https://')) {
+                            applyUrl = href;
+                        } else {
+                            // Might be a relative path without leading slash
+                            applyUrl = '/' + href;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // If no job-specific link found, look for any link inside the element that's not a generic nav link
+            if (!applyUrl) {
+                const allLinks = el.querySelectorAll('a');
+                for (const link of allLinks) {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !href.includes('login') &&
+                        !href.includes('signup') && !href.includes('register')) {
+                        if (href.includes('/') && href.length > 3) {
+                            if (href.startsWith('/')) {
+                                applyUrl = href;
+                            } else if (href.startsWith('http://') || href.startsWith('https://')) {
+                                applyUrl = href;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Clean up
+            title = title.replace(/^\d+\.\s*/, '').replace(/^[•\-*▶◆■]\s*/, '').trim();
+            company = company.replace(/^[•\-*▶◆■]\s*/, '').trim();
+            description = description.replace(/\s+/g, ' ').trim();
+            location = location.replace(/^[•\-*▶◆■]\s*/, '').trim();
+            salary = salary.replace(/^[•\-*▶◆■]\s*/, '').trim();
+
+            // If company is empty but title contains "at Company"
             if (!company && title.includes(' at ')) {
                 const parts = title.split(' at ');
                 title = parts[0].trim();
@@ -5218,6 +5385,13 @@
                     company = parts[1].trim();
                 }
             }
+            if (!company && title.includes(' | ')) {
+                const parts = title.split(' | ');
+                if (parts.length === 2) {
+                    title = parts[0].trim();
+                    company = parts[1].trim();
+                }
+            }
 
             return {
                 title: title || 'Untitled Job',
@@ -5225,9 +5399,20 @@
                 description: description || '',
                 location: location || 'Remote',
                 salary: salary || '',
-                jobType: location && /remote/i.test(location) ? 'Remote' : 'Hybrid',
-                source: 'HTML'
+                jobType: detectJobType(location, ''),
+                source: 'HTML',
+                applyUrl: applyUrl || ''
             };
+        }
+
+        function detectJobType(location, jobType) {
+            if (jobType && jobType.toLowerCase().includes('remote')) return 'Remote';
+            if (location && (location.toLowerCase().includes('remote') || location.toLowerCase().includes('work from home') ||
+                    location.toLowerCase().includes('wfh'))) return 'Remote';
+            if (location && location.toLowerCase().includes('hybrid')) return 'Hybrid';
+            if (location && (location.toLowerCase().includes('on-site') || location.toLowerCase().includes('onsite') ||
+                    location.toLowerCase().includes('in-office'))) return 'On-site';
+            return 'Remote';
         }
 
         function extractJobListItems(html) {
@@ -5241,9 +5426,9 @@
                 items.forEach(li => {
                     const text = li.textContent || '';
                     if (text.length > 20 && text.length < 400) {
-                        const hasJob = /(hiring|job|position|role|career|opportunity|vacancy|apply|now)/i.test(
-                        text);
-                        const hasCompany = /(inc|ltd|corp|co|ph|llc|\.com|@)/i.test(text);
+                        const hasJob = /(hiring|job|position|role|career|opportunity|vacancy|apply|now|open|we'?re|we are)/i
+                            .test(text);
+                        const hasCompany = /(inc|ltd|corp|co|ph|llc|\.com|@|company|agency|firm)/i.test(text);
                         if (hasJob || hasCompany) {
                             const job = extractJobFromElement(li);
                             if (job.title && job.title.length > 2) {
@@ -5264,10 +5449,11 @@
                 .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
 
             const patterns = [
-                /([A-Z][A-Za-z\s]{2,30})\s+(?:at|with|@)\s+([A-Z][A-Za-z\s&]{2,30})/g,
-                /([A-Z][A-Za-z\s&]{2,30})\s+(?:is\s+hiring|hiring\s+a|looking\s+for)\s+([A-Z][A-Za-z\s]{2,30})/g,
-                /([A-Z][A-Za-z\s]{2,30})\s*[-–—]\s*([A-Z][A-Za-z\s&]{2,30})/g,
-                /([A-Z][A-Za-z\s]{2,30})\s*\|\s*([A-Z][A-Za-z\s&]{2,30})/g
+                /([A-Z][A-Za-z\s]{2,40})\s+(?:at|with|@)\s+([A-Z][A-Za-z\s&]{2,40})/g,
+                /([A-Z][A-Za-z\s&]{2,40})\s+(?:is\s+hiring|hiring\s+a|looking\s+for)\s+([A-Z][A-Za-z\s]{2,40})/g,
+                /([A-Z][A-Za-z\s]{2,40})\s*[-–—]\s*([A-Z][A-Za-z\s&]{2,40})/g,
+                /([A-Z][A-Za-z\s]{2,40})\s*\|\s*([A-Z][A-Za-z\s&]{2,40})/g,
+                /([A-Z][A-Za-z\s]{2,40})\s*,\s*([A-Z][A-Za-z\s&]{2,40})/g
             ];
 
             patterns.forEach(pattern => {
@@ -5277,24 +5463,35 @@
                     let company = match[2].trim();
 
                     if (title.length < 3 || company.length < 3) continue;
-                    if (/^(hiring|jobs|careers|positions|opportunities|apply|now)$/i.test(title)) continue;
-                    if (/^(company|inc|corp|ltd|llc)$/i.test(company)) continue;
+                    if (/^(hiring|jobs|careers|positions|opportunities|apply|now|we'?re|we are)$/i.test(title))
+                        continue;
+                    if (/^(company|inc|corp|ltd|llc|ph|co|the|and|of|for)$/i.test(company)) continue;
 
-                    const start = Math.max(0, match.index - 100);
-                    const end = Math.min(clean.length, match.index + match[0].length + 200);
+                    const start = Math.max(0, match.index - 150);
+                    const end = Math.min(clean.length, match.index + match[0].length + 300);
                     const context = clean.substring(start, end);
+
                     let salary = '';
-                    const salMatch = context.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to)\s*[₱$€£]?\s*[\d,]+/);
+                    const salMatch = context.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to|–)\s*[₱$€£]?\s*[\d,]+/);
                     if (salMatch) salary = salMatch[0];
+
+                    let location = '';
+                    const locMatch = context.match(
+                        /(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia|Metro Manila|NCR|Quezon City|Makati|Taguig|Pasig|Mandaluyong|San Juan|Caloocan|Valenzuela|Navotas|Malabon|Marikina|Pasay|Parañaque|Las Piñas|Muntinlupa|Pateros)/
+                        i);
+                    if (locMatch) location = locMatch[0];
+
+                    title = title.replace(/^[•\-*▶◆■]\s*/, '').trim();
 
                     jobs.push({
                         title: title,
                         company: company,
                         description: context.substring(0, 300),
-                        location: /remote|online|work from home/i.test(context) ? 'Remote' : '',
+                        location: location || 'Remote',
                         salary: salary,
-                        jobType: /remote/i.test(context) ? 'Remote' : 'Hybrid',
-                        source: 'regex'
+                        jobType: detectJobType(location, ''),
+                        source: 'regex',
+                        applyUrl: ''
                     });
                 }
             });
@@ -5308,6 +5505,78 @@
             });
         }
 
+        function extractJobsFromJSON(data) {
+            const jobs = [];
+            const jsonJobs = extractJobsFromObject(data);
+            jsonJobs.forEach(job => {
+                if (job.applyUrl) {
+                    jobs.push(job);
+                } else {
+                    jobs.push({ ...job, applyUrl: job.sourceUrl || '' });
+                }
+            });
+            return jobs;
+        }
+
+        function extractJobsFromObject(obj, depth) {
+            const jobs = [];
+            const maxDepth = depth || 10;
+            if (maxDepth === 0) return jobs;
+
+            const job = tryExtractJob(obj);
+            if (job) jobs.push(job);
+
+            if (Array.isArray(obj)) {
+                obj.forEach(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        jobs.push(...extractJobsFromObject(item, maxDepth - 1));
+                    }
+                });
+            } else if (typeof obj === 'object' && obj !== null) {
+                const keys = ['jobs', 'items', 'data', 'results', 'listings', 'positions', 'postings',
+                    'requisitions', 'vacancies', 'opportunities', 'jobPostings', 'jobListings'
+                ];
+                for (const key of keys) {
+                    if (obj[key]) {
+                        jobs.push(...extractJobsFromObject(obj[key], maxDepth - 1));
+                    }
+                }
+                for (const key in obj) {
+                    if (typeof obj[key] === 'object' && obj[key] !== null) {
+                        jobs.push(...extractJobsFromObject(obj[key], maxDepth - 1));
+                    }
+                }
+            }
+
+            return jobs;
+        }
+
+        function tryExtractJob(obj) {
+            const title = obj.title || obj.name || obj.jobTitle || obj.position || obj.role || obj.headline || '';
+            const company = obj.company || obj.employer || obj.organization || obj.hiringOrganization || obj.business ||
+                obj.agency || '';
+            const description = obj.description || obj.details || obj.summary || obj.overview || obj.about || '';
+            const location = obj.location || obj.place || obj.address || obj.city || obj.country || '';
+            const salary = obj.salary || obj.pay || obj.compensation || obj.rate || '';
+            const jobType = obj.type || obj.jobType || obj.employmentType || obj.workType || '';
+            const applyUrl = obj.url || obj.applyUrl || obj.absolute_url || obj.absoluteUrl || obj.link || obj.hostedUrl ||
+                '';
+
+            if (title && title.toString().length > 2) {
+                return {
+                    title: title.toString().trim(),
+                    company: company.toString().trim() || 'Unknown Company',
+                    description: description.toString().trim(),
+                    location: location.toString().trim() || 'Remote',
+                    salary: salary.toString().trim(),
+                    jobType: jobType.toString().trim() || detectJobType(location, ''),
+                    source: 'JSON',
+                    applyUrl: applyUrl.toString().trim()
+                };
+            }
+            return null;
+        }
+
         function updateScraperUI(state) {
             const progress = document.getElementById('scraperProgress');
             const statusText = document.getElementById('scraperStatusText');
@@ -5316,6 +5585,7 @@
             const resultsList = document.getElementById('scraperResultsList');
             const importBtn = document.getElementById('scraperImportBtn');
             const selectAllBtn = document.getElementById('scraperSelectAllBtn');
+            const suggestionBox = document.getElementById('scraperSuggestionBox');
 
             if (state === 'loading') {
                 if (progress) progress.classList.add('active');
@@ -5323,6 +5593,7 @@
                 if (resultsContainer) resultsContainer.style.display = 'none';
                 if (importBtn) importBtn.disabled = true;
                 if (selectAllBtn) selectAllBtn.disabled = true;
+                if (suggestionBox) suggestionBox.style.display = 'none';
             } else if (state === 'results') {
                 if (progress) progress.classList.remove('active');
                 if (statusText) statusText.textContent = `✅ Found ${scrapedJobs.length} jobs`;
@@ -5336,12 +5607,24 @@
                 if (resultsContainer) resultsContainer.style.display = 'none';
                 if (importBtn) importBtn.disabled = true;
                 if (selectAllBtn) selectAllBtn.disabled = true;
+                if (suggestionBox) {
+                    suggestionBox.style.display = 'block';
+                    suggestionBox.innerHTML =
+                        `
+                        <strong>💡 Troubleshooting</strong>
+                        <p style="margin:4px 0 8px;font-size:14px;">
+                            If you're seeing the same page URL for all jobs, try the <strong>"Paste HTML"</strong> tab instead.
+                            Some sites load job details via JavaScript and the individual links are only in the fully rendered DOM.
+                        </p>
+                    `;
+                }
             } else {
                 if (progress) progress.classList.remove('active');
-                if (statusText) statusText.textContent = 'Enter a URL or paste HTML to start scraping';
+                if (statusText) statusText.textContent = 'Enter a URL or paste HTML/JSON to start scraping';
                 if (resultsContainer) resultsContainer.style.display = 'none';
                 if (importBtn) importBtn.disabled = true;
                 if (selectAllBtn) selectAllBtn.disabled = true;
+                if (suggestionBox) suggestionBox.style.display = 'none';
             }
         }
 
@@ -5376,6 +5659,7 @@
                                 ${job.salary ? `• 💰 ${escapeHtml(job.salary)}` : ''}
                                 ${job.jobType ? `• ${escapeHtml(job.jobType)}` : ''}
                                 ${job.source ? `• 🔍 ${escapeHtml(job.source)}` : ''}
+                                ${job.applyUrl ? `• 🔗 ${escapeHtml(job.applyUrl.substring(0, 40))}${job.applyUrl.length > 40 ? '...' : ''}` : ''}
                             </div>
                             ${job.description ? `<div style="font-size:13px;color:var(--gray-500);margin-top:4px;max-width:500px;">${escapeHtml(job.description.substring(0,120))}${job.description.length > 120 ? '...' : ''}</div>` : ''}
                         </div>
@@ -5430,8 +5714,8 @@
                             ${job.salary ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Salary</span><div>${escapeHtml(job.salary)}</div></div>` : ''}
                             ${job.jobType ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Job Type</span><div>${escapeHtml(job.jobType)}</div></div>` : ''}
                             ${job.description ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Description</span><div style="background:var(--gray-50);padding:12px;border-radius:8px;border:1px solid var(--gray-200);font-size:14px;max-height:200px;overflow-y:auto;">${escapeHtml(job.description)}</div></div>` : ''}
+                            ${job.applyUrl ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Apply URL</span><div style="word-break:break-all;"><a href="${job.applyUrl.startsWith('/') ? window.location.origin + job.applyUrl : job.applyUrl}" target="_blank" style="color:var(--primary);">${escapeHtml(job.applyUrl)}</a></div></div>` : ''}
                             ${job.source ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Source</span><div>${escapeHtml(job.source)}</div></div>` : ''}
-                            ${job.sourceUrl ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Source URL</span><div style="word-break:break-all;"><a href="${job.sourceUrl}" target="_blank" style="color:var(--primary);">${escapeHtml(job.sourceUrl)}</a></div></div>` : ''}
                         </div>
                         <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;">
                             <button class="btn-secondary" onclick="closeScraperPreview()">Close</button>
@@ -5452,7 +5736,9 @@
         }
 
         /**
-         * Import selected scraped jobs to harvested jobs AND publish to board
+         * ═══════════════════════════════════════════════════════════════
+         * FIXED: Import scraped jobs — now uses the individual job URL
+         * ═══════════════════════════════════════════════════════════════
          */
         function importScrapedJobs() {
             if (!currentUser || currentUser.role !== 'harvester') {
@@ -5483,12 +5769,20 @@
             selectedJobs.forEach(job => {
                 if (job.title.length < 3) return;
 
+                // Build the full URL if it's a relative path
+                let jobUrl = job.applyUrl || job.sourceUrl || '';
+                if (jobUrl && jobUrl.startsWith('/')) {
+                    // Use the source URL as the base
+                    const baseUrl = job.sourceUrl ? new URL(job.sourceUrl).origin : window.location.origin;
+                    jobUrl = baseUrl + jobUrl;
+                }
+
                 const jobId = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
                 const harvestedJob = {
                     id: jobId,
                     title: job.title,
                     company: job.company || 'Unknown Company',
-                    url: job.sourceUrl || job.applyUrl || '',
+                    url: jobUrl || job.sourceUrl || '',
                     description: job.description || '',
                     salary: job.salary || '',
                     location: job.location || 'Remote',
@@ -5533,7 +5827,7 @@
 
             localStorage.setItem(key, JSON.stringify(userData));
 
-            showNotification(`✅ Successfully imported ${imported} jobs and published to the job board!`, 'success');
+            showNotification(`✅ Successfully imported ${imported} jobs with correct URLs!`, 'success');
 
             scrapedJobs = [];
             updateScraperUI('idle');
@@ -5544,18 +5838,26 @@
             if (urlInput) urlInput.value = '';
             const htmlInput = document.getElementById('scraperHtmlInput');
             if (htmlInput) htmlInput.value = '';
+            const jsonInput = document.getElementById('scraperJsonInput');
+            if (jsonInput) jsonInput.value = '';
         }
 
         function switchScraperTab(tab) {
             document.querySelectorAll('.scraper-tabs button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tab);
             });
+            const tabMap = {
+                'url': 'scraperTabUrl',
+                'html': 'scraperTabHtml',
+                'json': 'scraperTabJson'
+            };
             document.querySelectorAll('.scraper-panel').forEach(panel => {
-                panel.classList.toggle('active', panel.id === 'scraperTab' + tab.charAt(0).toUpperCase() + tab.slice(
-                1));
+                panel.classList.toggle('active', panel.id === tabMap[tab]);
             });
             scrapedJobs = [];
             updateScraperUI('idle');
+            const suggestionBox = document.getElementById('scraperSuggestionBox');
+            if (suggestionBox) suggestionBox.style.display = 'none';
         }
 
         function escapeHtml(text) {
@@ -5570,7 +5872,7 @@
         // ============================================================
 
         // ============================================================
-        // RENDER HARVESTER DASHBOARD (with scraper back)
+        // RENDER HARVESTER DASHBOARD (with scraper)
         // ============================================================
         function renderHarvesterDashboard() {
             const container = document.getElementById('harvesterDashboardContent');
@@ -5675,7 +5977,7 @@
                     </div>
 
                     <!-- ================================ -->
-                    <!-- 🕷️ SCRAPER SECTION — BACK        -->
+                    <!-- 🕷️ SCRAPER SECTION                -->
                     <!-- ================================ -->
                     <div class="scraper-section">
                         <div class="scraper-header">
@@ -5869,6 +6171,7 @@
                                             <span>🌾 Harvested: ${job.harvestedAt ? new Date(job.harvestedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
                                             ${job.source ? `<span>📌 Source: ${job.source}</span>` : ''}
                                             ${job.updatedAt ? ` • ✏️ Updated: ${new Date(job.updatedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}` : ''}
+                                            ${job.url ? `<span>🔗 ${job.url.length > 50 ? job.url.substring(0, 50) + '...' : job.url}</span>` : ''}
                                         </div>
                                     </div>
                                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -7533,7 +7836,7 @@
         renderJobBoard();
         animateCounters();
 
-        console.log('🚀 Primespheres — Scraper is BACK in the Harvester Dashboard.');
+        console.log('🚀 Primespheres — Scraper fixed: now captures individual job URLs.');
         console.log('🕷️ Scraper Engine: Ready (URL, HTML, JSON tabs)');
         console.log('📋 Features: Animations, Particles, Dark Mode, 7 Roles, Full CRUD, Scraper');
         console.log('👤 Current User:', currentUser);
