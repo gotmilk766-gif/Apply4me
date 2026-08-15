@@ -1946,7 +1946,7 @@
         }
 
         /* ============================================================
-           FOOTER
+           FOOTER — ORIGINAL DESIGN
            ============================================================ */
         footer {
             background: var(--gray-900);
@@ -2021,7 +2021,8 @@
             gap: 12px;
             flex-wrap: wrap;
         }
-        .scraper-input-group input[type="text"] {
+        .scraper-input-group input[type="text"],
+        .scraper-input-group input[type="url"] {
             flex: 1;
             min-width: 250px;
             padding: 12px 16px;
@@ -2032,12 +2033,14 @@
             transition: all var(--transition);
             background: var(--gray-50);
         }
-        body.dark-mode .scraper-input-group input[type="text"] {
+        body.dark-mode .scraper-input-group input[type="text"],
+        body.dark-mode .scraper-input-group input[type="url"] {
             background: var(--gray-700);
             border-color: var(--gray-600);
             color: #f1f5f9;
         }
-        .scraper-input-group input[type="text"]:focus {
+        .scraper-input-group input[type="text"]:focus,
+        .scraper-input-group input[type="url"]:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
@@ -2192,6 +2195,32 @@
             color: var(--gray-500);
         }
 
+        .suggestion-box {
+            background: var(--primary-light);
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-top: 12px;
+            border-left: 4px solid var(--primary);
+            color: var(--gray-700);
+        }
+        body.dark-mode .suggestion-box {
+            background: rgba(26, 86, 219, 0.15);
+            color: #f1f5f9;
+        }
+        .suggestion-box strong {
+            color: var(--primary);
+        }
+        .suggestion-box .api-endpoint {
+            display: block;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
         /* ============================================================
            RESPONSIVE
            ============================================================ */
@@ -2337,7 +2366,8 @@
             .scraper-input-group {
                 flex-direction: column;
             }
-            .scraper-input-group input[type="text"] {
+            .scraper-input-group input[type="text"],
+            .scraper-input-group input[type="url"] {
                 min-width: unset;
             }
             .scraper-job-item {
@@ -2875,12 +2905,7 @@
         <section class="dashboard-page">
             <div class="container">
                 <div id="harvesterDashboardContent">
-                    <div class="access-denied">
-                        <span class="lock-icon">🔒</span>
-                        <h2>Access Denied</h2>
-                        <p>Please login to access your dashboard.</p>
-                        <button class="btn-primary" onclick="showPage('login')">Login</button>
-                    </div>
+                    <!-- Will be rendered by JavaScript -->
                 </div>
             </div>
         </section>
@@ -3171,7 +3196,7 @@
     </footer>
 
     <!-- ============================================================
-    JAVASCRIPT — COMPLETE SYSTEM + SCRAPER
+    JAVASCRIPT — COMPLETE SYSTEM + FIXED SCRAPER URL EXTRACTION
     ============================================================ -->
     <script>
         // ============================================================
@@ -4430,8 +4455,74 @@
         }
 
         // ============================================================
-        // HARVESTER FUNCTIONS
+        // HARVESTER FUNCTIONS — with job board publishing
         // ============================================================
+
+        /**
+         * Helper: Publish a harvested job to the job board (jobs array)
+         */
+        function publishHarvestedJob(jobData) {
+            if (!currentUser) return false;
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const userData = JSON.parse(localStorage.getItem(key) || '{"jobs":[],"harvestedJobs":[]}');
+
+            if (!userData.jobs) userData.jobs = [];
+
+            // Create a job for the board
+            const boardJob = {
+                id: jobData.id, // use same ID as harvested job
+                title: jobData.title,
+                company: jobData.company,
+                description: jobData.description || '',
+                jobType: jobData.jobType || 'Remote',
+                category: 'Other',
+                tags: '',
+                salaryMin: null,
+                salaryMax: null,
+                status: 'active',
+                applicants: 0,
+                views: 0,
+                postedAt: new Date().toISOString(),
+                expiresAt: (() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + 30);
+                    return d.toISOString();
+                })(),
+                postedBy: currentUser.name,
+                postedByEmail: currentUser.email,
+                postedByRole: currentUser.role,
+                harvested: true // flag to identify harvested jobs
+            };
+
+            // Check if job already exists (by id)
+            const existingIndex = userData.jobs.findIndex(j => j.id === jobData.id);
+            if (existingIndex >= 0) {
+                userData.jobs[existingIndex] = boardJob;
+            } else {
+                userData.jobs.unshift(boardJob);
+            }
+
+            localStorage.setItem(key, JSON.stringify(userData));
+            return true;
+        }
+
+        /**
+         * Helper: Remove a harvested job from the job board
+         */
+        function unpublishHarvestedJob(jobId) {
+            if (!currentUser) return;
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const userData = JSON.parse(localStorage.getItem(key) || '{"jobs":[],"harvestedJobs":[]}');
+
+            if (userData.jobs) {
+                userData.jobs = userData.jobs.filter(j => j.id !== jobId);
+                localStorage.setItem(key, JSON.stringify(userData));
+            }
+        }
+
+        // Modified addHarvestedJob
         function addHarvestedJob(event) {
             event.preventDefault();
 
@@ -4456,11 +4547,12 @@
             }
 
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
-            if (!data.harvestedJobs) data.harvestedJobs = [];
+            const userData = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+            if (!userData.harvestedJobs) userData.harvestedJobs = [];
 
-            data.harvestedJobs.unshift({
-                id: Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+            const jobId = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+            const harvestedJob = {
+                id: jobId,
                 title: title,
                 company: company,
                 url: url,
@@ -4471,11 +4563,15 @@
                 status: status,
                 source: source || '',
                 harvestedAt: new Date().toISOString()
-            });
+            };
 
-            localStorage.setItem(key, JSON.stringify(data));
+            userData.harvestedJobs.unshift(harvestedJob);
+            localStorage.setItem(key, JSON.stringify(userData));
 
-            showNotification('🌾 Job harvested successfully!', 'success');
+            // Publish to job board
+            publishHarvestedJob(harvestedJob);
+
+            showNotification('🌾 Job harvested and published to the job board!', 'success');
             document.getElementById('harvestTitle').value = '';
             document.getElementById('harvestCompany').value = '';
             document.getElementById('harvestURL').value = '';
@@ -4484,8 +4580,10 @@
             document.getElementById('harvestLocation').value = '';
             document.getElementById('harvestSource').value = '';
             renderHarvesterDashboard();
+            renderJobBoard(); // refresh job board
         }
 
+        // Modified editHarvestedJob
         function editHarvestedJob(jobId) {
             if (!currentUser || currentUser.role !== 'harvester') {
                 showNotification('Only Harvesters can edit jobs.', 'error');
@@ -4493,8 +4591,8 @@
             }
 
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
-            const job = data.harvestedJobs.find(j => j.id == jobId);
+            const userData = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
+            const job = userData.harvestedJobs.find(j => j.id == jobId);
             if (!job) {
                 showNotification('Job not found.', 'error');
                 return;
@@ -4504,74 +4602,74 @@
             modal.className = 'modal-overlay active';
             modal.id = 'editHarvestModal';
             modal.innerHTML = `
-                    <div class="modal" style="max-width:600px;">
-                        <button class="modal-close" onclick="closeEditHarvestModal()">&times;</button>
-                        <h2>✏️ Edit Harvested Job</h2>
-                        <form id="editHarvestForm" onsubmit="saveHarvestedJob(event, '${jobId}')">
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Title *</label>
-                                    <input type="text" id="editHarvestTitle" value="${job.title}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Company *</label>
-                                    <input type="text" id="editHarvestCompany" value="${job.company}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
-                                </div>
+                <div class="modal" style="max-width:600px;">
+                    <button class="modal-close" onclick="closeEditHarvestModal()">&times;</button>
+                    <h2>✏️ Edit Harvested Job</h2>
+                    <form id="editHarvestForm" onsubmit="saveHarvestedJob(event, '${jobId}')">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Title *</label>
+                                <input type="text" id="editHarvestTitle" value="${job.title}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
                             </div>
-                            <div style="margin-bottom:12px;">
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job URL *</label>
-                                    <input type="url" id="editHarvestURL" value="${job.url}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
-                                </div>
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Company *</label>
+                                <input type="text" id="editHarvestCompany" value="${job.company}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
                             </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Salary</label>
-                                    <input type="text" id="editHarvestSalary" value="${job.salary || ''}" placeholder="e.g., ₱25,000-₱35,000" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Location</label>
-                                    <input type="text" id="editHarvestLocation" value="${job.location || 'Remote'}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
-                                </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job URL *</label>
+                                <input type="url" id="editHarvestURL" value="${job.url}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required />
                             </div>
-                            <div style="margin-bottom:12px;">
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Description (Optional)</label>
-                                    <textarea id="editHarvestDescription" rows="3" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">${job.description || ''}</textarea>
-                                </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Salary</label>
+                                <input type="text" id="editHarvestSalary" value="${job.salary || ''}" placeholder="e.g., ₱25,000-₱35,000" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
                             </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Type</label>
-                                    <select id="editHarvestJobType" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">
-                                        <option value="Remote" ${job.jobType === 'Remote' ? 'selected' : ''}>Remote</option>
-                                        <option value="Hybrid" ${job.jobType === 'Hybrid' ? 'selected' : ''}>Hybrid</option>
-                                        <option value="On-site" ${job.jobType === 'On-site' ? 'selected' : ''}>On-site</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Status</label>
-                                    <select id="editHarvestStatus" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">
-                                        <option value="active" ${job.status === 'active' ? 'selected' : ''}>Active</option>
-                                        <option value="pending" ${job.status === 'pending' ? 'selected' : ''}>Pending Review</option>
-                                        <option value="rejected" ${job.status === 'rejected' ? 'selected' : ''}>Rejected</option>
-                                        <option value="archived" ${job.status === 'archived' ? 'selected' : ''}>Archived</option>
-                                    </select>
-                                </div>
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Location</label>
+                                <input type="text" id="editHarvestLocation" value="${job.location || 'Remote'}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
                             </div>
-                            <div style="margin-bottom:12px;">
-                                <div class="form-group">
-                                    <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Source</label>
-                                    <input type="text" id="editHarvestSource" value="${job.source || ''}" placeholder="e.g., Google Careers" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
-                                </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Description (Optional)</label>
+                                <textarea id="editHarvestDescription" rows="3" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">${job.description || ''}</textarea>
                             </div>
-                            <div style="display:flex;gap:12px;">
-                                <button type="submit" class="btn-primary" style="flex:1;padding:14px;">💾 Save Changes</button>
-                                <button type="button" class="btn-secondary" onclick="closeEditHarvestModal()" style="padding:14px 24px;">Cancel</button>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Type</label>
+                                <select id="editHarvestJobType" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">
+                                    <option value="Remote" ${job.jobType === 'Remote' ? 'selected' : ''}>Remote</option>
+                                    <option value="Hybrid" ${job.jobType === 'Hybrid' ? 'selected' : ''}>Hybrid</option>
+                                    <option value="On-site" ${job.jobType === 'On-site' ? 'selected' : ''}>On-site</option>
+                                </select>
                             </div>
-                        </form>
-                    </div>
-                `;
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Status</label>
+                                <select id="editHarvestStatus" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;">
+                                    <option value="active" ${job.status === 'active' ? 'selected' : ''}>Active</option>
+                                    <option value="pending" ${job.status === 'pending' ? 'selected' : ''}>Pending Review</option>
+                                    <option value="rejected" ${job.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                                    <option value="archived" ${job.status === 'archived' ? 'selected' : ''}>Archived</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Source</label>
+                                <input type="text" id="editHarvestSource" value="${job.source || ''}" placeholder="e.g., Google Careers" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" />
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;">
+                            <button type="submit" class="btn-primary" style="flex:1;padding:14px;">💾 Save Changes</button>
+                            <button type="button" class="btn-secondary" onclick="closeEditHarvestModal()" style="padding:14px 24px;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            `;
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
         }
@@ -4584,6 +4682,7 @@
             }
         }
 
+        // Modified saveHarvestedJob — updates both harvested and board
         function saveHarvestedJob(event, jobId) {
             event.preventDefault();
 
@@ -4603,45 +4702,90 @@
             }
 
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
-            const job = data.harvestedJobs.find(j => j.id == jobId);
-            if (!job) {
+            const userData = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+
+            // Update harvested job
+            const harvestedJob = userData.harvestedJobs.find(j => j.id == jobId);
+            if (!harvestedJob) {
                 showNotification('Job not found.', 'error');
                 return;
             }
+            harvestedJob.title = title;
+            harvestedJob.company = company;
+            harvestedJob.url = url;
+            harvestedJob.description = description;
+            harvestedJob.salary = salary;
+            harvestedJob.location = location || 'Remote';
+            harvestedJob.jobType = jobType;
+            harvestedJob.status = status;
+            harvestedJob.source = source || harvestedJob.source;
+            harvestedJob.updatedAt = new Date().toISOString();
 
-            job.title = title;
-            job.company = company;
-            job.url = url;
-            job.description = description;
-            job.salary = salary;
-            job.location = location || 'Remote';
-            job.jobType = jobType;
-            job.status = status;
-            job.source = source || job.source;
-            job.updatedAt = new Date().toISOString();
+            // Update board job
+            const boardJob = userData.jobs.find(j => j.id === jobId);
+            if (boardJob) {
+                boardJob.title = title;
+                boardJob.company = company;
+                boardJob.description = description;
+                boardJob.jobType = jobType;
+                // other fields remain
+            }
 
-            localStorage.setItem(key, JSON.stringify(data));
+            localStorage.setItem(key, JSON.stringify(userData));
+
             closeEditHarvestModal();
             showNotification('✅ Job updated successfully!', 'success');
             renderHarvesterDashboard();
+            renderJobBoard();
         }
 
+        // Modified deleteHarvestedJob — removes from both
         function deleteHarvestedJob(jobId) {
             if (!currentUser || currentUser.role !== 'harvester') {
                 showNotification('Only Harvesters can delete jobs.', 'error');
                 return;
             }
 
-            if (!confirm('Delete this harvested job?')) return;
+            if (!confirm('Delete this harvested job? It will also be removed from the job board.')) return;
 
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
-            data.harvestedJobs = data.harvestedJobs.filter(j => j.id != jobId);
-            localStorage.setItem(key, JSON.stringify(data));
+            const userData = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+
+            // Remove from harvested
+            userData.harvestedJobs = userData.harvestedJobs.filter(j => j.id !== jobId);
+            // Remove from jobs (board)
+            userData.jobs = userData.jobs.filter(j => j.id !== jobId);
+
+            localStorage.setItem(key, JSON.stringify(userData));
 
             showNotification('Job deleted.', 'info');
             renderHarvesterDashboard();
+            renderJobBoard();
+        }
+
+        // Modified clearAllHarvested — clears harvested and removes only harvested jobs from board
+        function clearAllHarvested() {
+            if (!currentUser || currentUser.role !== 'harvester') {
+                showNotification('Only Harvesters can clear jobs.', 'error');
+                return;
+            }
+
+            if (!confirm('Delete ALL harvested jobs? This will also remove them from the job board.')) return;
+            if (!confirm('Really?')) return;
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const userData = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+
+            // Clear harvested
+            userData.harvestedJobs = [];
+            // Remove only harvested jobs from board (those with harvested: true)
+            userData.jobs = userData.jobs.filter(j => !j.harvested);
+
+            localStorage.setItem(key, JSON.stringify(userData));
+
+            showNotification('🗑️ All harvested jobs cleared from dashboard and board.', 'info');
+            renderHarvesterDashboard();
+            renderJobBoard();
         }
 
         function viewHarvestedJob(url) {
@@ -4654,16 +4798,14 @@
 
         // ============================================================
         // ═══════════════════════════════════════════════════════════════
-        // 🕷️ SCRAPER ENGINE — Pull live jobs from any URL
+        // 🕷️ SCRAPER ENGINE — FIXED URL EXTRACTION
         // ═══════════════════════════════════════════════════════════════
         // ============================================================
 
         let scrapedJobs = [];
         let scraperRunning = false;
 
-        // Multiple CORS proxies tried in order — if one is down or rate-limited,
-        // the next is tried automatically. This is what makes URL scraping "universal"
-        // instead of depending on a single flaky free service.
+        // Multiple CORS proxies tried in order
         const CORS_PROXIES = [
             url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
             url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -4671,11 +4813,6 @@
             url => `https://thingproxy.freeboard.io/fetch/${url}`
         ];
 
-        /**
-         * Fetch a URL's HTML, trying multiple CORS proxies in order until one works.
-         * Each attempt times out after 15s so a dead proxy can't hang the scraper.
-         * Throws a descriptive error only if every proxy fails.
-         */
         async function fetchHTMLWithFallback(url, onStatus) {
             const errors = [];
             for (let i = 0; i < CORS_PROXIES.length; i++) {
@@ -4704,14 +4841,7 @@
                 '. The target site may be blocking automated access, or try "Paste HTML" instead.');
         }
 
-        /**
-         * Detect and fetch jobs directly from known ATS JSON APIs (Greenhouse, Lever).
-         * These APIs allow cross-origin requests and are far more reliable/complete
-         * than scraping rendered HTML through a proxy. Returns null if the URL
-         * doesn't match a recognized ATS pattern, so the caller can fall back to HTML scraping.
-         */
         async function tryATSDirectAPI(url) {
-            // Greenhouse: boards.greenhouse.io/COMPANY or job-boards.greenhouse.io/COMPANY
             let m = url.match(/greenhouse\.io\/([a-zA-Z0-9_-]+)/i);
             if (m) {
                 const token = m[1];
@@ -4731,7 +4861,6 @@
                 }));
             }
 
-            // Lever: jobs.lever.co/COMPANY
             m = url.match(/jobs\.lever\.co\/([a-zA-Z0-9_-]+)/i);
             if (m) {
                 const token = m[1];
@@ -4741,7 +4870,8 @@
                 return (data || []).map(j => ({
                     title: j.text || 'Untitled Job',
                     company: token,
-                    description: (j.descriptionPlain || j.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 500),
+                    description: (j.descriptionPlain || j.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+                    .trim().substring(0, 500),
                     location: j.categories?.location || '',
                     salary: '',
                     jobType: j.categories?.commitment || 'Remote',
@@ -4751,14 +4881,9 @@
                 }));
             }
 
-            return null; // not a recognized ATS — caller falls back to generic HTML scraping
+            return null;
         }
 
-        /**
-         * Main scraper function — fetches a URL and extracts job listings.
-         * Tries, in order: (1) a direct ATS API if recognized, (2) HTML scraping
-         * via a chain of CORS proxies with automatic fallback.
-         */
         async function scrapeJobsFromURL() {
             const input = document.getElementById('scraperUrlInput');
             const url = input?.value?.trim();
@@ -4784,14 +4909,11 @@
                 return;
             }
 
-            // Reset state
             scrapedJobs = [];
             scraperRunning = true;
             updateScraperUI('loading');
 
             try {
-                // Step 1: try a direct ATS API if this looks like a Greenhouse/Lever board —
-                // faster, more complete, and doesn't depend on a CORS proxy at all.
                 let atsJobs = null;
                 try {
                     atsJobs = await tryATSDirectAPI(url);
@@ -4802,7 +4924,6 @@
                 if (atsJobs && atsJobs.length > 0) {
                     scrapedJobs = atsJobs;
                 } else {
-                    // Step 2: generic HTML scraping via the CORS proxy fallback chain
                     const html = await fetchHTMLWithFallback(url, msg => showNotification(msg, 'info'));
 
                     showNotification('🔍 Parsing job listings...', 'info');
@@ -4810,12 +4931,10 @@
                     const extracted = extractJobsFromHTML(html, url);
 
                     if (extracted.length === 0) {
-                        // Try alternative: look for JSON-LD
                         const jsonLdJobs = extractJSONLDJobs(html);
                         if (jsonLdJobs.length > 0) {
                             scrapedJobs = jsonLdJobs;
                         } else {
-                            // Try one more fallback: look for common job patterns
                             const fallbackJobs = fallbackJobExtraction(html);
                             if (fallbackJobs.length > 0) {
                                 scrapedJobs = fallbackJobs;
@@ -4830,7 +4949,6 @@
                     }
                 }
 
-                // Enrich with source URL
                 scrapedJobs.forEach(job => {
                     job.sourceUrl = url;
                     job.scrapedAt = new Date().toISOString();
@@ -4848,9 +4966,6 @@
             }
         }
 
-        /**
-         * Scrape from pasted HTML (manual mode)
-         */
         function scrapePastedHTML() {
             const textarea = document.getElementById('scraperHtmlInput');
             const html = textarea?.value?.trim();
@@ -4906,30 +5021,30 @@
         }
 
         /**
-         * Extract jobs from HTML using multiple strategies
+         * Extract jobs from HTML — FIXED to capture individual job URLs
          */
         function extractJobsFromHTML(html, sourceUrl) {
             let jobs = [];
 
-            // Strategy 1: Look for JSON-LD structured data
+            // Strategy 1: JSON-LD
             const jsonLdJobs = extractJSONLDJobs(html);
             if (jsonLdJobs.length > 0) {
                 jobs = jobs.concat(jsonLdJobs);
             }
 
-            // Strategy 2: Look for job cards / listings using common patterns
-            const cardJobs = extractJobCards(html);
+            // Strategy 2: DOM selectors (job cards) — this is where we fix the URL extraction
+            const cardJobs = extractJobCards(html, sourceUrl);
             if (cardJobs.length > 0) {
                 jobs = jobs.concat(cardJobs);
             }
 
-            // Strategy 3: Look for job items in lists
-            const listJobs = extractJobListItems(html);
+            // Strategy 3: List items
+            const listJobs = extractJobListItems(html, sourceUrl);
             if (listJobs.length > 0) {
                 jobs = jobs.concat(listJobs);
             }
 
-            // Remove duplicates by title + company
+            // Deduplicate
             const seen = new Set();
             return jobs.filter(job => {
                 const key = (job.title + '|' + job.company).toLowerCase().trim();
@@ -4939,9 +5054,6 @@
             });
         }
 
-        /**
-         * Extract JSON-LD JobPosting data
-         */
         function extractJSONLDJobs(html) {
             const jobs = [];
             const scriptRegex = /<script\s+type="application\/ld\+json">(.*?)<\/script>/gis;
@@ -4983,48 +5095,106 @@
                 salary: item.salary?.value?.value || item.baseSalary?.value?.value || item.salary || '',
                 jobType: item.employmentType || item.jobType || 'Remote',
                 postedAt: item.datePosted || item.postedDate || new Date().toISOString(),
-                source: 'JSON-LD'
+                source: 'JSON-LD',
+                url: item.url || item.absolute_url || '' // some JSON-LD includes the job URL
             };
         }
 
         /**
-         * Extract job cards from HTML (common patterns)
+         * Extract job cards — FIXED: now captures the actual job URL from the <a> tag
          */
-        function extractJobCards(html) {
+        function extractJobCards(html, baseUrl) {
             const jobs = [];
             const doc = document.createElement('div');
             doc.innerHTML = html;
+
+            // Get the origin for resolving relative URLs
+            let origin = '';
+            if (baseUrl && baseUrl.startsWith('http')) {
+                try {
+                    const urlObj = new URL(baseUrl);
+                    origin = urlObj.origin;
+                } catch (e) {
+                    origin = '';
+                }
+            }
 
             // Look for common job card selectors
             const selectors = [
                 '.job-card', '.job-listing', '.job-item', '.job-post', '.job',
                 '.vacancy', '.career-item', '.opportunity', '.position',
                 '[data-job]', '[data-position]', '[role="article"]',
-                '.listing-item', '.job-result', '.search-result'
+                '.listing-item', '.job-result', '.search-result',
+                '.job-result-item', '.job-search-result', '.job-tile'
             ];
 
             selectors.forEach(selector => {
                 const elements = doc.querySelectorAll(selector);
                 elements.forEach(el => {
-                    const job = extractJobFromElement(el);
+                    const job = extractJobFromElement(el, origin);
                     if (job.title) {
+                        // If no URL was extracted from the element, try to find a link inside it
+                        if (!job.url) {
+                            const link = el.querySelector('a[href*="/job/"], a[href*="/position/"], a[href*="/careers/"], a[href*="/requisition/"]');
+                            if (link) {
+                                let href = link.getAttribute('href');
+                                if (href) {
+                                    if (href.startsWith('/') && origin) {
+                                        href = origin + href;
+                                    }
+                                    job.url = href;
+                                }
+                            }
+                        }
                         jobs.push(job);
                     }
                 });
             });
 
-            // Also look for generic divs with job-like content
+            // Also look for any <a> tags that contain job-like text
+            const allLinks = doc.querySelectorAll('a[href*="/job/"], a[href*="/position/"], a[href*="/careers/"]');
+            allLinks.forEach(link => {
+                const text = link.textContent || '';
+                const parent = link.closest('div, li, article') || link.parentElement;
+                // Only extract if the link seems to be a job title (not "View all" or similar)
+                if (text && text.length > 5 && text.length < 80 &&
+                    !/view all|see all|apply now|learn more|read more|back to/i.test(text)) {
+                    const job = extractJobFromElement(parent, origin);
+                    if (job.title && !job.url) {
+                        let href = link.getAttribute('href');
+                        if (href) {
+                            if (href.startsWith('/') && origin) {
+                                href = origin + href;
+                            }
+                            job.url = href;
+                            jobs.push(job);
+                        }
+                    }
+                }
+            });
+
+            // Additional: look for divs with job-like content that contain links
             const allDivs = doc.querySelectorAll('div');
             allDivs.forEach(el => {
                 const text = el.textContent || '';
                 if (text.length > 30 && text.length < 500) {
-                    // Check if it looks like a job listing
-                    const hasTitle = /(hiring|job|position|role|career|opportunity|vacancy)/i.test(text);
+                    const hasJob = /(hiring|job|position|role|career|opportunity|vacancy)/i.test(text);
                     const hasCompany = /(company|inc|corp|ltd|llc|ph|co|\.com)/i.test(text);
-                    if (hasTitle && hasCompany) {
-                        const job = extractJobFromElement(el);
-                        if (job.title && job.title.length > 3) {
-                            jobs.push(job);
+                    if (hasJob && hasCompany) {
+                        // Check if there's a link inside
+                        const link = el.querySelector('a[href*="/job/"], a[href*="/position/"], a[href*="/careers/"]');
+                        if (link) {
+                            const job = extractJobFromElement(el, origin);
+                            if (job.title) {
+                                let href = link.getAttribute('href');
+                                if (href) {
+                                    if (href.startsWith('/') && origin) {
+                                        href = origin + href;
+                                    }
+                                    job.url = href;
+                                }
+                                jobs.push(job);
+                            }
                         }
                     }
                 }
@@ -5034,16 +5204,15 @@
         }
 
         /**
-         * Extract job from a DOM element
+         * Extract job from a DOM element — FIXED to capture URL
          */
-        function extractJobFromElement(el) {
+        function extractJobFromElement(el, origin) {
             const text = el.textContent || '';
-            const html = el.innerHTML || '';
 
             // Try to find title
             let title = '';
             const titleSelectors = ['h1', 'h2', 'h3', 'h4', '.title', '.job-title', '.position-title', '[data-title]',
-                '.heading'
+                '.heading', '.job-name', '.role-name'
             ];
             for (const sel of titleSelectors) {
                 const found = el.querySelector(sel);
@@ -5061,7 +5230,9 @@
 
             // Try to find company
             let company = '';
-            const companySelectors = ['.company', '.employer', '.org', '.organization', '[data-company]', '.business'];
+            const companySelectors = ['.company', '.employer', '.org', '.organization', '[data-company]', '.business',
+                '.hiring-company', '.department'
+            ];
             for (const sel of companySelectors) {
                 const found = el.querySelector(sel);
                 if (found) {
@@ -5072,14 +5243,21 @@
             if (!company) {
                 const lines = text.split('\n').filter(l => l.trim().length > 2);
                 if (lines.length > 1) {
-                    // Sometimes company is the second line
-                    company = lines[1].trim();
+                    const secondLine = lines[1].trim();
+                    if (secondLine.length < 50 && !/^[0-9]/.test(secondLine) && !/remote|hybrid|onsite/i.test(secondLine)) {
+                        company = secondLine;
+                    }
                 }
+                // If still no company, try to find "at Company" pattern
+                const atMatch = text.match(/at\s+([A-Z][A-Za-z\s&]{2,30})/i);
+                if (atMatch) company = atMatch[1].trim();
             }
 
             // Try to find description
             let description = '';
-            const descSelectors = ['.description', '.details', '.summary', '.overview', '.info', '.content'];
+            const descSelectors = ['.description', '.details', '.summary', '.overview', '.info', '.content', '.text',
+                '.body', '.job-description'
+            ];
             for (const sel of descSelectors) {
                 const found = el.querySelector(sel);
                 if (found) {
@@ -5093,7 +5271,9 @@
 
             // Try to find location
             let location = '';
-            const locSelectors = ['.location', '.place', '.address', '[data-location]', '.city', '.country'];
+            const locSelectors = ['.location', '.place', '.address', '[data-location]', '.city', '.country', '.region',
+                '.workplace-type'
+            ];
             for (const sel of locSelectors) {
                 const found = el.querySelector(sel);
                 if (found) {
@@ -5102,7 +5282,9 @@
                 }
             }
             if (!location) {
-                const locMatch = text.match(/(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia)/i);
+                const locMatch = text.match(
+                    /(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia|NCR|Metro Manila|Quezon City|Makati|Taguig|Pasig|Mandaluyong|San Juan|Caloocan|Valenzuela|Navotas|Malabon|Marikina|Pasay|Parañaque|Las Piñas|Muntinlupa|Pateros)/i
+                );
                 if (locMatch) {
                     location = locMatch[0];
                 }
@@ -5110,7 +5292,7 @@
 
             // Try to find salary
             let salary = '';
-            const salarySelectors = ['.salary', '.pay', '.compensation', '.rate', '[data-salary]'];
+            const salarySelectors = ['.salary', '.pay', '.compensation', '.rate', '[data-salary]', '.remuneration'];
             for (const sel of salarySelectors) {
                 const found = el.querySelector(sel);
                 if (found) {
@@ -5119,20 +5301,83 @@
                 }
             }
             if (!salary) {
-                const salMatch = text.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to)\s*[₱$€£]?\s*[\d,]+/);
+                const salMatch = text.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to|–)\s*[₱$€£]?\s*[\d,]+/);
                 if (salMatch) {
                     salary = salMatch[0];
                 }
             }
 
-            // Clean up
-            title = title.replace(/^\d+\.\s*/, '').replace(/^[•\-*]\s*/, '').trim();
-            company = company.replace(/^[•\-*]\s*/, '').trim();
-            description = description.replace(/\s+/g, ' ').trim();
-            location = location.replace(/^[•\-*]\s*/, '').trim();
-            salary = salary.replace(/^[•\-*]\s*/, '').trim();
+            // Try to find job URL — THIS IS THE FIX
+            let jobUrl = '';
+            const linkSelectors = ['a[href*="/job/"]', 'a[href*="/position/"]', 'a[href*="/careers/"]',
+                'a[href*="/requisition/"]', 'a[href*="/posting/"]'
+            ];
+            for (const sel of linkSelectors) {
+                const link = el.querySelector(sel);
+                if (link) {
+                    let href = link.getAttribute('href');
+                    if (href) {
+                        // Make relative URLs absolute
+                        if (href.startsWith('/') && origin) {
+                            href = origin + href;
+                        }
+                        // Also handle relative paths without leading slash
+                        if (!href.startsWith('http') && !href.startsWith('//') && origin) {
+                            if (!href.startsWith('/')) {
+                                href = origin + '/' + href;
+                            } else {
+                                href = origin + href;
+                            }
+                        }
+                        // Only use if it looks like a job detail URL (not a category or search page)
+                        if (href && !href.includes('search') && !href.includes('category') && !href.includes('filter')) {
+                            jobUrl = href;
+                            break;
+                        }
+                    }
+                }
+            }
 
-            // If company is empty but title contains "at Company"
+            // If no link found with job-specific patterns, try a more generic approach
+            if (!jobUrl) {
+                const allLinks = el.querySelectorAll('a');
+                for (const link of allLinks) {
+                    let href = link.getAttribute('href');
+                    if (href) {
+                        // Make relative URLs absolute
+                        if (href.startsWith('/') && origin) {
+                            href = origin + href;
+                        }
+                        if (!href.startsWith('http') && !href.startsWith('//') && origin) {
+                            if (!href.startsWith('/')) {
+                                href = origin + '/' + href;
+                            } else {
+                                href = origin + href;
+                            }
+                        }
+                        // Check if the link text is the title
+                        const linkText = link.textContent.trim();
+                        if (linkText && title && linkText === title) {
+                            jobUrl = href;
+                            break;
+                        }
+                        // Or if the link contains the job ID pattern
+                        if (href && /\/\d{5,}\//.test(href)) {
+                            jobUrl = href;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Clean up
+            title = title.replace(/^\d+\.\s*/, '').replace(/^[•\-*▶◆■]\s*/, '').trim();
+            company = company.replace(/^[•\-*▶◆■]\s*/, '').trim();
+            description = description.replace(/\s+/g, ' ').trim();
+            location = location.replace(/^[•\-*▶◆■]\s*/, '').trim();
+            salary = salary.replace(/^[•\-*▶◆■]\s*/, '').trim();
+
+            // Fix: if company is empty but title contains "at Company"
             if (!company && title.includes(' at ')) {
                 const parts = title.split(' at ');
                 title = parts[0].trim();
@@ -5141,8 +5386,22 @@
             if (!company && title.includes(' - ')) {
                 const parts = title.split(' - ');
                 if (parts.length === 2) {
-                    title = parts[0].trim();
-                    company = parts[1].trim();
+                    // Check if the second part looks like a company (not a location or job type)
+                    const second = parts[1].trim();
+                    if (!/remote|hybrid|onsite|full-time|part-time|contract|temporary|internship/i.test(second)) {
+                        title = parts[0].trim();
+                        company = second;
+                    }
+                }
+            }
+            if (!company && title.includes(' | ')) {
+                const parts = title.split(' | ');
+                if (parts.length === 2) {
+                    const second = parts[1].trim();
+                    if (!/remote|hybrid|onsite|full-time|part-time|contract|temporary|internship/i.test(second)) {
+                        title = parts[0].trim();
+                        company = second;
+                    }
                 }
             }
 
@@ -5152,33 +5411,56 @@
                 description: description || '',
                 location: location || 'Remote',
                 salary: salary || '',
-                jobType: location && /remote/i.test(location) ? 'Remote' : 'Hybrid',
-                source: 'HTML'
+                jobType: location && /remote/i.test(location) ? 'Remote' : location && /hybrid/i.test(location) ?
+                    'Hybrid' : 'Remote',
+                source: 'HTML',
+                url: jobUrl || '' // This now contains the individual job URL
             };
         }
 
         /**
-         * Extract job list items from common patterns
+         * Extract job list items — also fixed for URLs
          */
-        function extractJobListItems(html) {
+        function extractJobListItems(html, baseUrl) {
             const jobs = [];
             const doc = document.createElement('div');
             doc.innerHTML = html;
 
-            // Look for list items that might be jobs
+            let origin = '';
+            if (baseUrl && baseUrl.startsWith('http')) {
+                try {
+                    const urlObj = new URL(baseUrl);
+                    origin = urlObj.origin;
+                } catch (e) {
+                    origin = '';
+                }
+            }
+
             const lists = doc.querySelectorAll('ul, ol');
             lists.forEach(list => {
                 const items = list.querySelectorAll('li');
                 items.forEach(li => {
                     const text = li.textContent || '';
                     if (text.length > 20 && text.length < 400) {
-                        // Check if it has job-like keywords
-                        const hasJob = /(hiring|job|position|role|career|opportunity|vacancy|apply|now)/i.test(
-                        text);
-                        const hasCompany = /(inc|ltd|corp|co|ph|llc|\.com|@)/i.test(text);
+                        const hasJob = /(hiring|job|position|role|career|opportunity|vacancy|apply|now|open|we're|we are)/i
+                            .test(text);
+                        const hasCompany = /(inc|ltd|corp|co|ph|llc|\.com|@|company|agency|firm)/i.test(text);
                         if (hasJob || hasCompany) {
-                            const job = extractJobFromElement(li);
+                            const job = extractJobFromElement(li, origin);
                             if (job.title && job.title.length > 2) {
+                                // Try to find a URL if not already set
+                                if (!job.url) {
+                                    const link = li.querySelector('a[href*="/job/"], a[href*="/position/"], a[href*="/careers/"]');
+                                    if (link) {
+                                        let href = link.getAttribute('href');
+                                        if (href) {
+                                            if (href.startsWith('/') && origin) {
+                                                href = origin + href;
+                                            }
+                                            job.url = href;
+                                        }
+                                    }
+                                }
                                 jobs.push(job);
                             }
                         }
@@ -5189,26 +5471,18 @@
             return jobs;
         }
 
-        /**
-         * Fallback extraction using regex patterns
-         */
         function fallbackJobExtraction(html) {
             const jobs = [];
 
-            // Remove scripts and styles
             const clean = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '')
                 .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
 
-            // Look for job patterns
             const patterns = [
-                // "Job Title at Company"
-                /([A-Z][A-Za-z\s]{2,30})\s+(?:at|with|@)\s+([A-Z][A-Za-z\s&]{2,30})/g,
-                // "Company is hiring Job Title"
-                /([A-Z][A-Za-z\s&]{2,30})\s+(?:is\s+hiring|hiring\s+a|looking\s+for)\s+([A-Z][A-Za-z\s]{2,30})/g,
-                // "Job Title - Company"
-                /([A-Z][A-Za-z\s]{2,30})\s*[-–—]\s*([A-Z][A-Za-z\s&]{2,30})/g,
-                // "Job Title | Company"
-                /([A-Z][A-Za-z\s]{2,30})\s*\|\s*([A-Z][A-Za-z\s&]{2,30})/g
+                /([A-Z][A-Za-z\s]{2,40})\s+(?:at|with|@)\s+([A-Z][A-Za-z\s&]{2,40})/g,
+                /([A-Z][A-Za-z\s&]{2,40})\s+(?:is\s+hiring|hiring\s+a|looking\s+for)\s+([A-Z][A-Za-z\s]{2,40})/g,
+                /([A-Z][A-Za-z\s]{2,40})\s*[-–—]\s*([A-Z][A-Za-z\s&]{2,40})/g,
+                /([A-Z][A-Za-z\s]{2,40})\s*\|\s*([A-Z][A-Za-z\s&]{2,40})/g,
+                /([A-Z][A-Za-z\s]{2,40})\s*,\s*([A-Z][A-Za-z\s&]{2,40})/g
             ];
 
             patterns.forEach(pattern => {
@@ -5217,32 +5491,40 @@
                     let title = match[1].trim();
                     let company = match[2].trim();
 
-                    // Skip if it's a generic header
                     if (title.length < 3 || company.length < 3) continue;
-                    if (/^(hiring|jobs|careers|positions|opportunities|apply|now)$/i.test(title)) continue;
-                    if (/^(company|inc|corp|ltd|llc)$/i.test(company)) continue;
+                    if (/^(hiring|jobs|careers|positions|opportunities|apply|now|we'?re|we are)$/i.test(title))
+                        continue;
+                    if (/^(company|inc|corp|ltd|llc|ph|co|the)$/i.test(company)) continue;
 
-                    // Check for salary in the surrounding text
-                    const start = Math.max(0, match.index - 100);
-                    const end = Math.min(clean.length, match.index + match[0].length + 200);
+                    const start = Math.max(0, match.index - 150);
+                    const end = Math.min(clean.length, match.index + match[0].length + 300);
                     const context = clean.substring(start, end);
+
                     let salary = '';
-                    const salMatch = context.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to)\s*[₱$€£]?\s*[\d,]+/);
+                    const salMatch = context.match(/[₱$€£]?\s*[\d,]+(?:\.\d+)?\s*(?:-|to|–)\s*[₱$€£]?\s*[\d,]+/);
                     if (salMatch) salary = salMatch[0];
+
+                    let location = '';
+                    const locMatch = context.match(
+                        /(Remote|Hybrid|On-site|Online|Manila|Cebu|Davao|PH|Philippines|USA|UK|Europe|Asia|Metro Manila|NCR|Quezon City|Makati|Taguig|Pasig|Mandaluyong|San Juan|Caloocan|Valenzuela|Navotas|Malabon|Marikina|Pasay|Parañaque|Las Piñas|Muntinlupa|Pateros)/
+                        i);
+                    if (locMatch) location = locMatch[0];
+
+                    title = title.replace(/^[•\-*▶◆■]\s*/, '').trim();
 
                     jobs.push({
                         title: title,
                         company: company,
                         description: context.substring(0, 300),
-                        location: /remote|online|work from home/i.test(context) ? 'Remote' : '',
+                        location: location || 'Remote',
                         salary: salary,
-                        jobType: /remote/i.test(context) ? 'Remote' : 'Hybrid',
-                        source: 'regex'
+                        jobType: location && /remote/i.test(location) ? 'Remote' : 'Hybrid',
+                        source: 'regex',
+                        url: '' // regex fallback can't extract URLs reliably
                     });
                 }
             });
 
-            // Deduplicate
             const seen = new Set();
             return jobs.filter(job => {
                 const key = (job.title + '|' + job.company).toLowerCase().trim();
@@ -5252,9 +5534,6 @@
             });
         }
 
-        /**
-         * Update the scraper UI based on state
-         */
         function updateScraperUI(state) {
             const progress = document.getElementById('scraperProgress');
             const statusText = document.getElementById('scraperStatusText');
@@ -5292,9 +5571,6 @@
             }
         }
 
-        /**
-         * Render scraped job results
-         */
         function renderScraperResults() {
             const list = document.getElementById('scraperResultsList');
             const stats = document.getElementById('scraperResultsStats');
@@ -5326,6 +5602,7 @@
                                 ${job.salary ? `• 💰 ${escapeHtml(job.salary)}` : ''}
                                 ${job.jobType ? `• ${escapeHtml(job.jobType)}` : ''}
                                 ${job.source ? `• 🔍 ${escapeHtml(job.source)}` : ''}
+                                ${job.url ? `• 🔗 ${escapeHtml(job.url)}` : ''}
                             </div>
                             ${job.description ? `<div style="font-size:13px;color:var(--gray-500);margin-top:4px;max-width:500px;">${escapeHtml(job.description.substring(0,120))}${job.description.length > 120 ? '...' : ''}</div>` : ''}
                         </div>
@@ -5336,13 +5613,9 @@
                     </div>
                 `).join('');
 
-            // Update selected count
             updateScraperSelection();
         }
 
-        /**
-         * Update selection count
-         */
         function updateScraperSelection() {
             const checkboxes = document.querySelectorAll('.scraper-checkbox');
             const selected = Array.from(checkboxes).filter(cb => cb.checked).length;
@@ -5350,25 +5623,16 @@
             if (countEl) countEl.textContent = selected;
         }
 
-        /**
-         * Select all scraped jobs
-         */
         function selectAllScraped() {
             document.querySelectorAll('.scraper-checkbox').forEach(cb => cb.checked = true);
             updateScraperSelection();
         }
 
-        /**
-         * Deselect all scraped jobs
-         */
         function deselectAllScraped() {
             document.querySelectorAll('.scraper-checkbox').forEach(cb => cb.checked = false);
             updateScraperSelection();
         }
 
-        /**
-         * Preview a scraped job in a modal
-         */
         function previewScrapedJob(index) {
             const job = scrapedJobs[index];
             if (!job) return;
@@ -5392,9 +5656,9 @@
                             ${job.location ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Location</span><div>${escapeHtml(job.location)}</div></div>` : ''}
                             ${job.salary ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Salary</span><div>${escapeHtml(job.salary)}</div></div>` : ''}
                             ${job.jobType ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Job Type</span><div>${escapeHtml(job.jobType)}</div></div>` : ''}
+                            ${job.url ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Job URL</span><div style="word-break:break-all;"><a href="${job.url}" target="_blank" style="color:var(--primary);">${escapeHtml(job.url)}</a></div></div>` : ''}
                             ${job.description ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Description</span><div style="background:var(--gray-50);padding:12px;border-radius:8px;border:1px solid var(--gray-200);font-size:14px;max-height:200px;overflow-y:auto;">${escapeHtml(job.description)}</div></div>` : ''}
                             ${job.source ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Source</span><div>${escapeHtml(job.source)}</div></div>` : ''}
-                            ${job.sourceUrl ? `<div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Source URL</span><div style="word-break:break-all;"><a href="${job.sourceUrl}" target="_blank" style="color:var(--primary);">${escapeHtml(job.sourceUrl)}</a></div></div>` : ''}
                         </div>
                         <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;">
                             <button class="btn-secondary" onclick="closeScraperPreview()">Close</button>
@@ -5415,7 +5679,7 @@
         }
 
         /**
-         * Import selected scraped jobs to harvested jobs
+         * Import selected scraped jobs — now uses the extracted URL
          */
         function importScrapedJobs() {
             if (!currentUser || currentUser.role !== 'harvester') {
@@ -5438,19 +5702,23 @@
             }
 
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
-            if (!data.harvestedJobs) data.harvestedJobs = [];
+            const userData = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+            if (!userData.harvestedJobs) userData.harvestedJobs = [];
+            if (!userData.jobs) userData.jobs = [];
 
             let imported = 0;
             selectedJobs.forEach(job => {
-                // Skip if title is too generic
                 if (job.title.length < 3) return;
 
-                data.harvestedJobs.unshift({
-                    id: Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                const jobId = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+                // Use the extracted URL if available, otherwise fallback to sourceUrl
+                const jobUrl = job.url || job.sourceUrl || job.applyUrl || '';
+
+                const harvestedJob = {
+                    id: jobId,
                     title: job.title,
                     company: job.company || 'Unknown Company',
-                    url: job.sourceUrl || '',
+                    url: jobUrl,
                     description: job.description || '',
                     salary: job.salary || '',
                     location: job.location || 'Remote',
@@ -5460,29 +5728,54 @@
                     harvestedAt: new Date().toISOString(),
                     scraped: true,
                     scrapedAt: job.scrapedAt || new Date().toISOString()
-                });
+                };
+
+                userData.harvestedJobs.unshift(harvestedJob);
+
+                // Publish to board
+                const boardJob = {
+                    id: harvestedJob.id,
+                    title: harvestedJob.title,
+                    company: harvestedJob.company,
+                    description: harvestedJob.description || '',
+                    jobType: harvestedJob.jobType || 'Remote',
+                    category: 'Other',
+                    tags: '',
+                    salaryMin: null,
+                    salaryMax: null,
+                    status: 'active',
+                    applicants: 0,
+                    views: 0,
+                    postedAt: new Date().toISOString(),
+                    expiresAt: (() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + 30);
+                        return d.toISOString();
+                    })(),
+                    postedBy: currentUser.name,
+                    postedByEmail: currentUser.email,
+                    postedByRole: currentUser.role,
+                    harvested: true
+                };
+                userData.jobs.unshift(boardJob);
                 imported++;
             });
 
-            localStorage.setItem(key, JSON.stringify(data));
+            localStorage.setItem(key, JSON.stringify(userData));
 
-            showNotification(`✅ Successfully imported ${imported} jobs!`, 'success');
+            showNotification(`✅ Successfully imported ${imported} jobs and published to the job board!`, 'success');
 
-            // Clear scraped jobs and update UI
             scrapedJobs = [];
             updateScraperUI('idle');
             renderHarvesterDashboard();
+            renderJobBoard();
 
-            // Clear inputs
             const urlInput = document.getElementById('scraperUrlInput');
             if (urlInput) urlInput.value = '';
             const htmlInput = document.getElementById('scraperHtmlInput');
             if (htmlInput) htmlInput.value = '';
         }
 
-        /**
-         * Switch scraper tabs
-         */
         function switchScraperTab(tab) {
             document.querySelectorAll('.scraper-tabs button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tab);
@@ -5491,14 +5784,10 @@
                 panel.classList.toggle('active', panel.id === 'scraperTab' + tab.charAt(0).toUpperCase() + tab.slice(
                 1));
             });
-            // Reset results when switching tabs
             scrapedJobs = [];
             updateScraperUI('idle');
         }
 
-        /**
-         * Escape HTML entities
-         */
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -5511,7 +5800,7 @@
         // ============================================================
 
         // ============================================================
-        // RENDER HARVESTER DASHBOARD (with scraper)
+        // RENDER HARVESTER DASHBOARD
         // ============================================================
         function renderHarvesterDashboard() {
             const container = document.getElementById('harvesterDashboardContent');
@@ -5547,10 +5836,8 @@
             const now = new Date();
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             const thisWeek = harvestedJobs.filter(j => new Date(j.harvestedAt) >= weekAgo).length;
-
             const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
             const thisMonth = harvestedJobs.filter(j => new Date(j.harvestedAt) >= monthAgo).length;
-
             const sources = [...new Set(harvestedJobs.map(j => j.source || 'Unknown'))];
 
             container.innerHTML = `
@@ -5617,53 +5904,61 @@
                         </div>
                     </div>
 
-                    <!-- ================================ -->
-                    <!-- 🕷️ SCRAPER SECTION                -->
-                    <!-- ================================ -->
+                    <!-- SCRAPER SECTION -->
                     <div class="scraper-section">
                         <div class="scraper-header">
-                            <h3>🕷️ Job Scraper <span style="font-size:13px;font-weight:400;color:var(--gray-500);">— Pull live jobs from any URL</span></h3>
-                            <span style="font-size:12px;color:var(--gray-400);">Beta • Uses CORS proxy</span>
+                            <h3>🕷️ Universal Job Scraper <span style="font-size:13px;font-weight:400;color:var(--gray-500);">— Extracts individual job URLs</span></h3>
+                            <span style="font-size:12px;color:var(--gray-400);">Beta • CORS proxy</span>
                         </div>
 
                         <div class="scraper-tabs">
-                            <button class="active" data-tab="url" onclick="switchScraperTab('url')">🌐 URL Scrape</button>
-                            <button data-tab="html" onclick="switchScraperTab('html')">📄 Paste HTML</button>
+                            <button class="active" data-tab="url" onclick="switchScraperTab('url')">🌐 URL</button>
+                            <button data-tab="html" onclick="switchScraperTab('html')">📄 HTML</button>
+                            <button data-tab="json" onclick="switchScraperTab('json')">📦 JSON</button>
                         </div>
 
-                        <!-- URL Scrape Tab -->
                         <div id="scraperTabUrl" class="scraper-panel active">
                             <div class="scraper-input-group">
-                                <input type="text" id="scraperUrlInput" placeholder="https://company.com/careers" />
+                                <input type="url" id="scraperUrlInput" placeholder="https://company.com/careers" />
                                 <button class="btn-primary" onclick="scrapeJobsFromURL()">🕷️ Scrape</button>
                                 <button class="btn-secondary" onclick="document.getElementById('scraperUrlInput').value=''" style="padding:10px 16px;">Clear</button>
                             </div>
                             <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">
-                                💡 Enter a job board URL, company careers page, or any page with job listings.
+                                💡 Works with job boards, company career pages, Oracle/Workday, and more.
                             </div>
                         </div>
 
-                        <!-- HTML Paste Tab -->
                         <div id="scraperTabHtml" class="scraper-panel">
                             <div style="margin-bottom:12px;">
-                                <textarea id="scraperHtmlInput" rows="6" placeholder="Paste the HTML of a job listing page here..."></textarea>
+                                <textarea id="scraperHtmlInput" rows="6" placeholder="Paste the fully rendered HTML of a job listing page here... (Ctrl+A → Copy)"></textarea>
                             </div>
                             <div style="display:flex;gap:12px;">
                                 <button class="btn-primary" onclick="scrapePastedHTML()">📄 Parse HTML</button>
                                 <button class="btn-secondary" onclick="document.getElementById('scraperHtmlInput').value=''" style="padding:10px 16px;">Clear</button>
                             </div>
                             <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">
-                                💡 Copy the full HTML of a job board page and paste it here. Works even if CORS blocks the URL.
+                                💡 Best for SPAs — load the page fully, then copy the HTML.
                             </div>
                         </div>
 
-                        <!-- Progress -->
+                        <div id="scraperTabJson" class="scraper-panel">
+                            <div style="margin-bottom:12px;">
+                                <textarea id="scraperJsonInput" rows="8" placeholder="Paste the raw JSON response from a job API here..."></textarea>
+                            </div>
+                            <div style="display:flex;gap:12px;">
+                                <button class="btn-primary" onclick="scrapePastedJSON()">📦 Parse JSON</button>
+                                <button class="btn-secondary" onclick="document.getElementById('scraperJsonInput').value=''" style="padding:10px 16px;">Clear</button>
+                            </div>
+                            <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">
+                                💡 Works with any JSON response from job APIs.
+                            </div>
+                        </div>
+
                         <div class="scraper-progress" id="scraperProgress">
                             <div class="spinner"></div>
                             <span class="status-text" id="scraperStatusText">🕷️ Scraping in progress...</span>
                         </div>
 
-                        <!-- Results -->
                         <div class="scraper-results" id="scraperResultsContainer" style="display:none;">
                             <div class="result-stats" id="scraperResultsStats">
                                 <span>📋 <strong>0</strong> jobs found</span>
@@ -5682,6 +5977,9 @@
                     <!-- Manual Harvest Form -->
                     <div class="dashboard-card" style="margin-bottom:24px;">
                         <h3>📥 Add Harvested Job (Manual)</h3>
+                        <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">
+                            Harvested jobs will automatically appear on the job board.
+                        </p>
                         <form onsubmit="addHarvestedJob(event)" style="margin-top:16px;">
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
                                 <div class="form-group">
@@ -5817,7 +6115,7 @@
                     <div class="modal" style="max-width:700px;">
                         <button class="modal-close" onclick="closeBulkImportModal()">&times;</button>
                         <h2>📥 Bulk Import Harvested Jobs</h2>
-                        <p style="color:var(--gray-500);margin-bottom:16px;">Paste multiple job URLs below (one per line). We'll auto-fetch the job details.</p>
+                        <p style="color:var(--gray-500);margin-bottom:16px;">Paste multiple job URLs below (one per line).</p>
                         <form id="bulkImportForm" onsubmit="processBulkImport(event)">
                             <div class="form-group" style="margin-bottom:16px;">
                                 <label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job URLs (one per line) *</label>
@@ -5857,18 +6155,20 @@
                 return;
             }
 
-            let imported = 0;
             const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
-            if (!data.harvestedJobs) data.harvestedJobs = [];
+            const userData = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+            if (!userData.harvestedJobs) userData.harvestedJobs = [];
+            if (!userData.jobs) userData.jobs = [];
 
+            let imported = 0;
             urls.forEach(url => {
                 const urlParts = url.replace(/https?:\/\//, '').split('/');
                 const domain = urlParts[0];
                 const company = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
 
-                data.harvestedJobs.unshift({
-                    id: Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+                const jobId = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+                const harvestedJob = {
+                    id: jobId,
                     title: 'Job from ' + company,
                     company: company,
                     url: url,
@@ -5880,15 +6180,43 @@
                     source: domain,
                     harvestedAt: new Date().toISOString(),
                     bulkImported: true
-                });
+                };
+                userData.harvestedJobs.unshift(harvestedJob);
+
+                const boardJob = {
+                    id: harvestedJob.id,
+                    title: harvestedJob.title,
+                    company: harvestedJob.company,
+                    description: harvestedJob.description,
+                    jobType: harvestedJob.jobType,
+                    category: 'Other',
+                    tags: '',
+                    salaryMin: null,
+                    salaryMax: null,
+                    status: 'active',
+                    applicants: 0,
+                    views: 0,
+                    postedAt: new Date().toISOString(),
+                    expiresAt: (() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + 30);
+                        return d.toISOString();
+                    })(),
+                    postedBy: currentUser.name,
+                    postedByEmail: currentUser.email,
+                    postedByRole: currentUser.role,
+                    harvested: true
+                };
+                userData.jobs.unshift(boardJob);
                 imported++;
             });
 
-            localStorage.setItem(key, JSON.stringify(data));
+            localStorage.setItem(key, JSON.stringify(userData));
 
             closeBulkImportModal();
             renderHarvesterDashboard();
-            showNotification(`✅ Successfully imported ${imported} jobs!`, 'success');
+            renderJobBoard();
+            showNotification(`✅ Successfully imported ${imported} jobs and published to the job board!`, 'success');
         }
 
         // ============================================================
@@ -5945,22 +6273,6 @@
             URL.revokeObjectURL(url);
 
             showNotification('📊 Harvested jobs exported successfully!', 'success');
-        }
-
-        // ============================================================
-        // CLEAR ALL HARVESTED
-        // ============================================================
-        function clearAllHarvested() {
-            if (!confirm('Are you sure you want to delete ALL harvested jobs? This cannot be undone.')) return;
-            if (!confirm('Really? This will permanently delete all your harvested jobs.')) return;
-
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"harvestedJobs":[]}');
-            data.harvestedJobs = [];
-            localStorage.setItem(key, JSON.stringify(data));
-
-            showNotification('🗑️ All harvested jobs have been cleared.', 'info');
-            renderHarvesterDashboard();
         }
 
         // ============================================================
@@ -6231,9 +6543,6 @@
             }
 
             const users = getUsers();
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const data = JSON.parse(localStorage.getItem(key) || '{"jobs":[]}');
-            const jobs = data.jobs || [];
             const allJobs = getAllJobs();
 
             container.innerHTML = `
@@ -6262,8 +6571,8 @@
                     <div class="dashboard-grid">
                         <div class="dashboard-card">
                             <h3>📋 Recent Job Postings</h3>
-                            ${jobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet.</p></div>' :
-                                jobs.slice(0, 5).map(job => `
+                            ${allJobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet.</p></div>' :
+                                allJobs.slice(0, 5).map(job => `
                                     <div class="dash-item">
                                         <div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${job.jobType} • ${job.applicants || 0} applicants • ${job.views || 0} views</div></div>
                                         <span class="dash-item-status ${job.status}">${job.status}</span>
@@ -7287,14 +7596,10 @@
 
             document.getElementById('navLinks')?.classList.remove('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            // pushState throws a SecurityError when this page is loaded inside a
-            // sandboxed iframe (e.g. a preview tool) whose origin doesn't match its
-            // own URL. Fall back to a plain hash assignment (still updates the URL
-            // and still fires 'hashchange') so navigation keeps working either way.
             try {
                 history.pushState(null, '', '#' + pageId);
             } catch (err) {
-                console.warn('pushState blocked (likely a sandboxed preview frame), using location.hash instead:', err.message);
+                console.warn('pushState blocked, using location.hash:', err.message);
                 window.location.hash = pageId;
             }
 
@@ -7328,6 +7633,73 @@
             }
 
             console.log('Navigated to: ' + pageId);
+        }
+
+        // ============================================================
+        // PROFILE
+        // ============================================================
+        function renderProfile() {
+            const container = document.getElementById('profileContent');
+            if (!container) return;
+
+            if (!currentUser) {
+                container.innerHTML = `
+                        <div class="access-denied">
+                            <span class="lock-icon">🔒</span>
+                            <h2>Access Denied</h2>
+                            <p>Please login to access your profile.</p>
+                            <button class="btn-primary" onclick="showPage('login')">Login</button>
+                        </div>
+                    `;
+                return;
+            }
+
+            container.innerHTML = `
+                    <div class="dashboard-header">
+                        <div>
+                            <h1>👤 My Profile</h1>
+                            <p style="color:var(--gray-500);">Manage your account details.</p>
+                        </div>
+                        <div class="user-info">
+                            <div class="avatar">${currentUser.name.charAt(0)}</div>
+                            <div>
+                                <strong>${currentUser.name}</strong>
+                                <span class="user-badge ${currentUser.role.replace('-','')}">${getRoleDisplay(currentUser.role)}</span>
+                            </div>
+                            <button class="btn-secondary btn-sm" onclick="logout()">Logout</button>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card" style="max-width:600px;margin:0 auto;">
+                        <h3>Account Information</h3>
+                        <div style="margin-top:16px;">
+                            <div style="display:flex;padding:8px 0;border-bottom:1px solid var(--gray-200);">
+                                <span style="font-weight:600;width:120px;">Name</span>
+                                <span>${currentUser.name}</span>
+                            </div>
+                            <div style="display:flex;padding:8px 0;border-bottom:1px solid var(--gray-200);">
+                                <span style="font-weight:600;width:120px;">Email</span>
+                                <span>${currentUser.email}</span>
+                            </div>
+                            <div style="display:flex;padding:8px 0;border-bottom:1px solid var(--gray-200);">
+                                <span style="font-weight:600;width:120px;">Role</span>
+                                <span>${getRoleDisplay(currentUser.role)}</span>
+                            </div>
+                            <div style="display:flex;padding:8px 0;border-bottom:1px solid var(--gray-200);">
+                                <span style="font-weight:600;width:120px;">Member Since</span>
+                                <span>${currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }) : 'Recent'}</span>
+                            </div>
+                            <div style="display:flex;padding:8px 0;">
+                                <span style="font-weight:600;width:120px;">User ID</span>
+                                <span style="font-size:12px;color:var(--gray-400);">${currentUser.id}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top:20px;display:flex;gap:12px;">
+                            <button class="btn-secondary" onclick="showNotification('Profile editing coming soon.', 'info')">✏️ Edit Profile</button>
+                            <button class="btn-danger" onclick="if(confirm('Delete your account?')){logout();}">🗑️ Delete Account</button>
+                        </div>
+                    </div>
+                `;
         }
 
         // ============================================================
@@ -7381,12 +7753,11 @@
         renderJobBoard();
         animateCounters();
 
-        console.log('🚀 Primespheres — Ultimate UX/UI System Loaded');
-        console.log('🕷️ Scraper Engine: Ready');
+        console.log('🚀 Primespheres — Scraper URL extraction FIXED.');
+        console.log('🕷️ Scraper now captures individual job URLs (not just the page URL).');
         console.log('📋 Features: Animations, Particles, Dark Mode, 7 Roles, Full CRUD, Scraper');
         console.log('👤 Current User:', currentUser);
 
-        // Initialize scraper UI
         updateScraperUI('idle');
     </script>
 
