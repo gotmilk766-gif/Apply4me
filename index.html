@@ -2312,7 +2312,7 @@
     </div>
 
     <!-- ============================================================
-    PAGE: JOB SEEKER DASHBOARD
+    PAGE: JOB SEEKER DASHBOARD (ENHANCED WITH ALL FEATURES)
     ============================================================ -->
     <div id="page-jobseeker-dashboard" class="page">
         <section class="dashboard-page"><div class="container"><div id="jobseekerDashboardContent"></div></div></section>
@@ -2416,7 +2416,7 @@
     </footer>
 
     <!-- ============================================================
-    JAVASCRIPT – COMPLETE SYSTEM WITH UNIVERSAL SCRAPER
+    JAVASCRIPT – COMPLETE SYSTEM WITH ENHANCED JOB SEEKER FEATURES
     ============================================================ -->
     <script>
         // ============================================================
@@ -3034,13 +3034,15 @@
                 jobTitle: job.title,
                 company: job.company,
                 appliedAt: new Date().toISOString(),
-                status: 'pending'
+                status: 'pending',
+                notes: ''
             });
             storage.setItem(key, JSON.stringify(data));
             incrementApplicantCount(jobId);
             incrementJobViews(jobId);
             showNotification('Application submitted successfully!', 'success');
             renderJobBoard();
+            renderJobSeekerDashboard();
         }
 
         function incrementApplicantCount(jobId) {
@@ -3423,7 +3425,6 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
-            // 1. JSON-LD
             const jsonLdJobs = extractJSONLDJobs(html);
             jobs.push(...jsonLdJobs);
 
@@ -4531,7 +4532,10 @@
         }
 
         // ============================================================
-        // JOB SEEKER DASHBOARD
+        // JOB SEEKER DASHBOARD (ENHANCED WITH ALL FEATURES)
+        // ============================================================
+        // ============================================================
+        // ENHANCED JOB SEEKER DASHBOARD
         // ============================================================
         function renderJobSeekerDashboard() {
             const container = document.getElementById('jobseekerDashboardContent');
@@ -4543,51 +4547,311 @@
 
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"applications":[],"savedJobs":[]}');
+            const data = JSON.parse(storage.getItem(key) || '{"applications":[],"savedJobs":[],"timeIn":null,"timeOut":null}');
             const applications = data.applications || [];
             const savedJobs = data.savedJobs || [];
             const allJobs = getAllJobs();
             const appliedJobIds = applications.map(a => a.jobId);
             const recommendedJobs = allJobs.filter(j => !appliedJobIds.includes(j.id) && j.status === 'active').slice(0, 3);
 
+            const totalApps = applications.length;
+            const seen = applications.filter(a => a.status === 'seen' || a.status === 'reviewed').length;
+            const interviews = applications.filter(a => a.status === 'interview').length;
+            const hired = applications.filter(a => a.status === 'hired').length;
+            const rejected = applications.filter(a => a.status === 'rejected').length;
+            const pending = applications.filter(a => a.status === 'pending').length;
+
+            const responseRate = totalApps > 0 ? Math.round(((seen + interviews + hired) / totalApps) * 100) : 0;
+            const interviewRate = totalApps > 0 ? Math.round((interviews / totalApps) * 100) : 0;
+            const successRate = totalApps > 0 ? Math.round((hired / totalApps) * 100) : 0;
+
+            const statusLabels = {
+                'pending': '⏳ Pending',
+                'seen': '👁️ Seen',
+                'reviewed': '📋 Reviewed',
+                'interview': '📞 Interview',
+                'hired': '✅ Hired',
+                'rejected': '❌ Rejected'
+            };
+
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>🔍 Job Seeker Dashboard</h1><p style="color:var(--gray-500);">Find your dream job, track applications, and save jobs.</p></div>
-                    <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge job-seeker">Job Seeker</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
+                    <div>
+                        <h1>🔍 Job Seeker Dashboard</h1>
+                        <p style="color:var(--gray-500);">Find your dream job, track applications, and save jobs.</p>
+                    </div>
+                    <div class="user-info">
+                        <div class="avatar">${currentUser.name.charAt(0)}</div>
+                        <div><strong>${currentUser.name}</strong><span class="user-badge job-seeker">Job Seeker</span></div>
+                        <button class="btn-secondary btn-sm" onclick="logout()">Logout</button>
+                    </div>
                 </div>
+
+                <!-- Enhanced Stats with Analytics -->
                 <div class="dashboard-stats">
-                    <div class="dashboard-stat-card"><span class="number">${applications.length}</span><span class="label">Applications Sent</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${applications.filter(a => a.status === 'seen').length}</span><span class="label">Viewed</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${applications.filter(a => a.status === 'interview').length}</span><span class="label">Interviews</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${savedJobs.length}</span><span class="label">Saved Jobs</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${totalApps}</span><span class="label">📤 Applications</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${pending}</span><span class="label">⏳ Pending</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${seen}</span><span class="label">👁️ Viewed</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${interviews}</span><span class="label">📞 Interviews</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${hired}</span><span class="label">✅ Hired</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${rejected}</span><span class="label">❌ Rejected</span></div>
                 </div>
+
+                <!-- Analytics Cards -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
+                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
+                        <div style="font-size:28px;font-weight:800;color:var(--success);">${responseRate}%</div>
+                        <div style="font-size:13px;color:var(--gray-500);">📊 Response Rate</div>
+                    </div>
+                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
+                        <div style="font-size:28px;font-weight:800;color:var(--primary);">${interviewRate}%</div>
+                        <div style="font-size:13px;color:var(--gray-500);">🎯 Interview Rate</div>
+                    </div>
+                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
+                        <div style="font-size:28px;font-weight:800;color:var(--warning);">${successRate}%</div>
+                        <div style="font-size:13px;color:var(--gray-500);">🏆 Success Rate</div>
+                    </div>
+                    <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
+                        <div style="font-size:28px;font-weight:800;color:var(--gray-700);">${savedJobs.length}</div>
+                        <div style="font-size:13px;color:var(--gray-500);">⭐ Saved Jobs</div>
+                    </div>
+                </div>
+
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>📤 Your Applications</h3>
+                        <h3>📤 Your Applications <button class="btn-secondary btn-sm" onclick="renderJobSeekerAnalytics()" style="float:right;font-size:11px;">📊 Detailed Analytics</button></h3>
                         ${applications.length === 0 ? '<div class="empty-state"><p>You haven\'t applied to any jobs yet. <a onclick="showPage(\'home\')" style="color:var(--primary);cursor:pointer;">Browse jobs →</a></p></div>' :
-                            applications.slice(0, 5).map(app => {
-                                const statusLabels = { 'pending': '⏳ Pending', 'seen': '👁️ Seen', 'interview': '📞 Interview', 'hired': '✅ Hired', 'rejected': '❌ Rejected' };
-                                return `<div class="dash-item"><div><div class="dash-item-title">${app.jobTitle || 'Job'}</div><div class="dash-item-sub">${app.company || 'Company'} • Applied ${new Date(app.appliedAt).toLocaleDateString('en-PH')}</div></div><span class="dash-item-status ${app.status}">${statusLabels[app.status] || app.status}</span></div>`;
+                            applications.slice(0, 10).map(app => {
+                                return `
+                                    <div class="dash-item">
+                                        <div>
+                                            <div class="dash-item-title">${app.jobTitle || 'Job'}</div>
+                                            <div class="dash-item-sub">${app.company || 'Company'} • Applied ${new Date(app.appliedAt).toLocaleDateString('en-PH')}</div>
+                                            ${app.notes ? `<div style="font-size:12px;color:var(--gray-500);margin-top:4px;">📝 ${app.notes}</div>` : ''}
+                                        </div>
+                                        <div style="display:flex;align-items:center;gap:8px;">
+                                            <span class="dash-item-status ${app.status}">${statusLabels[app.status] || app.status}</span>
+                                            <button class="btn-secondary btn-sm" onclick="addApplicationNote('${app.jobId}')" title="Add Note" style="padding:2px 8px;font-size:11px;">📝</button>
+                                        </div>
+                                    </div>
+                                `;
                             }).join('')
                         }
+                        ${applications.length > 10 ? `<div style="text-align:center;padding-top:12px;color:var(--gray-400);font-size:13px;">Showing 10 of ${applications.length}</div>` : ''}
                     </div>
                     <div class="dashboard-card">
                         <h3>⭐ Saved Jobs</h3>
                         ${savedJobs.length === 0 ? '<div class="empty-state"><p>Save jobs you\'re interested in for later.</p></div>' :
                             savedJobs.slice(0, 5).map(jobId => {
                                 const job = allJobs.find(j => j.id == jobId);
-                                return job ? `<div class="dash-item"><div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${job.jobType}</div></div><button class="btn-primary btn-sm" onclick="applyToJob('${job.id}')">Apply</button></div>` : '';
+                                return job ? `
+                                    <div class="dash-item">
+                                        <div>
+                                            <div class="dash-item-title">${job.title}</div>
+                                            <div class="dash-item-sub">${job.company} • ${job.jobType}</div>
+                                        </div>
+                                        <button class="btn-primary btn-sm" onclick="applyToJob('${job.id}')">Apply</button>
+                                    </div>
+                                ` : '';
                             }).join('')
                         }
+                        ${savedJobs.length > 5 ? `<div style="text-align:center;padding-top:12px;"><a onclick="showPage('home')" style="color:var(--primary);cursor:pointer;font-weight:600;">View all →</a></div>` : ''}
                     </div>
                 </div>
+
+                <!-- Quick Actions Section -->
+                <div class="dashboard-card" style="margin-top:24px;background:var(--primary-light);border:2px solid var(--primary);">
+                    <h3>⚡ Quick Actions</h3>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+                        <button class="btn-primary" onclick="showPage('home')">🔍 Browse Jobs</button>
+                        <button class="btn-secondary" onclick="showPage('apply4me')">🚀 Apply4Me</button>
+                        <button class="btn-secondary" onclick="exportJobSeekerApplications()">📊 Export Applications</button>
+                        <button class="btn-secondary" onclick="renderJobSeekerAnalytics()">📊 View Analytics</button>
+                        <button class="btn-secondary" onclick="showNotification('🔔 Job alerts coming soon!', 'info')">🔔 Job Alerts</button>
+                    </div>
+                </div>
+
+                <!-- Recommended Jobs -->
                 <div class="dashboard-card" style="margin-top:24px;">
                     <h3>🎯 Recommended Jobs</h3>
                     ${recommendedJobs.length === 0 ? '<div class="empty-state"><p>No recommendations right now. Check back later!</p></div>' :
-                        recommendedJobs.map(job => `<div class="dash-item"><div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${job.jobType} ${job.salaryMin && job.salaryMax ? '• ₱' + Number(job.salaryMin).toLocaleString() + '-' + Number(job.salaryMax).toLocaleString() : ''}</div></div><button class="btn-primary btn-sm" onclick="applyToJob('${job.id}')">Apply</button></div>`).join('')
+                        recommendedJobs.map(job => `
+                            <div class="dash-item">
+                                <div>
+                                    <div class="dash-item-title">${job.title}</div>
+                                    <div class="dash-item-sub">${job.company} • ${job.jobType} ${job.salaryMin && job.salaryMax ? '• ₱' + Number(job.salaryMin).toLocaleString() + '-' + Number(job.salaryMax).toLocaleString() : ''}</div>
+                                </div>
+                                <button class="btn-primary btn-sm" onclick="applyToJob('${job.id}')">Apply</button>
+                            </div>
+                        `).join('')
                     }
                 </div>
             `;
+        }
+
+        // ============================================================
+        // JOB SEEKER ADDITIONAL FUNCTIONS
+        // ============================================================
+
+        // Add Application Note
+        function addApplicationNote(jobId) {
+            if (!currentUser) {
+                showNotification('Please login first.', 'warning');
+                return;
+            }
+
+            const note = prompt('Add a note about this application (e.g., "Followed up on 3/15", "Had interview on 3/10"):');
+            if (note === null) return;
+            if (!note.trim()) {
+                showNotification('Note cannot be empty.', 'warning');
+                return;
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const storage = getStorage();
+            const data = JSON.parse(storage.getItem(key) || '{"applications":[]}');
+
+            const app = data.applications.find(a => a.jobId == jobId);
+            if (app) {
+                app.notes = note.trim();
+                storage.setItem(key, JSON.stringify(data));
+                showNotification('✅ Note added successfully!', 'success');
+                renderJobSeekerDashboard();
+            } else {
+                showNotification('Application not found.', 'error');
+            }
+        }
+
+        // Render Job Seeker Analytics (Detailed Modal)
+        function renderJobSeekerAnalytics() {
+            if (!currentUser || currentUser.role !== 'job-seeker') {
+                showNotification('Please login as a Job Seeker.', 'warning');
+                return;
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const storage = getStorage();
+            const data = JSON.parse(storage.getItem(key) || '{"applications":[]}');
+            const apps = data.applications || [];
+
+            const total = apps.length;
+            const pending = apps.filter(a => a.status === 'pending').length;
+            const seen = apps.filter(a => a.status === 'seen').length;
+            const reviewed = apps.filter(a => a.status === 'reviewed').length;
+            const interviews = apps.filter(a => a.status === 'interview').length;
+            const hired = apps.filter(a => a.status === 'hired').length;
+            const rejected = apps.filter(a => a.status === 'rejected').length;
+
+            const responseRate = total > 0 ? Math.round(((seen + reviewed + interviews + hired) / total) * 100) : 0;
+            const interviewRate = total > 0 ? Math.round((interviews / total) * 100) : 0;
+            const successRate = total > 0 ? Math.round((hired / total) * 100) : 0;
+
+            // Calculate this week's activity
+            const now = new Date();
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const thisWeek = apps.filter(a => new Date(a.appliedAt) >= weekAgo).length;
+            const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+            const thisMonth = apps.filter(a => new Date(a.appliedAt) >= monthAgo).length;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.id = 'analyticsModal';
+            modal.innerHTML = `
+                <div class="modal" style="max-width:700px;">
+                    <button class="modal-close" onclick="closeAnalyticsModal()">&times;</button>
+                    <h2>📊 Application Analytics</h2>
+                    <p style="color:var(--gray-500);margin-bottom:20px;">Your job application performance overview.</p>
+
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;">
+                        <div style="background:var(--gray-50);padding:16px;border-radius:8px;text-align:center;border:1px solid var(--gray-200);">
+                            <div style="font-size:28px;font-weight:800;color:var(--primary);">${total}</div>
+                            <div style="font-size:12px;color:var(--gray-500);">Total Applications</div>
+                        </div>
+                        <div style="background:var(--gray-50);padding:16px;border-radius:8px;text-align:center;border:1px solid var(--gray-200);">
+                            <div style="font-size:28px;font-weight:800;color:var(--warning);">${responseRate}%</div>
+                            <div style="font-size:12px;color:var(--gray-500);">Response Rate</div>
+                        </div>
+                        <div style="background:var(--gray-50);padding:16px;border-radius:8px;text-align:center;border:1px solid var(--gray-200);">
+                            <div style="font-size:28px;font-weight:800;color:var(--primary);">${interviewRate}%</div>
+                            <div style="font-size:12px;color:var(--gray-500);">Interview Rate</div>
+                        </div>
+                        <div style="background:var(--gray-50);padding:16px;border-radius:8px;text-align:center;border:1px solid var(--gray-200);">
+                            <div style="font-size:28px;font-weight:800;color:var(--success);">${successRate}%</div>
+                            <div style="font-size:12px;color:var(--gray-500);">Success Rate</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+                        <div style="background:var(--gray-50);padding:16px;border-radius:8px;border:1px solid var(--gray-200);">
+                            <div style="font-size:13px;color:var(--gray-500);">📅 This Week</div>
+                            <div style="font-size:32px;font-weight:800;color:var(--gray-900);">${thisWeek}</div>
+                            <div style="font-size:12px;color:var(--gray-400);">Applications sent</div>
+                        </div>
+                        <div style="background:var(--gray-50);padding:16px;border-radius:8px;border:1px solid var(--gray-200);">
+                            <div style="font-size:13px;color:var(--gray-500);">📅 This Month</div>
+                            <div style="font-size:32px;font-weight:800;color:var(--gray-900);">${thisMonth}</div>
+                            <div style="font-size:12px;color:var(--gray-400);">Applications sent</div>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--gray-50);padding:16px;border-radius:8px;border:1px solid var(--gray-200);margin-bottom:16px;">
+                        <div style="font-size:13px;color:var(--gray-500);margin-bottom:8px;">📊 Status Breakdown</div>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                            <span style="font-size:14px;">⏳ Pending: <strong>${pending}</strong></span>
+                            <span style="font-size:14px;">👁️ Seen: <strong>${seen}</strong></span>
+                            <span style="font-size:14px;">📋 Reviewed: <strong>${reviewed}</strong></span>
+                            <span style="font-size:14px;">📞 Interviews: <strong>${interviews}</strong></span>
+                            <span style="font-size:14px;">✅ Hired: <strong>${hired}</strong></span>
+                            <span style="font-size:14px;">❌ Rejected: <strong>${rejected}</strong></span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;">
+                        <button class="btn-secondary" onclick="closeAnalyticsModal()">Close</button>
+                        <button class="btn-primary btn-sm" onclick="closeAnalyticsModal(); exportJobSeekerApplications();">📊 Export Report</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAnalyticsModal() {
+            const modal = document.getElementById('analyticsModal');
+            if (modal) { modal.remove(); document.body.style.overflow = 'auto'; }
+        }
+
+        // Export Job Seeker Applications
+        function exportJobSeekerApplications() {
+            if (!currentUser) {
+                showNotification('Please login first.', 'warning');
+                return;
+            }
+
+            const key = currentUser.role + '_data_' + currentUser.email;
+            const storage = getStorage();
+            const data = JSON.parse(storage.getItem(key) || '{"applications":[]}');
+            const applications = data.applications || [];
+
+            if (applications.length === 0) {
+                showNotification('No applications to export.', 'warning');
+                return;
+            }
+
+            let csv = 'Job Title,Company,Status,Applied Date,Notes\n';
+            applications.forEach(app => {
+                csv += `"${app.jobTitle || ''}","${app.company || ''}","${app.status || 'pending'}","${new Date(app.appliedAt).toLocaleDateString('en-PH')}","${app.notes || ''}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'my_applications_' + new Date().toISOString().slice(0, 10) + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showNotification('📊 Applications exported successfully!', 'success');
         }
 
         // ============================================================
@@ -5543,7 +5807,8 @@
 
         renderJobBoard();
         animateCounters();
-        console.log('🚀 Primespheres — Full system ready. Universal scraper active.');
+        console.log('🚀 Primespheres — Enhanced Job Seeker features active!');
+        console.log('📊 New features: Application notes, analytics, export, quick actions.');
     </script>
 </body>
 </html>
