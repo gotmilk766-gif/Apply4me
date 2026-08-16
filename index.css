@@ -1,0 +1,43 @@
+body.dark-mode #apply4meModal .modal {
+    background: var(--gray-800);
+}
+
+body.dark-mode #apply4meModal input,
+body.dark-mode #apply4meModal select,
+body.dark-mode #apply4meModal textarea {
+    background: var(--gray-700) !important;
+    border-color: var(--gray-600) !important;
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode #apply4meModal input:focus,
+body.dark-mode #apply4meModal select:focus,
+body.dark-mode #apply4meModal textarea:focus {
+    border-color: var(--primary) !important;
+    background: var(--gray-700) !important;
+    box-shadow: 0 0 0 4px rgba(26, 86, 219, 0.15) !important;
+}
+
+body.dark-mode #apply4meModal label {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .file-upload-wrapper {
+    background: var(--gray-700) !important;
+    border-color: var(--gray-600) !important;
+}
+
+body.dark-mode .file-upload-wrapper .upload-text {
+    color: var(--gray-300) !important;
+}
+
+body.dark-mode #apply4meModal .modal-close {
+    background: rgba(255,255,255,0.1) !important;
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode #apply4meSelectedPlan {
+    background: rgba(26, 86, 219, 0.15) !important;
+    border-color: rgba(26, 86, 219, 0.2) !important;
+    color: #93bbfc !important;
+}
