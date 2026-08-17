@@ -625,9 +625,10 @@
             box-shadow: var(--shadow-xl);
         }
         .feature-card .feature-icon {
-            font-size: 32px;
-            display: block;
+            display: flex;
+            justify-content: center;
             margin-bottom: 12px;
+            color: var(--primary);
             animation: pulse 3s ease-in-out infinite;
         }
         .feature-card h3 {
@@ -1076,9 +1077,10 @@
             color: var(--gray-400);
         }
         .empty-state .empty-icon {
-            font-size: 48px;
-            display: block;
+            display: flex;
+            justify-content: center;
             margin-bottom: 12px;
+            color: var(--gray-400);
         }
 
         .time-tracker {
@@ -1160,9 +1162,10 @@
             padding: 60px 20px;
         }
         .access-denied .lock-icon {
-            font-size: 64px;
-            display: block;
+            display: flex;
+            justify-content: center;
             margin-bottom: 16px;
+            color: var(--gray-400);
             animation: pulse 2s ease-in-out infinite;
         }
         .access-denied h2 {
@@ -1220,6 +1223,78 @@
             transform: rotate(90deg);
         }
         body.dark-mode .modal-close:hover { color: #f1f5f9; }
+        .modal h2 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .modal-subtitle {
+            color: var(--gray-500);
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        /* Apply4Me form */
+        #apply4meForm .form-group {
+            margin-bottom: 18px;
+        }
+        #apply4meForm label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 6px;
+            color: var(--gray-700);
+        }
+        body.dark-mode #apply4meForm label {
+            color: var(--gray-300);
+        }
+        #apply4meForm .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+        #apply4meForm input,
+        #apply4meForm select,
+        #apply4meForm textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #ffffff;
+            color: var(--gray-900);
+            transition: all var(--transition);
+        }
+        #apply4meForm textarea {
+            resize: vertical;
+            min-height: 72px;
+        }
+        body.dark-mode #apply4meForm input,
+        body.dark-mode #apply4meForm select,
+        body.dark-mode #apply4meForm textarea {
+            background: var(--gray-700);
+            border-color: var(--gray-600);
+            color: #f1f5f9;
+        }
+        #apply4meForm input:focus,
+        #apply4meForm select:focus,
+        #apply4meForm textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+        }
+        #apply4meForm input::placeholder,
+        #apply4meForm textarea::placeholder {
+            color: var(--gray-400);
+        }
+        #apply4meForm .field-hint {
+            display: block;
+            font-size: 12px;
+            color: var(--gray-400);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
 
         /* Resume Builder Styles */
         .resume-builder {
@@ -1405,9 +1480,10 @@
             background: rgba(26,86,219,0.1);
         }
         .file-upload-wrapper .upload-icon {
-            font-size: 32px;
-            display: block;
+            display: flex;
+            justify-content: center;
             margin-bottom: 4px;
+            color: var(--gray-400);
         }
         .file-upload-wrapper .upload-text {
             font-size: 14px;
@@ -1647,6 +1723,13 @@
             color: var(--gray-300);
             transition: all var(--transition);
         }
+        .apply4me-features span::before {
+            content: "\2713";
+            display: inline-block;
+            margin-right: 8px;
+            color: #22c55e;
+            font-weight: 700;
+        }
         .apply4me-features span:hover {
             background: rgba(255,255,255,0.1);
             transform: translateX(4px);
@@ -1750,8 +1833,8 @@
             padding: 20px 0;
         }
         .success-state .success-icon {
-            font-size: 64px;
-            display: block;
+            display: flex;
+            justify-content: center;
             margin-bottom: 16px;
             animation: pulse 2s ease-in-out infinite;
         }
@@ -2134,9 +2217,9 @@
                 <li><a onclick="showPage('employee-tracker')" id="employeeTrackerNav" style="display:none;">Tracker</a></li>
                 <li><a onclick="showPage('login')">Login</a></li>
                 <li><a onclick="showPage('register')" class="btn-primary">Sign Up</a></li>
-                <li><button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button></li>
+                <li><button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode"></button></li>
             </ul>
-            <button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
+            <button class="menu-toggle" id="menuToggle" aria-label="Menu"></button>
         </nav>
     </header>
 
@@ -2163,9 +2246,9 @@
                     <button type="submit" class="btn-search">Search</button>
                 </form>
                 <div class="trust-badges">
-                    <span>✅ Verified Listings</span>
-                    <span>⏱️ 92% Reply within 5 days</span>
-                    <span>🌍 100% Remote-First</span>
+                    <span>Verified Listings</span>
+                    <span>⏱92% Reply within 5 days</span>
+                    <span>100% Remote-First</span>
                 </div>
             </div>
         </section>
@@ -2174,19 +2257,19 @@
             <div class="container">
                 <div class="feature-grid">
                     <div class="feature-card" data-delay="0.1">
-                        <span class="feature-icon">🔍</span>
+                        <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span>
                         <h3>For Job Seekers</h3>
                         <p>Browse verified remote jobs from global companies. Save jobs, track applications, and get hired.</p>
                         <a onclick="showPage('home')" class="feature-link">Browse Jobs →</a>
                     </div>
                     <div class="feature-card highlight" data-delay="0.2">
-                        <span class="feature-icon">🚀</span>
+                        <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg></span>
                         <h3>Apply4Me</h3>
                         <p>We apply to 20+ jobs for you monthly. Resume parsing auto-fills your profile.</p>
                         <a onclick="showPage('apply4me')" class="feature-link">Learn More →</a>
                     </div>
                     <div class="feature-card" data-delay="0.3">
-                        <span class="feature-icon">🏢</span>
+                        <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></span>
                         <h3>For Employers</h3>
                         <p>Post jobs, manage applicants, track analytics, and find top Filipino talent.</p>
                         <a onclick="showPage('post-job')" class="feature-link">Post a Job →</a>
@@ -2197,7 +2280,7 @@
 
         <section class="companies-section">
             <div class="container">
-                <h2>🏢 Companies Hiring This Week</h2>
+                <h2>Companies Hiring This Week</h2>
                 <p class="subtitle">7 companies filed · updated hourly</p>
                 <div class="company-grid">
                     <div class="company-card"><div class="company-name">North Atlas</div><div class="company-roles">2 open roles</div></div>
@@ -2214,7 +2297,7 @@
         <section class="job-board-section">
             <div class="container">
                 <div class="job-board-header">
-                    <h2>📋 Open Positions</h2>
+                    <h2>Open Positions</h2>
                     <div class="job-filters">
                         <select id="jobFilterType" onchange="renderJobBoard()">
                             <option value="all">All Types</option>
@@ -2232,7 +2315,7 @@
                             <option value="Accounting">Accounting</option>
                         </select>
                         <input type="text" id="jobSearchInput" onkeyup="renderJobBoard()" placeholder="Search jobs..." />
-                        <button class="btn-secondary btn-sm" onclick="exportJobsCSV()">📊 Export</button>
+                        <button class="btn-secondary btn-sm" onclick="exportJobsCSV()">Export</button>
                     </div>
                 </div>
                 <div id="jobListings" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px;"></div>
@@ -2247,19 +2330,19 @@
                 <div class="stat-grid">
                     <div class="stat-item">
                         <span class="stat-number counter-number" data-target="4.8">4.8</span>
-                        <span class="stat-label">⭐ Applicant Rating</span>
+                        <span class="stat-label">Applicant Rating</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-number counter-number" data-target="5">5</span>
-                        <span class="stat-label">⏱️ Avg. Reply Time</span>
+                        <span class="stat-label">⏱Avg. Reply Time</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-number counter-number" data-target="61">61</span>
-                        <span class="stat-label">🏆 Hired Within a Month</span>
+                        <span class="stat-label">Hired Within a Month</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-number counter-number" data-target="7">7</span>
-                        <span class="stat-label">🏢 Companies Filing</span>
+                        <span class="stat-label">Companies Filing</span>
                     </div>
                 </div>
             </div>
@@ -2283,35 +2366,35 @@
     <div id="page-apply4me" class="page">
         <section class="apply4me-hero">
             <div class="container">
-                <span class="new-service-badge">🚀 New Service</span>
+                <span class="new-service-badge">New Service</span>
                 <h1>We apply for you. You get the interview.</h1>
                 <p class="subtitle">&ldquo;You focus on your skills. We focus on getting you noticed.&rdquo;</p>
                 <div class="apply4me-features">
-                    <span>✅ 20+ applications submitted for you every month</span>
-                    <span>✅ Resume tailored for each job</span>
-                    <span>✅ Manual submission — no bots, no spam</span>
-                    <span>✅ Weekly progress reports with screenshots</span>
+                    <span>Real people submit tailored applications for you — no monthly commitment</span>
+                    <span>Resume tailored for each job</span>
+                    <span>Manual submission — no bots, no spam</span>
+                    <span>Weekly progress reports with screenshots</span>
                 </div>
                 <button class="btn-primary btn-large" onclick="openApply4MeModal()">Start My Apply4Me Journey</button>
                 <p class="apply4me-small-text">Free consultation. No commitment.</p>
                 <div class="apply4me-social-proof">
-                    <span>⭐ Rated 4.9/5 by 50+ professionals</span>
-                    <span>💬 &ldquo;I got 3 interviews in 2 weeks!&rdquo;</span>
+                    <span>Rated 4.9/5 by 50+ professionals</span>
+                    <span>&ldquo;I got 3 interviews in 2 weeks!&rdquo;</span>
                 </div>
             </div>
         </section>
 
         <section style="padding:60px 0;background:#ffffff;transition:background 0.3s;">
             <div class="container">
-                <h2 style="text-align:center;font-size:32px;margin-bottom:8px;">💰 Choose Your Plan</h2>
-                <p style="text-align:center;color:var(--gray-500);font-size:18px;margin-bottom:40px;">Invest in your future. Get hired faster.</p>
+                <h2 style="text-align:center;font-size:32px;margin-bottom:8px;">Choose Your Package</h2>
+                <p style="text-align:center;color:var(--gray-500);font-size:18px;margin-bottom:40px;">One-time payment. No subscription. Use your applications within 60 days.</p>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:30px;max-width:1000px;margin:0 auto;">
                     <div style="background:var(--gray-50);padding:32px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;transition:all var(--transition);">
                         <span style="display:inline-block;font-size:12px;font-weight:700;background:var(--gray-200);padding:4px 16px;border-radius:20px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px;">Starter</span>
-                        <div style="font-size:36px;font-weight:800;color:var(--gray-900);">₱5,350 <span style="font-size:16px;font-weight:400;color:var(--gray-400);">/mo</span></div>
-                        <div style="font-size:14px;color:var(--gray-400);margin-bottom:16px;">(~$97 USD)</div>
+                        <div style="font-size:36px;font-weight:800;color:var(--gray-900);">₱2,999 <span style="font-size:16px;font-weight:400;color:var(--gray-400);">one-time</span></div>
+                        <div style="font-size:14px;color:var(--gray-400);margin-bottom:16px;">(~$54 USD)</div>
                         <ul style="list-style:none;padding:0;text-align:left;margin:16px 0 24px;">
-                            <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ 10 applications/month</li>
+                            <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ 10 applications, valid 60 days</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Resume tailored per job</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Weekly progress reports</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Manual submission</li>
@@ -2319,11 +2402,11 @@
                         <button class="btn-secondary" style="width:100%;" onclick="openApply4MeModal('starter')">Sign Up</button>
                     </div>
                     <div style="background:#ffffff;padding:32px;border-radius:var(--radius);border:2px solid var(--primary);text-align:center;position:relative;transition:all var(--transition);transform:scale(1.02);">
-                        <span style="display:inline-block;font-size:12px;font-weight:700;background:var(--primary);color:#ffffff;padding:4px 16px;border-radius:20px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px;">⭐ Pro - Best Value</span>
-                        <div style="font-size:36px;font-weight:800;color:var(--gray-900);">₱10,850 <span style="font-size:16px;font-weight:400;color:var(--gray-400);">/mo</span></div>
-                        <div style="font-size:14px;color:var(--gray-400);margin-bottom:16px;">(~$197 USD)</div>
+                        <span style="display:inline-block;font-size:12px;font-weight:700;background:var(--primary);color:#ffffff;padding:4px 16px;border-radius:20px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px;">Pro - Best Value</span>
+                        <div style="font-size:36px;font-weight:800;color:var(--gray-900);">₱6,999 <span style="font-size:16px;font-weight:400;color:var(--gray-400);">one-time</span></div>
+                        <div style="font-size:14px;color:var(--gray-400);margin-bottom:16px;">(~$127 USD)</div>
                         <ul style="list-style:none;padding:0;text-align:left;margin:16px 0 24px;">
-                            <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ 20 applications/month</li>
+                            <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ 25 applications, valid 60 days</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Resume tailored per job</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Weekly progress reports</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Manual submission</li>
@@ -2334,10 +2417,10 @@
                     </div>
                     <div style="background:var(--gray-50);padding:32px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;transition:all var(--transition);">
                         <span style="display:inline-block;font-size:12px;font-weight:700;background:var(--gray-200);padding:4px 16px;border-radius:20px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px;">Executive</span>
-                        <div style="font-size:36px;font-weight:800;color:var(--gray-900);">₱21,900 <span style="font-size:16px;font-weight:400;color:var(--gray-400);">/mo</span></div>
-                        <div style="font-size:14px;color:var(--gray-400);margin-bottom:16px;">(~$397 USD)</div>
+                        <div style="font-size:36px;font-weight:800;color:var(--gray-900);">₱12,999 <span style="font-size:16px;font-weight:400;color:var(--gray-400);">one-time</span></div>
+                        <div style="font-size:14px;color:var(--gray-400);margin-bottom:16px;">(~$236 USD)</div>
                         <ul style="list-style:none;padding:0;text-align:left;margin:16px 0 24px;">
-                            <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ 40 applications/month</li>
+                            <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ 50 applications, valid 60 days</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Resume tailored per job</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Weekly progress reports</li>
                             <li style="padding:6px 0;font-size:14px;color:var(--gray-600);">✓ Manual submission</li>
@@ -2348,7 +2431,7 @@
                         <button class="btn-secondary" style="width:100%;" onclick="openApply4MeModal('executive')">Sign Up</button>
                     </div>
                 </div>
-                <p style="text-align:center;color:var(--gray-500);font-size:14px;margin-top:30px;padding:16px;background:var(--gray-50);border-radius:8px;max-width:800px;margin-left:auto;margin-right:auto;transition:background 0.3s;">💡 All plans include: Resume rewriting for each job, custom cover letters, manual form filling, and weekly progress screenshots.</p>
+                <p style="text-align:center;color:var(--gray-500);font-size:14px;margin-top:30px;padding:16px;background:var(--gray-50);border-radius:8px;max-width:800px;margin-left:auto;margin-right:auto;transition:background 0.3s;">All plans include: Resume rewriting for each job, custom cover letters, manual form filling, and weekly progress screenshots.</p>
             </div>
         </section>
     </div>
@@ -2360,13 +2443,13 @@
         <div class="modal">
             <button class="modal-close" onclick="closeApply4MeModal()">&times;</button>
             <div id="apply4meModalContent">
-                <h2>🚀 Start Your Apply4Me Journey</h2>
+                <h2>Start Your Apply4Me Journey</h2>
                 <p class="modal-subtitle">Fill out the form below and we'll reach out within 24 hours for your free consultation.</p>
                 <div id="apply4meSelectedPlan" class="selected-plan" style="display:none;background:var(--primary-light);padding:12px 16px;border-radius:8px;margin-bottom:16px;text-align:center;font-weight:600;color:var(--primary);">
                     Selected Plan: <span id="apply4mePlanName">Pro</span>
                 </div>
                 <form id="apply4meForm" onsubmit="submitApply4MeLead(event)" enctype="multipart/form-data">
-                    <div id="parseStatus" style="display:none;background:var(--primary-light);padding:12px 16px;border-radius:8px;margin-bottom:16px;color:var(--primary);font-weight:600;">🔄 Parsing resume...</div>
+                    <div id="parseStatus" style="display:none;background:var(--primary-light);padding:12px 16px;border-radius:8px;margin-bottom:16px;color:var(--primary);font-weight:600;">Parsing resume...</div>
                     <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div class="form-group"><label>Full Name <span class="required">*</span></label><input type="text" id="apply4meName" placeholder="Juan Dela Cruz" required /></div>
                         <div class="form-group"><label>Email Address <span class="required">*</span></label><input type="email" id="apply4meEmail" placeholder="juan@email.com" required /></div>
@@ -2390,33 +2473,33 @@
                     <div class="form-group">
                         <label>Resume / CV <span class="required">*</span></label>
                         <div class="file-upload-wrapper" id="apply4meResumeUpload">
-                            <span class="upload-icon">📄</span>
+                            <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
                             <div class="upload-text">Drop your resume here or click to browse</div>
                             <div class="upload-hint">PDF, DOC, DOCX (Max 5MB)</div>
                             <input type="file" id="apply4meResume" accept=".pdf,.doc,.docx,.txt" required />
                             <div class="file-name" id="apply4meResumeName"></div>
                         </div>
                         <div id="parsedDataPreview" style="display:none;margin-top:12px;padding:12px 16px;background:#f0fdf4;border-radius:8px;border:1px solid var(--success);">
-                            <div style="font-weight:600;color:var(--success);margin-bottom:8px;">☑ Resume Parsed Successfully!</div>
+                            <div style="font-weight:600;color:var(--success);margin-bottom:8px;">Resume Parsed Successfully!</div>
                             <div id="parsedDataContent" style="font-size:14px;color:var(--gray-600);"></div>
                         </div>
                     </div>
-                    <div class="form-group"><label>Portfolio / Website Link</label><input type="url" id="apply4mePortfolio" placeholder="https://yourportfolio.com" /><span style="font-size:12px;color:var(--gray-400);">Share your portfolio, GitHub, Behance, or personal website</span></div>
+                    <div class="form-group"><label>Portfolio / Website Link</label><input type="url" id="apply4mePortfolio" placeholder="https://yourportfolio.com" /><span class="field-hint">Share your portfolio, GitHub, Behance, or personal website</span></div>
                     <div class="form-group"><label>LinkedIn Profile</label><input type="url" id="apply4meLinkedIn" placeholder="https://linkedin.com/in/yourprofile" /></div>
                     <div class="form-group"><label>What roles are you targeting? (Optional)</label><textarea id="apply4meMessage" rows="2" placeholder="Tell us more about your ideal job..."></textarea></div>
                     <div class="form-group"><label>Preferred Plan</label><select id="apply4mePlan">
-                        <option value="starter">Starter (₱5,350/mo — 10 apps)</option>
-                        <option value="pro" selected>Pro (₱10,850/mo — 20 apps) — Best Value</option>
-                        <option value="executive">Executive (₱21,900/mo — 40 apps)</option>
+                        <option value="starter">Starter (₱2,999 one-time — 10 apps)</option>
+                        <option value="pro" selected>Pro (₱6,999 one-time — 25 apps) — Best Value</option>
+                        <option value="executive">Executive (₱12,999 one-time — 50 apps)</option>
                         <option value="undecided">Not sure yet — I want to learn more</option>
                     </select></div>
-                    <button type="submit" class="btn-primary" style="width:100%;padding:14px;font-size:16px;">🚀 Send My Free Consultation</button>
+                    <button type="submit" class="btn-primary" style="width:100%;padding:14px;font-size:16px;">Send My Free Consultation</button>
                     <p class="form-note" style="text-align:center;font-size:14px;color:var(--gray-400);margin-top:12px;">No commitment. We'll discuss your goals and see if Apply4Me is right for you.</p>
                 </form>
             </div>
             <div id="apply4meSuccessContent" style="display:none;">
                 <div class="success-state">
-                    <span class="success-icon">✅</span>
+                    <span class="success-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="var(--success)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></span>
                     <h2>Thank You!</h2>
                     <p>Your consultation request has been received. We'll reach out to you within 24 hours.</p>
                     <button class="btn-primary" onclick="closeApply4MeModal()">Close</button>
@@ -2432,7 +2515,7 @@
         <section class="auth-page">
             <div class="container">
                 <div class="auth-wrapper">
-                    <h1>📄 Create Your File</h1>
+                    <h1>Create Your File</h1>
                     <p class="auth-subtitle">Build your profile once — your experience, your rate, your availability.</p>
                     <form class="auth-form" id="registerForm">
                         <div class="form-group"><label>Full Name <span class="required">*</span></label><input type="text" id="regFullName" placeholder="Juan Dela Cruz" required /></div>
@@ -2440,13 +2523,13 @@
                         <div class="form-group"><label>Password <span class="required">*</span></label><input type="password" id="regPassword" placeholder="•••••••• (min 8 characters)" required minlength="8" /><span class="password-hint" style="font-size:12px;color:var(--gray-400);margin-top:4px;display:block;">Must be at least 8 characters</span></div>
                         <span class="role-selector-label">Select your role:</span>
                         <div class="role-selector" id="roleSelector">
-                            <div class="role-option" data-role="owner" onclick="selectRole('owner')"><div class="role-name">👑 Owner</div><div class="role-desc">Full access · Admin</div></div>
-                            <div class="role-option" data-role="manager" onclick="selectRole('manager')"><div class="role-name">📊 Manager</div><div class="role-desc">Manage jobs &amp; applicants</div></div>
-                            <div class="role-option" data-role="business-partner" onclick="selectRole('business-partner')"><div class="role-name">🤝 Business Partner</div><div class="role-desc">Post jobs · View applicants</div></div>
-                            <div class="role-option" data-role="harvester" onclick="selectRole('harvester')"><div class="role-name">🌾 Harvester</div><div class="role-desc">Harvest jobs only</div></div>
-                            <div class="role-option" data-role="employee" onclick="selectRole('employee')"><div class="role-name">👤 Employee</div><div class="role-desc">Apply4Me access only</div></div>
-                            <div class="role-option" data-role="employer" onclick="selectRole('employer')"><div class="role-name">🏢 Employer</div><div class="role-desc">Post jobs · Hire talent</div></div>
-                            <div class="role-option" data-role="job-seeker" onclick="selectRole('job-seeker')"><div class="role-name">🔍 Job Seeker</div><div class="role-desc">Find jobs · Apply</div></div>
+                            <div class="role-option" data-role="owner" onclick="selectRole('owner')"><div class="role-name">Owner</div><div class="role-desc">Full access · Admin</div></div>
+                            <div class="role-option" data-role="manager" onclick="selectRole('manager')"><div class="role-name">Manager</div><div class="role-desc">Manage jobs &amp; applicants</div></div>
+                            <div class="role-option" data-role="business-partner" onclick="selectRole('business-partner')"><div class="role-name">Business Partner</div><div class="role-desc">Post jobs · View applicants</div></div>
+                            <div class="role-option" data-role="harvester" onclick="selectRole('harvester')"><div class="role-name">Harvester</div><div class="role-desc">Harvest jobs only</div></div>
+                            <div class="role-option" data-role="employee" onclick="selectRole('employee')"><div class="role-name">Employee</div><div class="role-desc">Apply4Me access only</div></div>
+                            <div class="role-option" data-role="employer" onclick="selectRole('employer')"><div class="role-name">Employer</div><div class="role-desc">Post jobs · Hire talent</div></div>
+                            <div class="role-option" data-role="job-seeker" onclick="selectRole('job-seeker')"><div class="role-name">Job Seeker</div><div class="role-desc">Find jobs · Apply</div></div>
                         </div>
                         <input type="hidden" id="regUserType" value="employee" />
                         <button type="submit" class="btn-primary" id="registerBtn">Create File</button>
@@ -2465,7 +2548,7 @@
         <section class="auth-page">
             <div class="container">
                 <div class="auth-wrapper">
-                    <h1>🔑 Welcome Back</h1>
+                    <h1>Welcome Back</h1>
                     <p class="auth-subtitle">Login to your Primespheres account.</p>
                     <form class="auth-form" id="loginForm">
                         <div class="form-group"><label>Email Address <span class="required">*</span></label><input type="email" id="loginEmail" placeholder="juan@email.com" required /></div>
@@ -2486,7 +2569,7 @@
     PAGE: PROFILE
     ============================================================ -->
     <div id="page-profile" class="page">
-        <section class="dashboard-page"><div class="container"><div id="profileContent"><div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>Please login to access your profile.</p><button class="btn-primary" onclick="showPage('login')">Login</button></div></div></div></section>
+        <section class="dashboard-page"><div class="container"><div id="profileContent"><div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>Please login to access your profile.</p><button class="btn-primary" onclick="showPage('login')">Login</button></div></div></div></section>
     </div>
 
     <!-- ============================================================
@@ -2573,7 +2656,7 @@
         <section class="post-job-section">
             <div class="container">
                 <div class="post-job-wrapper">
-                    <h1>📝 Post a Job</h1>
+                    <h1>Post a Job</h1>
                     <p class="post-subtitle">Find top Filipino talent for your remote team.</p>
                     <form onsubmit="handlePostJob(event)">
                         <div class="form-group"><label>Job Title <span class="required">*</span></label><input type="text" id="postTitle" placeholder="e.g., Virtual Assistant" required /></div>
@@ -2585,7 +2668,7 @@
                         <div class="form-group"><label>Salary Range (PHP)</label><div class="salary-range"><input type="number" id="postSalaryMin" placeholder="Min" step="1000" /><span>to</span><input type="number" id="postSalaryMax" placeholder="Max" step="1000" /></div></div>
                         <div class="form-group"><label>Days to Expire</label><select id="postExpiry"><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option><option value="60">60 days</option></select></div>
                         <button type="submit" class="btn-primary" style="width:100%;padding:14px;">Post Job</button>
-                        <p class="form-note">💰 Pay after posting. 100% satisfaction guaranteed.</p>
+                        <p class="form-note">Pay after posting. 100% satisfaction guaranteed.</p>
                     </form>
                 </div>
             </div>
@@ -2610,12 +2693,12 @@
     <footer>
         <div class="container">
             <div class="footer-grid">
-                <div class="footer-col"><h4>🌏 Primespheres</h4><p>Find work worth showing up for.</p></div>
+                <div class="footer-col"><h4>Primespheres</h4><p>Find work worth showing up for.</p></div>
                 <div class="footer-col"><h4>For Job Seekers</h4><a onclick="showPage('home')">Browse Jobs</a><a onclick="showPage('apply4me')">Apply4Me</a><a onclick="showPage('register')">Create Your File</a></div>
                 <div class="footer-col"><h4>For Employers</h4><a onclick="showPage('post-job')">Post a Job</a><a onclick="showPage('register')">Dashboard</a></div>
                 <div class="footer-col"><h4>Company</h4><a onclick="showPage('home')">About Us</a><a href="#">Privacy Policy</a></div>
             </div>
-            <div class="footer-bottom"><p>&copy; 2026 Primespheres. All rights reserved. Made with ❤️ in the Philippines.</p></div>
+            <div class="footer-bottom"><p>&copy; 2026 Primespheres. All rights reserved. Made with in the Philippines.</p></div>
         </div>
     </footer>
 
@@ -2743,17 +2826,17 @@
             document.body.classList.toggle('dark-mode');
             const btn = document.querySelector('.dark-toggle');
             if (document.body.classList.contains('dark-mode')) {
-                btn.textContent = '☀️';
+                btn.textContent = '';
                 getStorage().setItem('primespheres_darkmode', 'true');
             } else {
-                btn.textContent = '🌙';
+                btn.textContent = '';
                 getStorage().setItem('primespheres_darkmode', 'false');
             }
         }
 
         if (getStorage().getItem('primespheres_darkmode') === 'true') {
             document.body.classList.add('dark-mode');
-            document.querySelector('.dark-toggle').textContent = '☀️';
+            document.querySelector('.dark-toggle').textContent = '';
         }
 
         // ============================================================
@@ -2961,7 +3044,7 @@
                 }
 
                 setCurrentUser(newUser);
-                showNotification('✅ Account created successfully! Welcome to Primespheres.', 'success');
+                showNotification('Account created successfully! Welcome to Primespheres.', 'success');
                 showPage(getDashboardForRole(role));
             } catch (err) {
                 showNotification('Something went wrong. Please try again.', 'error');
@@ -2989,7 +3072,7 @@
                     return;
                 }
                 setCurrentUser(user);
-                showNotification('👋 Welcome back, ' + user.name + '!', 'success');
+                showNotification('Welcome back, ' + user.name + '!', 'success');
                 showPage(getDashboardForRole(user.role));
             } catch (err) {
                 showNotification('Something went wrong. Please try again.', 'error');
@@ -3153,16 +3236,16 @@
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                                 <span class="job-type-badge ${job.jobType === 'Remote' ? 'remote' : job.jobType === 'Hybrid' ? 'hybrid' : 'onsite'}">${job.jobType}</span>
-                                ${isHarvested ? `<span class="harvested-badge">🌾 Harvested</span>` : ''}
+                                ${isHarvested ? `<span class="harvested-badge">Harvested</span>` : ''}
                                 ${expiryWarning}
                             </div>
                             <div style="display:flex;gap:8px;align-items:center;">
                                 <span style="font-size:12px;color:var(--gray-400);">${job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-PH') : 'Recent'}</span>
-                                <button class="bookmark-btn ${isSaved ? 'saved' : ''}" onclick="toggleSaveJob('${job.id}')">${isSaved ? '⭐' : '☆'}</button>
+                                <button class="bookmark-btn ${isSaved ? 'saved' : ''}" onclick="toggleSaveJob('${job.id}')">${isSaved ? '' : ''}</button>
                             </div>
                         </div>
                         <h3>${job.title}</h3>
-                        <p class="job-company">🏢 ${job.company}</p>
+                        <p class="job-company">${job.company}</p>
                         <p class="job-description">${job.description.length > 120 ? job.description.substring(0,120) + '...' : job.description}</p>
                         ${job.tags ? `<div class="job-tags">${job.tags.split(',').map(t => `<span>#${t.trim()}</span>`).join('')}</div>` : ''}
                         ${job.salaryMin && job.salaryMax ? `<p class="job-salary">₱${Number(job.salaryMin).toLocaleString()} - ₱${Number(job.salaryMax).toLocaleString()}</p>` : ''}
@@ -3173,10 +3256,10 @@
                             </div>
                         </div>
                         <div class="job-actions">
-                            <button class="btn-secondary btn-sm" onclick="viewJobDetails('${job.id}')">👁️ View Details</button>
+                            <button class="btn-secondary btn-sm" onclick="viewJobDetails('${job.id}')">View Details</button>
                             ${canDelete ? `<button class="btn-danger btn-sm" onclick="deleteJob('${job.id}')">Delete</button>` : ''}
                             ${isHarvested && jobUrl ? 
-                                `<button class="btn-primary btn-sm" onclick="applyToHarvestedJob('${job.id}')">🚀 Apply Now</button>` :
+                                `<button class="btn-primary btn-sm" onclick="applyToHarvestedJob('${job.id}')">Apply Now</button>` :
                                 `<button class="btn-primary btn-sm" onclick="applyToJob('${job.id}')">Apply</button>`
                             }
                         </div>
@@ -3203,27 +3286,27 @@
 
             content.innerHTML = `
                 <div class="job-title">${job.title}</div>
-                <div class="job-company">🏢 ${job.company}</div>
+                <div class="job-company">${job.company}</div>
                 <div class="job-meta">
                     <span>${job.jobType || 'Remote'}</span>
-                    <span>📅 ${job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
-                    ${job.salaryMin && job.salaryMax ? `<span>💰 ₱${Number(job.salaryMin).toLocaleString()} - ₱${Number(job.salaryMax).toLocaleString()}</span>` : ''}
-                    ${isHarvested ? `<span>🌾 Harvested Job</span>` : ''}
-                    ${job.category ? `<span>📁 ${job.category}</span>` : ''}
+                    <span>${job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
+                    ${job.salaryMin && job.salaryMax ? `<span>₱${Number(job.salaryMin).toLocaleString()} - ₱${Number(job.salaryMax).toLocaleString()}</span>` : ''}
+                    ${isHarvested ? `<span>Harvested Job</span>` : ''}
+                    ${job.category ? `<span>${job.category}</span>` : ''}
                 </div>
                 ${job.tags ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;">${job.tags.split(',').map(t => `<span style="background:var(--gray-100);padding:2px 10px;border-radius:12px;font-size:12px;">#${t.trim()}</span>`).join('')}</div>` : ''}
-                <div style="font-size:14px;color:var(--gray-500);margin-bottom:8px;">📄 Job Description</div>
+                <div style="font-size:14px;color:var(--gray-500);margin-bottom:8px;">Job Description</div>
                 <div class="job-full-description">${job.description || 'No description provided.'}</div>
                 ${jobUrl ? `
                     <div style="margin:12px 0;padding:12px;background:var(--gray-50);border-radius:8px;border:1px solid var(--gray-200);">
-                        <div style="font-size:13px;color:var(--gray-500);">🔗 Direct Job Link</div>
+                        <div style="font-size:13px;color:var(--gray-500);">Direct Job Link</div>
                         <a href="${jobUrl}" target="_blank" class="job-url-link">${jobUrl}</a>
                     </div>
                 ` : ''}
                 <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;margin-top:16px;">
                     <button class="btn-secondary" onclick="closeJobDetailModal()">Close</button>
                     ${isHarvested && jobUrl ? 
-                        `<button class="btn-primary" onclick="closeJobDetailModal(); applyToHarvestedJob('${job.id}')">🚀 Apply on Company Site</button>` :
+                        `<button class="btn-primary" onclick="closeJobDetailModal(); applyToHarvestedJob('${job.id}')">Apply on Company Site</button>` :
                         `<button class="btn-primary" onclick="closeJobDetailModal(); applyToJob('${job.id}')">Apply</button>`
                     }
                 </div>
@@ -3294,7 +3377,7 @@
             // Check if already applied
             if (data.applications.find(a => a.jobId == jobId)) {
                 // Still redirect them
-                showNotification('🔗 Redirecting to company website...', 'info');
+                showNotification('Redirecting to company website...', 'info');
                 setTimeout(() => {
                     window.open(jobUrl, '_blank');
                 }, 500);
@@ -3314,7 +3397,7 @@
             incrementApplicantCount(jobId);
             incrementJobViews(jobId);
 
-            showNotification('✅ Application recorded! Redirecting to company website...', 'success');
+            showNotification('Application recorded! Redirecting to company website...', 'success');
 
             // Redirect to the job URL after a short delay
             setTimeout(() => {
@@ -3525,7 +3608,7 @@
             if (currentUser.role === 'employer') {
                 const result = canPostJobToday();
                 if (!result.allowed) {
-                    showNotification('⛔ ' + result.message, 'warning');
+                    showNotification('' + result.message, 'warning');
                     return;
                 }
             }
@@ -3584,7 +3667,7 @@
             }
 
             storage.setItem(key, JSON.stringify(data));
-            showNotification('✅ Job posted successfully!', 'success');
+            showNotification('Job posted successfully!', 'success');
             document.getElementById('postTitle').value = '';
             document.getElementById('postCompany').value = '';
             document.getElementById('postDescription').value = '';
@@ -3605,12 +3688,12 @@
             const container = document.getElementById('profileContent');
             if (!container) return;
             if (!currentUser) {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>Please login to access your profile.</p><button class="btn-primary" onclick="showPage('login')">Login</button></div>`;
+                container.innerHTML = `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>Please login to access your profile.</p><button class="btn-primary" onclick="showPage('login')">Login</button></div>`;
                 return;
             }
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>👤 My Profile</h1><p style="color:var(--gray-500);">Manage your account details.</p></div>
+                    <div><h1>My Profile</h1><p style="color:var(--gray-500);">Manage your account details.</p></div>
                     <div class="user-info">
                         <div class="avatar">${currentUser.name.charAt(0)}</div>
                         <div><strong>${currentUser.name}</strong><span class="user-badge ${currentUser.role.replace('-','')}">${getRoleDisplay(currentUser.role)}</span></div>
@@ -3627,8 +3710,8 @@
                         <div style="display:flex;padding:8px 0;"><span style="font-weight:600;width:120px;">User ID</span><span style="font-size:12px;color:var(--gray-400);">${currentUser.id}</span></div>
                     </div>
                     <div style="margin-top:20px;display:flex;gap:12px;">
-                        <button class="btn-secondary" onclick="showNotification('Profile editing coming soon.', 'info')">✏️ Edit Profile</button>
-                        <button class="btn-danger" onclick="if(confirm('Delete your account?')){logout();}">🗑️ Delete Account</button>
+                        <button class="btn-secondary" onclick="showNotification('Profile editing coming soon.', 'info')">Edit Profile</button>
+                        <button class="btn-danger" onclick="if(confirm('Delete your account?')){logout();}">Delete Account</button>
                     </div>
                 </div>
             `;
@@ -3647,7 +3730,7 @@
             const container = document.getElementById('harvesterDashboardContent');
             if (!container) return;
             if (!currentUser || currentUser.role !== 'harvester') {
-                container.innerHTML = `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                container.innerHTML = `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -3676,7 +3759,7 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>🌾 Harvester Dashboard</h1><p style="color:var(--gray-500);">Manage harvested jobs, track your time, and monitor analytics.</p></div>
+                    <div><h1>Harvester Dashboard</h1><p style="color:var(--gray-500);">Manage harvested jobs, track your time, and monitor analytics.</p></div>
                     <div class="user-info">
                         <div class="avatar">${currentUser.name.charAt(0)}</div>
                         <div><strong>${currentUser.name}</strong><span class="user-badge harvester">Harvester</span></div>
@@ -3698,37 +3781,37 @@
                 </div>
                 <div class="time-tracker">
                     <div><strong style="font-size:16px;">⏰ Time Tracker</strong><div style="font-size:13px;color:var(--gray-500);">Clock in and out to track your hours</div></div>
-                    <div><span class="time-status ${isClockedIn ? 'clocked-in' : isClockedOut ? 'clocked-out' : ''}" style="font-size:16px;font-weight:600;">${isClockedIn ? '🟢 Clocked In' : isClockedOut ? '🔴 Clocked Out' : '⚪ Not Started'}</span></div>
+                    <div><span class="time-status ${isClockedIn ? 'clocked-in' : isClockedOut ? 'clocked-out' : ''}" style="font-size:16px;font-weight:600;">${isClockedIn ? 'Clocked In' : isClockedOut ? 'Clocked Out' : 'Not Started'}</span></div>
                     <div style="font-size:14px;"><div>In: <strong>${timeIn}</strong></div><div>Out: <strong>${timeOut}</strong></div>${isClockedOut ? `<div>Hours: <strong>${hoursWorked}</strong></div>` : ''}</div>
                     <div style="display:flex;gap:8px;"><button class="btn-success btn-sm" onclick="clockIn()" ${isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock In</button><button class="btn-danger btn-sm" onclick="clockOut()" ${!isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock Out</button></div>
                 </div>
                 <div class="scraper-section">
-                    <div class="scraper-header"><h3>🕷️ Universal Job Scraper</h3><span style="font-size:12px;color:var(--gray-400);">Beta • CORS proxy</span></div>
-                    <div class="scraper-tabs"><button class="active" data-tab="url" onclick="switchScraperTab('url')">🌐 URL</button><button data-tab="html" onclick="switchScraperTab('html')">📄 HTML</button><button data-tab="json" onclick="switchScraperTab('json')">📦 JSON</button></div>
+                    <div class="scraper-header"><h3>Universal Job Scraper</h3><span style="font-size:12px;color:var(--gray-400);">Beta • CORS proxy</span></div>
+                    <div class="scraper-tabs"><button class="active" data-tab="url" onclick="switchScraperTab('url')">URL</button><button data-tab="html" onclick="switchScraperTab('html')">HTML</button><button data-tab="json" onclick="switchScraperTab('json')">JSON</button></div>
                     <div id="scraperTabUrl" class="scraper-panel active">
-                        <div class="scraper-input-group"><input type="url" id="scraperUrlInput" placeholder="https://company.com/careers" /><button class="btn-primary" onclick="scrapeJobsFromURL()">🕷️ Scrape</button><button class="btn-secondary" onclick="document.getElementById('scraperUrlInput').value=''" style="padding:10px 16px;">Clear</button></div>
-                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">💡 Works with job boards, company career pages, Oracle/Workday, and more.</div>
+                        <div class="scraper-input-group"><input type="url" id="scraperUrlInput" placeholder="https://company.com/careers" /><button class="btn-primary" onclick="scrapeJobsFromURL()">Scrape</button><button class="btn-secondary" onclick="document.getElementById('scraperUrlInput').value=''" style="padding:10px 16px;">Clear</button></div>
+                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">Works with job boards, company career pages, Oracle/Workday, and more.</div>
                     </div>
                     <div id="scraperTabHtml" class="scraper-panel">
                         <div style="margin-bottom:12px;"><textarea id="scraperHtmlInput" rows="6" placeholder="Paste the fully rendered HTML of a job listing page here..."></textarea></div>
-                        <div style="display:flex;gap:12px;"><button class="btn-primary" onclick="scrapePastedHTML()">📄 Parse HTML</button><button class="btn-secondary" onclick="document.getElementById('scraperHtmlInput').value=''" style="padding:10px 16px;">Clear</button></div>
-                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">💡 Best for SPAs — load the page fully, then copy the HTML.</div>
+                        <div style="display:flex;gap:12px;"><button class="btn-primary" onclick="scrapePastedHTML()">Parse HTML</button><button class="btn-secondary" onclick="document.getElementById('scraperHtmlInput').value=''" style="padding:10px 16px;">Clear</button></div>
+                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">Best for SPAs — load the page fully, then copy the HTML.</div>
                     </div>
                     <div id="scraperTabJson" class="scraper-panel">
                         <div style="margin-bottom:12px;"><textarea id="scraperJsonInput" rows="8" placeholder="Paste the raw JSON response from a job API here..."></textarea></div>
-                        <div style="display:flex;gap:12px;"><button class="btn-primary" onclick="scrapePastedJSON()">📦 Parse JSON</button><button class="btn-secondary" onclick="document.getElementById('scraperJsonInput').value=''" style="padding:10px 16px;">Clear</button></div>
-                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">💡 Works with any JSON response from job APIs.</div>
+                        <div style="display:flex;gap:12px;"><button class="btn-primary" onclick="scrapePastedJSON()">Parse JSON</button><button class="btn-secondary" onclick="document.getElementById('scraperJsonInput').value=''" style="padding:10px 16px;">Clear</button></div>
+                        <div style="font-size:12px;color:var(--gray-400);margin-top:8px;">Works with any JSON response from job APIs.</div>
                     </div>
-                    <div class="scraper-progress" id="scraperProgress"><div class="spinner"></div><span class="status-text" id="scraperStatusText">🕷️ Scraping in progress...</span></div>
+                    <div class="scraper-progress" id="scraperProgress"><div class="spinner"></div><span class="status-text" id="scraperStatusText">Scraping in progress...</span></div>
                     <div class="scraper-results" id="scraperResultsContainer" style="display:none;">
-                        <div class="result-stats" id="scraperResultsStats"><span>📋 <strong>0</strong> jobs found</span><span>✅ <span id="scraperSelectedCount">0</span> selected</span><button class="btn-secondary btn-sm" onclick="selectAllScraped()" id="scraperSelectAllBtn">Select All</button><button class="btn-secondary btn-sm" onclick="deselectAllScraped()">Deselect All</button></div>
+                        <div class="result-stats" id="scraperResultsStats"><span><strong>0</strong> jobs found</span><span><span id="scraperSelectedCount">0</span> selected</span><button class="btn-secondary btn-sm" onclick="selectAllScraped()" id="scraperSelectAllBtn">Select All</button><button class="btn-secondary btn-sm" onclick="deselectAllScraped()">Deselect All</button></div>
                         <div id="scraperResultsList"></div>
-                        <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;"><button class="btn-success" onclick="importScrapedJobs()" id="scraperImportBtn">📥 Import Selected</button><button class="btn-secondary" onclick="scrapedJobs=[]; updateScraperUI('idle');">🗑️ Clear Results</button></div>
+                        <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;"><button class="btn-success" onclick="importScrapedJobs()" id="scraperImportBtn">Import Selected</button><button class="btn-secondary" onclick="scrapedJobs=[]; updateScraperUI('idle');">Clear Results</button></div>
                     </div>
                 </div>
                 <div class="dashboard-card" style="margin-bottom:24px;">
-                    <h3>📥 Add Harvested Job (Manual)</h3>
-                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">Harvested jobs will automatically appear on the job board with a "🌾 Harvested" badge.</p>
+                    <h3>Add Harvested Job (Manual)</h3>
+                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">Harvested jobs will automatically appear on the job board with a "Harvested" badge.</p>
                     <form onsubmit="addHarvestedJob(event)" style="margin-top:16px;">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
                             <div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Title <span style="color:var(--danger);">*</span></label><input type="text" id="harvestTitle" placeholder="e.g., Virtual Assistant" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;" required /></div>
@@ -3745,7 +3828,7 @@
                         </div>
                         <div style="margin-bottom:16px;"><div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Description (Optional)</label><textarea id="harvestDescription" rows="3" placeholder="Brief description of the job..." style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;"></textarea></div></div>
                         <div style="margin-bottom:16px;"><div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Source (Optional)</label><input type="text" id="harvestSource" placeholder="e.g., Google Careers, LinkedIn" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;" /></div></div>
-                        <div style="display:flex;gap:12px;"><button type="submit" class="btn-success" style="flex:1;padding:14px;font-size:16px;">🌾 Harvest Job</button><button type="button" class="btn-secondary" onclick="bulkImportHarvest()" style="padding:14px 24px;">📥 Bulk Import</button></div>
+                        <div style="display:flex;gap:12px;"><button type="submit" class="btn-success" style="flex:1;padding:14px;font-size:16px;">Harvest Job</button><button type="button" class="btn-secondary" onclick="bulkImportHarvest()" style="padding:14px 24px;">Bulk Import</button></div>
                     </form>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
@@ -3753,31 +3836,31 @@
                         <select id="harvestStatusFilter" onchange="filterHarvestedJobs()" style="padding:8px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit;background:#ffffff;"><option value="all">All Status</option><option value="active">Active</option><option value="pending">Pending Review</option><option value="rejected">Rejected</option><option value="archived">Archived</option></select>
                         <input type="text" id="harvestSearchInput" onkeyup="filterHarvestedJobs()" placeholder="Search jobs..." style="padding:8px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit;min-width:200px;" />
                     </div>
-                    <div style="display:flex;gap:8px;"><button class="btn-secondary btn-sm" onclick="exportHarvestedJobs()">📊 Export CSV</button><button class="btn-secondary btn-sm" onclick="clearAllHarvested()" style="color:var(--danger);">🗑️ Clear All</button></div>
+                    <div style="display:flex;gap:8px;"><button class="btn-secondary btn-sm" onclick="exportHarvestedJobs()">Export CSV</button><button class="btn-secondary btn-sm" onclick="clearAllHarvested()" style="color:var(--danger);">Clear All</button></div>
                 </div>
                 <div class="dashboard-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">📋 Harvested Jobs</h3><span style="font-size:14px;color:var(--gray-400);">${harvestedJobs.length} jobs</span></div>
-                    ${harvestedJobs.length === 0 ? '<div class="empty-state"><span class="empty-icon">🌾</span><p>No jobs harvested yet. Use the scraper above or add your first job manually.</p></div>' :
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;">Harvested Jobs</h3><span style="font-size:14px;color:var(--gray-400);">${harvestedJobs.length} jobs</span></div>
+                    ${harvestedJobs.length === 0 ? '<div class="empty-state"><span class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 8v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M3 8l3-5h12l3 5"/><path d="M3 8h18"/><path d="M9 12h6"/></svg></span><p>No jobs harvested yet. Use the scraper above or add your first job manually.</p></div>' :
                         harvestedJobs.slice(0, 20).map(job => `
                             <div class="dash-item" style="padding:16px 0;">
                                 <div style="flex:1;">
                                     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                                         <div class="dash-item-title" style="font-size:16px;">${job.title}</div>
                                         <span class="dash-item-status ${job.status || 'active'}">${job.status || 'Active'}</span>
-                                        ${job.scraped ? `<span style="font-size:10px;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:10px;">🕷️ Scraped</span>` : ''}
+                                        ${job.scraped ? `<span style="font-size:10px;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:10px;">Scraped</span>` : ''}
                                     </div>
-                                    <div class="dash-item-sub" style="margin-top:4px;"><strong>${job.company}</strong>${job.salary ? ` • 💰 ${job.salary}` : ''}${job.location ? ` • 📍 ${job.location}` : ''}${job.jobType ? ` • ${job.jobType}` : ''}</div>
+                                    <div class="dash-item-sub" style="margin-top:4px;"><strong>${job.company}</strong>${job.salary ? ` • ${job.salary}` : ''}${job.location ? ` • ${job.location}` : ''}${job.jobType ? ` • ${job.jobType}` : ''}</div>
                                     ${job.description ? `<div style="font-size:13px;color:var(--gray-500);margin-top:4px;">${job.description}</div>` : ''}
                                     <div style="font-size:12px;color:var(--gray-400);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;">
-                                        <span>🌾 Harvested: ${job.harvestedAt ? new Date(job.harvestedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
-                                        ${job.source ? `<span>📌 Source: ${job.source}</span>` : ''}
-                                        ${job.updatedAt ? ` • ✏️ Updated: ${new Date(job.updatedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}` : ''}
+                                        <span>Harvested: ${job.harvestedAt ? new Date(job.harvestedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
+                                        ${job.source ? `<span>Source: ${job.source}</span>` : ''}
+                                        ${job.updatedAt ? ` • Updated: ${new Date(job.updatedAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}` : ''}
                                     </div>
                                 </div>
                                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                    <button class="btn-secondary btn-sm" onclick="viewHarvestedJob('${job.url}')" style="padding:4px 12px;">🔗 View</button>
-                                    <button class="btn-secondary btn-sm" onclick="editHarvestedJob('${job.id}')" style="padding:4px 12px;">✏️ Edit</button>
-                                    <button class="btn-danger btn-sm" onclick="deleteHarvestedJob('${job.id}')" style="padding:4px 12px;">🗑️ Delete</button>
+                                    <button class="btn-secondary btn-sm" onclick="viewHarvestedJob('${job.url}')" style="padding:4px 12px;">View</button>
+                                    <button class="btn-secondary btn-sm" onclick="editHarvestedJob('${job.id}')" style="padding:4px 12px;">Edit</button>
+                                    <button class="btn-danger btn-sm" onclick="deleteHarvestedJob('${job.id}')" style="padding:4px 12px;">Delete</button>
                                 </div>
                             </div>
                         `).join('')
@@ -4203,13 +4286,13 @@
             const selectAllBtn = document.getElementById('scraperSelectAllBtn');
             if (state === 'loading') {
                 if (progress) progress.classList.add('active');
-                if (statusText) statusText.textContent = '🕷️ Scraping in progress...';
+                if (statusText) statusText.textContent = 'Scraping in progress...';
                 if (resultsContainer) resultsContainer.style.display = 'none';
                 if (importBtn) importBtn.disabled = true;
                 if (selectAllBtn) selectAllBtn.disabled = true;
             } else if (state === 'results') {
                 if (progress) progress.classList.remove('active');
-                if (statusText) statusText.textContent = `✅ Found ${scrapedJobs.length} jobs`;
+                if (statusText) statusText.textContent = `Found ${scrapedJobs.length} jobs`;
                 if (resultsContainer) resultsContainer.style.display = 'block';
                 if (importBtn) importBtn.disabled = false;
                 if (selectAllBtn) selectAllBtn.disabled = false;
@@ -4234,12 +4317,12 @@
             }
             if (stats) {
                 stats.innerHTML =
-                    `<span>📋 <strong>${scrapedJobs.length}</strong> jobs found</span><span>✅ <span id="scraperSelectedCount">0</span> selected</span><button class="btn-secondary btn-sm" onclick="selectAllScraped()" id="scraperSelectAllBtn">Select All</button><button class="btn-secondary btn-sm" onclick="deselectAllScraped()">Deselect All</button>`;
+                    `<span><strong>${scrapedJobs.length}</strong> jobs found</span><span><span id="scraperSelectedCount">0</span> selected</span><button class="btn-secondary btn-sm" onclick="selectAllScraped()" id="scraperSelectAllBtn">Select All</button><button class="btn-secondary btn-sm" onclick="deselectAllScraped()">Deselect All</button>`;
             }
             list.innerHTML = scrapedJobs.map((job, index) => `
                 <div class="scraper-job-item">
-                    <div class="job-info"><div class="title">${job.title}</div><div class="meta">🏢 ${job.company}${job.location ? `• 📍 ${job.location}` : ''}${job.salary ? `• 💰 ${job.salary}` : ''}${job.jobType ? `• ${job.jobType}` : ''}${job.url ? `• 🔗 ${job.url}` : ''}</div></div>
-                    <div class="job-actions"><input type="checkbox" class="scraper-checkbox" data-index="${index}" checked onchange="updateScraperSelection()" /><button class="btn-secondary btn-sm" onclick="previewScrapedJob(${index})" title="Preview">👁️</button></div>
+                    <div class="job-info"><div class="title">${job.title}</div><div class="meta">${job.company}${job.location ? `• ${job.location}` : ''}${job.salary ? `• ${job.salary}` : ''}${job.jobType ? `• ${job.jobType}` : ''}${job.url ? `• ${job.url}` : ''}</div></div>
+                    <div class="job-actions"><input type="checkbox" class="scraper-checkbox" data-index="${index}" checked onchange="updateScraperSelection()" /><button class="btn-secondary btn-sm" onclick="previewScrapedJob(${index})" title="Preview"></button></div>
                 </div>
             `).join('');
             updateScraperSelection();
@@ -4267,7 +4350,7 @@
             modal.innerHTML = `
                 <div class="modal" style="max-width:600px;">
                     <button class="modal-close" onclick="closeScraperPreview()">&times;</button>
-                    <h2>👁️ Job Preview</h2>
+                    <h2>Job Preview</h2>
                     <div style="margin-top:16px;">
                         <div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Title</span><div style="font-size:20px;font-weight:700;">${job.title}</div></div>
                         <div style="margin-bottom:12px;"><span style="font-size:13px;color:var(--gray-400);">Company</span><div style="font-size:16px;font-weight:600;">${job.company}</div></div>
@@ -4279,7 +4362,7 @@
                     </div>
                     <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;">
                         <button class="btn-secondary" onclick="closeScraperPreview()">Close</button>
-                        <button class="btn-primary" onclick="closeScraperPreview(); importScrapedJobs();">📥 Import All</button>
+                        <button class="btn-primary" onclick="closeScraperPreview(); importScrapedJobs();">Import All</button>
                     </div>
                 </div>
             `;
@@ -4304,7 +4387,7 @@
             for (let i = 0; i < CORS_PROXIES.length; i++) {
                 const proxyUrl = CORS_PROXIES[i](url);
                 try {
-                    onStatus?.(`🕷️ Fetching page (source ${i + 1}/${CORS_PROXIES.length})...`);
+                    onStatus?.(`Fetching page (source ${i + 1}/${CORS_PROXIES.length})...`);
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 15000);
                     const response = await fetch(proxyUrl, { signal: controller.signal });
@@ -4326,7 +4409,7 @@
             const url = input?.value?.trim();
             if (!url) { showNotification('Please enter a URL to scrape.', 'warning'); return; }
             if (!/^https?:\/\//i.test(url)) { showNotification('Please enter a full URL starting with http:// or https://', 'warning'); return; }
-            if (window.location.protocol === 'file:') { showNotification('⚠️ This page is open as a local file. Host it on a web server or use the "Paste HTML" tab.', 'error'); return; }
+            if (window.location.protocol === 'file:') { showNotification('This page is open as a local file. Host it on a web server or use the "Paste HTML" tab.', 'error'); return; }
             if (scraperRunning) { showNotification('Scraper is already running.', 'warning'); return; }
             scrapedJobs = [];
             scraperRunning = true;
@@ -4341,10 +4424,10 @@
                 scrapedJobs = extracted;
                 scrapedJobs.forEach(job => { job.sourceUrl = url;
                     job.scrapedAt = new Date().toISOString(); });
-                showNotification(`✅ Found ${scrapedJobs.length} job listings!`, 'success');
+                showNotification(`Found ${scrapedJobs.length} job listings!`, 'success');
                 updateScraperUI('results');
             } catch (error) {
-                showNotification('❌ Scraper error: ' + error.message, 'error');
+                showNotification('Scraper error: ' + error.message, 'error');
                 updateScraperUI('error');
             } finally {
                 scraperRunning = false;
@@ -4368,10 +4451,10 @@
                 scrapedJobs = extracted;
                 scrapedJobs.forEach(job => { job.sourceUrl = 'pasted-html';
                     job.scrapedAt = new Date().toISOString(); });
-                showNotification(`✅ Found ${scrapedJobs.length} job listings!`, 'success');
+                showNotification(`Found ${scrapedJobs.length} job listings!`, 'success');
                 updateScraperUI('results');
             } catch (error) {
-                showNotification('❌ Error: ' + error.message, 'error');
+                showNotification('Error: ' + error.message, 'error');
                 updateScraperUI('error');
             } finally {
                 scraperRunning = false;
@@ -4421,10 +4504,10 @@
                 }
                 scrapedJobs = jobs.filter(j => j.title && j.title.length > 2);
                 scrapedJobs.forEach(job => { job.scrapedAt = new Date().toISOString(); });
-                showNotification(`✅ Found ${scrapedJobs.length} jobs from JSON!`, 'success');
+                showNotification(`Found ${scrapedJobs.length} jobs from JSON!`, 'success');
                 updateScraperUI('results');
             } catch (e) {
-                showNotification('❌ Invalid JSON: ' + e.message, 'error');
+                showNotification('Invalid JSON: ' + e.message, 'error');
             }
         }
 
@@ -4491,7 +4574,7 @@
                 imported++;
             });
             storage.setItem(key, JSON.stringify(userData));
-            showNotification(`✅ Successfully imported ${imported} jobs and published to the job board!`, 'success');
+            showNotification(`Successfully imported ${imported} jobs and published to the job board!`, 'success');
             scrapedJobs = [];
             updateScraperUI('idle');
             renderHarvesterDashboard();
@@ -4544,7 +4627,7 @@
             };
             userData.jobs.unshift(boardJob);
             storage.setItem(key, JSON.stringify(userData));
-            showNotification('🌾 Job harvested and published to the job board!', 'success');
+            showNotification('Job harvested and published to the job board!', 'success');
             document.getElementById('harvestTitle').value = '';
             document.getElementById('harvestCompany').value = '';
             document.getElementById('harvestURL').value = '';
@@ -4569,7 +4652,7 @@
             modal.innerHTML = `
                 <div class="modal" style="max-width:600px;">
                     <button class="modal-close" onclick="closeEditHarvestModal()">&times;</button>
-                    <h2>✏️ Edit Harvested Job</h2>
+                    <h2>Edit Harvested Job</h2>
                     <form id="editHarvestForm" onsubmit="saveHarvestedJob(event, '${jobId}')">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
                             <div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Job Title *</label><input type="text" id="editHarvestTitle" value="${job.title}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" required /></div>
@@ -4586,7 +4669,7 @@
                             <div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Status</label><select id="editHarvestStatus" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;"><option value="active" ${job.status === 'active' ? 'selected' : ''}>Active</option><option value="pending" ${job.status === 'pending' ? 'selected' : ''}>Pending Review</option><option value="rejected" ${job.status === 'rejected' ? 'selected' : ''}>Rejected</option><option value="archived" ${job.status === 'archived' ? 'selected' : ''}>Archived</option></select></div>
                         </div>
                         <div style="margin-bottom:12px;"><div class="form-group"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Source</label><input type="text" id="editHarvestSource" value="${job.source || ''}" style="width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px;font-family:inherit;" /></div></div>
-                        <div style="display:flex;gap:12px;"><button type="submit" class="btn-primary" style="flex:1;padding:14px;">💾 Save Changes</button><button type="button" class="btn-secondary" onclick="closeEditHarvestModal()" style="padding:14px 24px;">Cancel</button></div>
+                        <div style="display:flex;gap:12px;"><button type="submit" class="btn-primary" style="flex:1;padding:14px;">Save Changes</button><button type="button" class="btn-secondary" onclick="closeEditHarvestModal()" style="padding:14px 24px;">Cancel</button></div>
                     </form>
                 </div>
             `;
@@ -4637,7 +4720,7 @@
                 boardJob.url = url; }
             storage.setItem(key, JSON.stringify(userData));
             closeEditHarvestModal();
-            showNotification('✅ Job updated successfully!', 'success');
+            showNotification('Job updated successfully!', 'success');
             renderHarvesterDashboard();
             renderJobBoard();
         }
@@ -4665,7 +4748,7 @@
             userData.harvestedJobs = [];
             userData.jobs = userData.jobs.filter(j => !j.harvested);
             storage.setItem(key, JSON.stringify(userData));
-            showNotification('🗑️ All harvested jobs cleared.', 'info');
+            showNotification('All harvested jobs cleared.', 'info');
             renderHarvesterDashboard();
             renderJobBoard();
         }
@@ -4682,7 +4765,7 @@
             modal.innerHTML = `
                 <div class="modal" style="max-width:700px;">
                     <button class="modal-close" onclick="closeBulkImportModal()">&times;</button>
-                    <h2>📥 Bulk Import Harvested Jobs</h2>
+                    <h2>Bulk Import Harvested Jobs</h2>
                     <p style="color:var(--gray-500);margin-bottom:16px;">Paste multiple job URLs below (one per line).</p>
                     <form id="bulkImportForm" onsubmit="processBulkImport(event)">
                         <div class="form-group" style="margin-bottom:16px;">
@@ -4690,7 +4773,7 @@
                             <textarea id="bulkUrls" rows="8" placeholder="https://company.com/jobs/123&#10;https://company2.com/careers/456" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:monospace;" required></textarea>
                             <span style="font-size:12px;color:var(--gray-400);">Enter up to 20 URLs at a time</span>
                         </div>
-                        <div style="display:flex;gap:12px;"><button type="submit" class="btn-primary" style="flex:1;padding:14px;">📥 Import Jobs</button><button type="button" class="btn-secondary" onclick="closeBulkImportModal()" style="padding:14px 24px;">Cancel</button></div>
+                        <div style="display:flex;gap:12px;"><button type="submit" class="btn-primary" style="flex:1;padding:14px;">Import Jobs</button><button type="button" class="btn-secondary" onclick="closeBulkImportModal()" style="padding:14px 24px;">Cancel</button></div>
                     </form>
                 </div>
             `;
@@ -4754,7 +4837,7 @@
             closeBulkImportModal();
             renderHarvesterDashboard();
             renderJobBoard();
-            showNotification(`✅ Successfully imported ${imported} jobs and published to the job board!`, 'success');
+            showNotification(`Successfully imported ${imported} jobs and published to the job board!`, 'success');
         }
 
         function filterHarvestedJobs() {
@@ -4779,7 +4862,7 @@
             a.download = 'harvested_jobs_' + new Date().toISOString().slice(0, 10) + '.csv';
             a.click();
             URL.revokeObjectURL(url);
-            showNotification('📊 Harvested jobs exported successfully!', 'success');
+            showNotification('Harvested jobs exported successfully!', 'success');
         }
 
         // ============================================================
@@ -4838,7 +4921,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'employer') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -4859,15 +4942,15 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>🏢 Employer Dashboard</h1><p style="color:var(--gray-500);">Post jobs, manage listings, and track analytics.</p></div>
+                    <div><h1>Employer Dashboard</h1><p style="color:var(--gray-500);">Post jobs, manage listings, and track analytics.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge employer">Employer</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div style="background:var(--gray-50);padding:16px 20px;border-radius:var(--radius);border:1px solid var(--gray-200);margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-                    <div><strong style="font-size:15px;">📊 Daily Posting Limit</strong><div style="font-size:13px;color:var(--gray-500);margin-top:2px;">Free employers can post <strong>1 job per day</strong></div></div>
+                    <div><strong style="font-size:15px;">Daily Posting Limit</strong><div style="font-size:13px;color:var(--gray-500);margin-top:2px;">Free employers can post <strong>1 job per day</strong></div></div>
                     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
                         <div style="text-align:center;"><span style="font-size:24px;font-weight:800;color:var(--primary);">${remainingPosts}</span><span style="font-size:13px;color:var(--gray-500);display:block;">Posts remaining today</span></div>
                         <div style="text-align:center;"><span style="font-size:24px;font-weight:800;color:${postedToday > 0 ? 'var(--success)' : 'var(--gray-400)'};">${postedToday}/1</span><span style="font-size:13px;color:var(--gray-500);display:block;">Posted today</span></div>
-                        <div style="text-align:center;"><span style="font-size:13px;color:var(--gray-500);display:block;">${remainingPosts > 0 ? '✅ You can post today' : '⛔ Daily limit reached'}</span>${remainingPosts === 0 ? `<span style="font-size:12px;color:var(--warning);">⏳ Come back tomorrow</span>` : ''}</div>
+                        <div style="text-align:center;"><span style="font-size:13px;color:var(--gray-500);display:block;">${remainingPosts > 0 ? 'You can post today' : 'Daily limit reached'}</span>${remainingPosts === 0 ? `<span style="font-size:12px;color:var(--warning);">Come back tomorrow</span>` : ''}</div>
                     </div>
                 </div>
                 <div class="dashboard-stats">
@@ -4878,7 +4961,7 @@
                 </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>📋 Your Active Jobs</h3>
+                        <h3>Your Active Jobs</h3>
                         ${jobs.length === 0 ? `<div class="empty-state"><p>No jobs posted yet. <a onclick="showPage('post-job')" style="color:var(--primary);cursor:pointer;font-weight:600;">Post your first job →</a></p></div>` :
                             jobs.filter(j => j.status === 'active').slice(0, 5).map(job => `
                                 <div class="dash-item"><div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${job.jobType} • ${job.applicants || 0} applicants • ${job.views || 0} views</div></div><div style="display:flex;gap:8px;align-items:center;"><span class="dash-item-status ${job.status}">${job.status}</span><button class="btn-secondary btn-sm" onclick="closeJob('${job.id}')">Close</button></div></div>
@@ -4887,13 +4970,13 @@
                         ${jobs.filter(j => j.status === 'active').length > 5 ? `<div style="text-align:center;padding-top:12px;"><a onclick="showPage('home')" style="color:var(--primary);cursor:pointer;font-weight:600;">View all →</a></div>` : ''}
                     </div>
                     <div class="dashboard-card">
-                        <h3>⚡ Quick Actions</h3>
+                        <h3>Quick Actions</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
-                            <button class="btn-primary" onclick="handlePostJobClick()" ${remainingPosts === 0 ? 'disabled' : ''} style="opacity:${remainingPosts === 0 ? '0.5' : '1'};">📝 Post a Job ${remainingPosts === 0 ? '(Limit reached)' : ''}</button>
-                            <button class="btn-secondary" onclick="showPage('home')">👁️ View Job Board</button>
-                            <button class="btn-secondary" onclick="exportJobsCSV()">📊 Export Jobs</button>
-                            <button class="btn-secondary" onclick="showPage('employer-applicants')">📥 View Applicants</button>
-                            <button class="btn-secondary" onclick="showNotification('Upgrade to Premium for unlimited job posting!', 'info')">💎 Upgrade Plan</button>
+                            <button class="btn-primary" onclick="handlePostJobClick()" ${remainingPosts === 0 ? 'disabled' : ''} style="opacity:${remainingPosts === 0 ? '0.5' : '1'};">Post a Job ${remainingPosts === 0 ? '(Limit reached)' : ''}</button>
+                            <button class="btn-secondary" onclick="showPage('home')">View Job Board</button>
+                            <button class="btn-secondary" onclick="exportJobsCSV()">Export Jobs</button>
+                            <button class="btn-secondary" onclick="showPage('employer-applicants')">View Applicants</button>
+                            <button class="btn-secondary" onclick="showNotification('Upgrade to Premium for unlimited job posting!', 'info')">Upgrade Plan</button>
                         </div>
                     </div>
                 </div>
@@ -4913,7 +4996,7 @@
 
         function handlePostJobClick() {
             const result = canPostJobToday();
-            if (!result.allowed) { showNotification('⛔ ' + result.message, 'warning'); return; }
+            if (!result.allowed) { showNotification('' + result.message, 'warning'); return; }
             showPage('post-job');
         }
 
@@ -4943,7 +5026,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'job-seeker') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -4969,12 +5052,12 @@
             const successRate = totalApps > 0 ? Math.round((hired / totalApps) * 100) : 0;
 
             const statusLabels = {
-                'pending': '⏳ Pending',
-                'seen': '👁️ Seen',
-                'reviewed': '📋 Reviewed',
-                'interview': '📞 Interview',
-                'hired': '✅ Hired',
-                'rejected': '❌ Rejected'
+                'pending': 'Pending',
+                'seen': 'Seen',
+                'reviewed': 'Reviewed',
+                'interview': 'Interview',
+                'hired': 'Hired',
+                'rejected': 'Rejected'
             };
 
             // Resume data
@@ -4991,7 +5074,7 @@
             container.innerHTML = `
                 <div class="dashboard-header">
                     <div>
-                        <h1>🔍 Job Seeker Dashboard</h1>
+                        <h1>Job Seeker Dashboard</h1>
                         <p style="color:var(--gray-500);">Find your dream job, track applications, and save jobs.</p>
                     </div>
                     <div class="user-info">
@@ -5003,37 +5086,37 @@
 
                 <!-- Enhanced Stats -->
                 <div class="dashboard-stats">
-                    <div class="dashboard-stat-card"><span class="number">${totalApps}</span><span class="label">📤 Applications</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${pending}</span><span class="label">⏳ Pending</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${seen}</span><span class="label">👁️ Viewed</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${interviews}</span><span class="label">📞 Interviews</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${hired}</span><span class="label">✅ Hired</span></div>
-                    <div class="dashboard-stat-card"><span class="number">${rejected}</span><span class="label">❌ Rejected</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${totalApps}</span><span class="label">Applications</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${pending}</span><span class="label">Pending</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${seen}</span><span class="label">Viewed</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${interviews}</span><span class="label">Interviews</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${hired}</span><span class="label">Hired</span></div>
+                    <div class="dashboard-stat-card"><span class="number">${rejected}</span><span class="label">Rejected</span></div>
                 </div>
 
                 <!-- Analytics Cards -->
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
                     <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
                         <div style="font-size:28px;font-weight:800;color:var(--success);">${responseRate}%</div>
-                        <div style="font-size:13px;color:var(--gray-500);">📊 Response Rate</div>
+                        <div style="font-size:13px;color:var(--gray-500);">Response Rate</div>
                     </div>
                     <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
                         <div style="font-size:28px;font-weight:800;color:var(--primary);">${interviewRate}%</div>
-                        <div style="font-size:13px;color:var(--gray-500);">🎯 Interview Rate</div>
+                        <div style="font-size:13px;color:var(--gray-500);">Interview Rate</div>
                     </div>
                     <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
                         <div style="font-size:28px;font-weight:800;color:var(--warning);">${successRate}%</div>
-                        <div style="font-size:13px;color:var(--gray-500);">🏆 Success Rate</div>
+                        <div style="font-size:13px;color:var(--gray-500);">Success Rate</div>
                     </div>
                     <div style="background:var(--gray-50);padding:16px;border-radius:var(--radius);border:1px solid var(--gray-200);text-align:center;">
                         <div style="font-size:28px;font-weight:800;color:var(--gray-700);">${savedJobs.length}</div>
-                        <div style="font-size:13px;color:var(--gray-500);">⭐ Saved Jobs</div>
+                        <div style="font-size:13px;color:var(--gray-500);">Saved Jobs</div>
                     </div>
                 </div>
 
                 <!-- RESUME BUILDER SECTION -->
                 <div class="dashboard-card" style="margin-bottom:24px;border:2px solid var(--primary);">
-                    <h3>📄 Resume Builder</h3>
+                    <h3>Resume Builder</h3>
                     <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">Build and manage your professional resume. This information will be used when you apply to jobs.</p>
 
                     <div class="resume-builder">
@@ -5076,13 +5159,13 @@
                                     <label>Certifications</label>
                                     <textarea id="resumeCertifications" rows="2" placeholder="AWS Certified, Google Analytics, ...">${resumeCertifications}</textarea>
                                 </div>
-                                <button type="submit" class="btn-primary" style="width:100%;padding:12px;">💾 Save Resume</button>
+                                <button type="submit" class="btn-primary" style="width:100%;padding:12px;">Save Resume</button>
                             </form>
                         </div>
 
                         <!-- Resume Preview -->
                         <div class="resume-preview">
-                            <h4 style="margin-bottom:12px;font-size:14px;color:var(--gray-500);">📄 Resume Preview</h4>
+                            <h4 style="margin-bottom:12px;font-size:14px;color:var(--gray-500);">Resume Preview</h4>
                             <div id="resumePreviewContent">
                                 ${resumeName ? `
                                     <div class="preview-name">${resumeName}</div>
@@ -5095,8 +5178,8 @@
                                 ` : `<div class="empty-state" style="padding:20px 0;"><p>No resume data yet. Fill out the form and click "Save Resume".</p></div>`}
                             </div>
                             ${resumeName ? `<div style="margin-top:16px;border-top:1px solid var(--gray-200);padding-top:12px;display:flex;gap:12px;">
-                                <button class="btn-secondary btn-sm" onclick="exportResume()">📥 Export PDF</button>
-                                <button class="btn-secondary btn-sm" onclick="clearResume()">🗑️ Clear Resume</button>
+                                <button class="btn-secondary btn-sm" onclick="exportResume()">Export PDF</button>
+                                <button class="btn-secondary btn-sm" onclick="clearResume()">Clear Resume</button>
                             </div>` : ''}
                         </div>
                     </div>
@@ -5104,7 +5187,7 @@
 
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>📤 Your Applications <button class="btn-secondary btn-sm" onclick="renderJobSeekerAnalytics()" style="float:right;font-size:11px;">📊 Detailed Analytics</button></h3>
+                        <h3>Your Applications <button class="btn-secondary btn-sm" onclick="renderJobSeekerAnalytics()" style="float:right;font-size:11px;">Detailed Analytics</button></h3>
                         ${applications.length === 0 ? '<div class="empty-state"><p>You haven\'t applied to any jobs yet. <a onclick="showPage(\'home\')" style="color:var(--primary);cursor:pointer;">Browse jobs →</a></p></div>' :
                             applications.slice(0, 10).map(app => {
                                 return `
@@ -5112,11 +5195,11 @@
                                         <div>
                                             <div class="dash-item-title">${app.jobTitle || 'Job'}</div>
                                             <div class="dash-item-sub">${app.company || 'Company'} • Applied ${new Date(app.appliedAt).toLocaleDateString('en-PH')}</div>
-                                            ${app.notes ? `<div style="font-size:12px;color:var(--gray-500);margin-top:4px;">📝 ${app.notes}</div>` : ''}
+                                            ${app.notes ? `<div style="font-size:12px;color:var(--gray-500);margin-top:4px;">${app.notes}</div>` : ''}
                                         </div>
                                         <div style="display:flex;align-items:center;gap:8px;">
                                             <span class="dash-item-status ${app.status}">${statusLabels[app.status] || app.status}</span>
-                                            <button class="btn-secondary btn-sm" onclick="addApplicationNote('${app.jobId}')" title="Add Note" style="padding:2px 8px;font-size:11px;">📝</button>
+                                            <button class="btn-secondary btn-sm" onclick="addApplicationNote('${app.jobId}')" title="Add Note" style="padding:2px 8px;font-size:11px;"></button>
                                         </div>
                                     </div>
                                 `;
@@ -5125,7 +5208,7 @@
                         ${applications.length > 10 ? `<div style="text-align:center;padding-top:12px;color:var(--gray-400);font-size:13px;">Showing 10 of ${applications.length}</div>` : ''}
                     </div>
                     <div class="dashboard-card">
-                        <h3>⭐ Saved Jobs</h3>
+                        <h3>Saved Jobs</h3>
                         ${savedJobs.length === 0 ? '<div class="empty-state"><p>Save jobs you\'re interested in for later.</p></div>' :
                             savedJobs.slice(0, 5).map(jobId => {
                                 const job = allJobs.find(j => j.id == jobId);
@@ -5146,19 +5229,19 @@
 
                 <!-- Quick Actions -->
                 <div class="dashboard-card" style="margin-top:24px;background:var(--primary-light);border:2px solid var(--primary);">
-                    <h3>⚡ Quick Actions</h3>
+                    <h3>Quick Actions</h3>
                     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
-                        <button class="btn-primary" onclick="showPage('home')">🔍 Browse Jobs</button>
-                        <button class="btn-secondary" onclick="showPage('apply4me')">🚀 Apply4Me</button>
-                        <button class="btn-secondary" onclick="exportJobSeekerApplications()">📊 Export Applications</button>
-                        <button class="btn-secondary" onclick="renderJobSeekerAnalytics()">📊 View Analytics</button>
-                        <button class="btn-secondary" onclick="showNotification('🔔 Job alerts coming soon!', 'info')">🔔 Job Alerts</button>
+                        <button class="btn-primary" onclick="showPage('home')">Browse Jobs</button>
+                        <button class="btn-secondary" onclick="showPage('apply4me')">Apply4Me</button>
+                        <button class="btn-secondary" onclick="exportJobSeekerApplications()">Export Applications</button>
+                        <button class="btn-secondary" onclick="renderJobSeekerAnalytics()">View Analytics</button>
+                        <button class="btn-secondary" onclick="showNotification('Job alerts coming soon!', 'info')">Job Alerts</button>
                     </div>
                 </div>
 
                 <!-- Recommended Jobs -->
                 <div class="dashboard-card" style="margin-top:24px;">
-                    <h3>🎯 Recommended Jobs</h3>
+                    <h3>Recommended Jobs</h3>
                     ${recommendedJobs.length === 0 ? '<div class="empty-state"><p>No recommendations right now. Check back later!</p></div>' :
                         recommendedJobs.map(job => `
                             <div class="dash-item">
@@ -5203,7 +5286,7 @@
             data.resume = resume;
             storage.setItem(key, JSON.stringify(data));
 
-            showNotification('✅ Resume saved successfully!', 'success');
+            showNotification('Resume saved successfully!', 'success');
             renderJobSeekerDashboard();
         }
 
@@ -5248,7 +5331,7 @@
             a.click();
             URL.revokeObjectURL(url);
 
-            showNotification('📄 Resume exported as text file!', 'success');
+            showNotification('Resume exported as text file!', 'success');
         }
 
         function clearResume() {
@@ -5260,7 +5343,7 @@
             data.resume = null;
             storage.setItem(key, JSON.stringify(data));
 
-            showNotification('🗑️ Resume cleared.', 'info');
+            showNotification('Resume cleared.', 'info');
             renderJobSeekerDashboard();
         }
 
@@ -5290,7 +5373,7 @@
             if (app) {
                 app.notes = note.trim();
                 storage.setItem(key, JSON.stringify(data));
-                showNotification('✅ Note added successfully!', 'success');
+                showNotification('Note added successfully!', 'success');
                 renderJobSeekerDashboard();
             } else {
                 showNotification('Application not found.', 'error');
@@ -5332,7 +5415,7 @@
             modal.innerHTML = `
                 <div class="modal" style="max-width:700px;">
                     <button class="modal-close" onclick="closeAnalyticsModal()">&times;</button>
-                    <h2>📊 Application Analytics</h2>
+                    <h2>Application Analytics</h2>
                     <p style="color:var(--gray-500);margin-bottom:20px;">Your job application performance overview.</p>
 
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px;">
@@ -5356,32 +5439,32 @@
 
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
                         <div style="background:var(--gray-50);padding:16px;border-radius:8px;border:1px solid var(--gray-200);">
-                            <div style="font-size:13px;color:var(--gray-500);">📅 This Week</div>
+                            <div style="font-size:13px;color:var(--gray-500);">This Week</div>
                             <div style="font-size:32px;font-weight:800;color:var(--gray-900);">${thisWeek}</div>
                             <div style="font-size:12px;color:var(--gray-400);">Applications sent</div>
                         </div>
                         <div style="background:var(--gray-50);padding:16px;border-radius:8px;border:1px solid var(--gray-200);">
-                            <div style="font-size:13px;color:var(--gray-500);">📅 This Month</div>
+                            <div style="font-size:13px;color:var(--gray-500);">This Month</div>
                             <div style="font-size:32px;font-weight:800;color:var(--gray-900);">${thisMonth}</div>
                             <div style="font-size:12px;color:var(--gray-400);">Applications sent</div>
                         </div>
                     </div>
 
                     <div style="background:var(--gray-50);padding:16px;border-radius:8px;border:1px solid var(--gray-200);margin-bottom:16px;">
-                        <div style="font-size:13px;color:var(--gray-500);margin-bottom:8px;">📊 Status Breakdown</div>
+                        <div style="font-size:13px;color:var(--gray-500);margin-bottom:8px;">Status Breakdown</div>
                         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                            <span style="font-size:14px;">⏳ Pending: <strong>${pending}</strong></span>
-                            <span style="font-size:14px;">👁️ Seen: <strong>${seen}</strong></span>
-                            <span style="font-size:14px;">📋 Reviewed: <strong>${reviewed}</strong></span>
-                            <span style="font-size:14px;">📞 Interviews: <strong>${interviews}</strong></span>
-                            <span style="font-size:14px;">✅ Hired: <strong>${hired}</strong></span>
-                            <span style="font-size:14px;">❌ Rejected: <strong>${rejected}</strong></span>
+                            <span style="font-size:14px;">Pending: <strong>${pending}</strong></span>
+                            <span style="font-size:14px;">Seen: <strong>${seen}</strong></span>
+                            <span style="font-size:14px;">Reviewed: <strong>${reviewed}</strong></span>
+                            <span style="font-size:14px;">Interviews: <strong>${interviews}</strong></span>
+                            <span style="font-size:14px;">Hired: <strong>${hired}</strong></span>
+                            <span style="font-size:14px;">Rejected: <strong>${rejected}</strong></span>
                         </div>
                     </div>
 
                     <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;">
                         <button class="btn-secondary" onclick="closeAnalyticsModal()">Close</button>
-                        <button class="btn-primary btn-sm" onclick="closeAnalyticsModal(); exportJobSeekerApplications();">📊 Export Report</button>
+                        <button class="btn-primary btn-sm" onclick="closeAnalyticsModal(); exportJobSeekerApplications();">Export Report</button>
                     </div>
                 </div>
             `;
@@ -5425,7 +5508,7 @@
             a.click();
             URL.revokeObjectURL(url);
 
-            showNotification('📊 Applications exported successfully!', 'success');
+            showNotification('Applications exported successfully!', 'success');
         }
 
         // ============================================================
@@ -5436,7 +5519,7 @@
             if (!container) return;
             if (!currentUser || !['owner', 'manager'].includes(currentUser.role)) {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5444,7 +5527,7 @@
             const allJobs = getAllJobs();
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>${currentUser.role === 'owner' ? '👑 Owner' : '📊 Manager'} Dashboard</h1><p style="color:var(--gray-500);">Welcome back, ${currentUser.name}.</p></div>
+                    <div><h1>${currentUser.role === 'owner' ? 'Owner' : 'Manager'} Dashboard</h1><p style="color:var(--gray-500);">Welcome back, ${currentUser.name}.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge ${currentUser.role.replace('-','')}">${getRoleDisplay(currentUser.role)}</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div class="dashboard-stats">
@@ -5455,19 +5538,19 @@
                 </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>📋 Recent Job Postings</h3>
+                        <h3>Recent Job Postings</h3>
                         ${allJobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet.</p></div>' :
                             allJobs.slice(0, 5).map(job => `<div class="dash-item"><div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${job.jobType} • ${job.applicants || 0} applicants • ${job.views || 0} views</div></div><span class="dash-item-status ${job.status}">${job.status}</span></div>`).join('')
                         }
                     </div>
                     <div class="dashboard-card">
-                        <h3>⚡ Quick Actions</h3>
+                        <h3>Quick Actions</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
-                            <button class="btn-primary" onclick="showPage('post-job')">📝 Post a Job</button>
-                            <button class="btn-secondary" onclick="showPage('apply4me')">🚀 Apply4Me</button>
-                            <button class="btn-secondary" onclick="showPage('home')">👁️ View Job Board</button>
-                            <button class="btn-secondary" onclick="showPage('manager-analytics')">📊 Analytics</button>
-                            <button class="btn-secondary" onclick="exportJobsCSV()">📊 Export Data</button>
+                            <button class="btn-primary" onclick="showPage('post-job')">Post a Job</button>
+                            <button class="btn-secondary" onclick="showPage('apply4me')">Apply4Me</button>
+                            <button class="btn-secondary" onclick="showPage('home')">View Job Board</button>
+                            <button class="btn-secondary" onclick="showPage('manager-analytics')">Analytics</button>
+                            <button class="btn-secondary" onclick="exportJobsCSV()">Export Data</button>
                         </div>
                     </div>
                 </div>
@@ -5482,7 +5565,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'business-partner') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5494,7 +5577,7 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>🤝 Business Partner Dashboard</h1><p style="color:var(--gray-500);">Post jobs and earn referral fees.</p></div>
+                    <div><h1>Business Partner Dashboard</h1><p style="color:var(--gray-500);">Post jobs and earn referral fees.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge partner">Business Partner</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div class="referral-stats">
@@ -5504,12 +5587,12 @@
                     <div class="referral-stat"><span class="number">${data.hires || 0}</span><span class="label">Successful Hires</span></div>
                 </div>
                 <div class="dashboard-card" style="margin-bottom:24px;">
-                    <h3>🔗 Your Referral Code</h3>
+                    <h3>Your Referral Code</h3>
                     <div class="referral-code"><span>Share this code with employers:</span><span class="code">${data.code || 'REF-XXXXXX'}</span><button class="btn-primary btn-sm" onclick="copyReferralCode()">Copy</button></div>
                     <p style="font-size:13px;color:var(--gray-500);margin-top:12px;">Earn ₱1,500 for every successful hire through your referral.</p>
                 </div>
                 <div class="dashboard-card">
-                    <h3>📋 Your Jobs</h3>
+                    <h3>Your Jobs</h3>
                     ${jobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet.</p></div>' :
                         jobs.slice(0, 5).map(job => `<div class="dash-item"><div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${job.applicants || 0} applicants • ${job.views || 0} views</div></div><span class="dash-item-status ${job.status}">${job.status}</span></div>`).join('')
                     }
@@ -5543,7 +5626,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'employee') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5572,12 +5655,12 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>👤 Employee Dashboard</h1><p style="color:var(--gray-500);">Track your applications, time, and manage Apply4Me clients.</p></div>
+                    <div><h1>Employee Dashboard</h1><p style="color:var(--gray-500);">Track your applications, time, and manage Apply4Me clients.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge employee">Employee</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div class="time-tracker">
                     <div><strong style="font-size:16px;">⏰ Time Tracker</strong><div style="font-size:13px;color:var(--gray-500);">Clock in and out to track your hours</div></div>
-                    <div><span class="time-status ${isClockedIn ? 'clocked-in' : isClockedOut ? 'clocked-out' : ''}" style="font-size:16px;font-weight:600;">${isClockedIn ? '🟢 Clocked In' : isClockedOut ? '🔴 Clocked Out' : '⚪ Not Started'}</span></div>
+                    <div><span class="time-status ${isClockedIn ? 'clocked-in' : isClockedOut ? 'clocked-out' : ''}" style="font-size:16px;font-weight:600;">${isClockedIn ? 'Clocked In' : isClockedOut ? 'Clocked Out' : 'Not Started'}</span></div>
                     <div style="font-size:14px;"><div>In: <strong>${timeIn}</strong></div><div>Out: <strong>${timeOut}</strong></div>${isClockedOut ? `<div>Hours: <strong>${hoursWorked}</strong></div>` : ''}</div>
                     <div style="display:flex;gap:8px;"><button class="btn-success btn-sm" onclick="clockIn()" ${isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock In</button><button class="btn-danger btn-sm" onclick="clockOut()" ${!isClockedIn ? 'disabled' : ''} style="padding:8px 20px;">Clock Out</button></div>
                 </div>
@@ -5589,26 +5672,26 @@
                 </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>📤 Your Applications</h3>
+                        <h3>Your Applications</h3>
                         ${applications.length === 0 ? '<div class="empty-state"><p>You haven\'t applied to any jobs yet. <a onclick="showPage(\'home\')" style="color:var(--primary);cursor:pointer;">Browse jobs →</a></p></div>' :
                             applications.slice(0, 5).map(app => {
-                                const statusLabels = { 'pending': '⏳ Pending', 'seen': '👁️ Seen', 'interview': '📞 Interview', 'hired': '✅ Hired', 'rejected': '❌ Rejected' };
+                                const statusLabels = { 'pending': 'Pending', 'seen': 'Seen', 'interview': 'Interview', 'hired': 'Hired', 'rejected': 'Rejected' };
                                 return `<div class="dash-item"><div><div class="dash-item-title">${app.jobTitle || 'Job'}</div><div class="dash-item-sub">${app.company || 'Company'} • Applied ${new Date(app.appliedAt).toLocaleDateString('en-PH')}</div></div><span class="dash-item-status ${app.status}">${statusLabels[app.status] || app.status}</span></div>`;
                             }).join('')
                         }
                     </div>
                     <div class="dashboard-card">
-                        <h3>🚀 Apply4Me Clients</h3>
+                        <h3>Apply4Me Clients</h3>
                         ${apply4meClients.length === 0 ? '<div class="empty-state"><p>No Apply4Me clients yet. Share the service to get clients!</p></div>' :
                             apply4meClients.slice(0, 5).map(client => `
                                 <div class="dash-item">
-                                    <div><div class="dash-item-title">${client.name}</div><div class="dash-item-sub">${client.role} • ${client.plan} • 📄 ${client.resume !== 'Not uploaded' ? '✅' : '❌'} Resume</div></div>
+                                    <div><div class="dash-item-title">${client.name}</div><div class="dash-item-sub">${client.role} • ${client.plan} • ${client.resume !== 'Not uploaded' ? '' : ''} Resume</div></div>
                                     <button class="btn-primary btn-sm" onclick="viewClientProfile('${client.email}')">View</button>
                                 </div>
                             `).join('')
                         }
                         ${apply4meClients.length > 5 ? `<div style="text-align:center;padding-top:12px;"><span style="color:var(--gray-400);font-size:13px;">Showing 5 of ${apply4meClients.length} clients</span></div>` : ''}
-                        <div style="margin-top:12px;text-align:center;"><button class="btn-primary btn-sm" onclick="showPage('apply4me')">🚀 Go to Apply4Me</button></div>
+                        <div style="margin-top:12px;text-align:center;"><button class="btn-primary btn-sm" onclick="showPage('apply4me')">Go to Apply4Me</button></div>
                     </div>
                 </div>
             `;
@@ -5624,7 +5707,7 @@
             modal.innerHTML = `
                 <div class="modal" style="max-width:700px;">
                     <button class="modal-close" onclick="closeClientProfileModal()">&times;</button>
-                    <h2>👤 Client Profile</h2>
+                    <h2>Client Profile</h2>
                     <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                         <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Full Name</p><p style="font-weight:600;">${lead.name}</p></div>
                         <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Email</p><p style="font-weight:600;">${lead.email}</p></div>
@@ -5632,14 +5715,14 @@
                         <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Target Role</p><p style="font-weight:600;">${lead.role || 'N/A'}</p></div>
                         <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Plan</p><p><span style="background:var(--primary-light);color:var(--primary);padding:2px 12px;border-radius:12px;font-size:13px;font-weight:600;">${lead.planName || 'N/A'}</span></p></div>
                         <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Submitted</p><p style="font-size:13px;color:var(--gray-500);">${new Date(lead.submittedAt).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</p></div>
-                        <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Portfolio</p>${lead.portfolio ? `<a href="${lead.portfolio}" target="_blank" style="color:var(--primary);font-weight:600;">🔗 View</a>` : '<span style="color:var(--gray-400);">Not provided</span>'}</div>
-                        <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">LinkedIn</p>${lead.linkedin ? `<a href="${lead.linkedin}" target="_blank" style="color:var(--primary);font-weight:600;">🔗 View</a>` : '<span style="color:var(--gray-400);">Not provided</span>'}</div>
-                        <div style="grid-column:1/3;"><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Resume</p>${lead.resume ? `<span style="color:var(--success);font-weight:600;">📄 ${lead.resume.name}</span>` : '<span style="color:var(--gray-400);">Not uploaded</span>'}</div>
+                        <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Portfolio</p>${lead.portfolio ? `<a href="${lead.portfolio}" target="_blank" style="color:var(--primary);font-weight:600;">View</a>` : '<span style="color:var(--gray-400);">Not provided</span>'}</div>
+                        <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">LinkedIn</p>${lead.linkedin ? `<a href="${lead.linkedin}" target="_blank" style="color:var(--primary);font-weight:600;">View</a>` : '<span style="color:var(--gray-400);">Not provided</span>'}</div>
+                        <div style="grid-column:1/3;"><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Resume</p>${lead.resume ? `<span style="color:var(--success);font-weight:600;">${lead.resume.name}</span>` : '<span style="color:var(--gray-400);">Not uploaded</span>'}</div>
                         ${lead.message ? `<div style="grid-column:1/3;"><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Message</p><p style="background:var(--gray-50);padding:12px;border-radius:8px;border:1px solid var(--gray-200);font-size:14px;color:var(--gray-600);">${lead.message}</p></div>` : ''}
                     </div>
                     <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;">
                         <button class="btn-secondary" onclick="closeClientProfileModal()">Close</button>
-                        <button class="btn-primary" onclick="contactClient('${lead.email}')">📧 Contact Client</button>
+                        <button class="btn-primary" onclick="contactClient('${lead.email}')">Contact Client</button>
                     </div>
                 </div>
             `;
@@ -5655,7 +5738,7 @@
 
         function contactClient(email) {
             closeClientProfileModal();
-            showNotification(`📧 Opening email to ${email}...`, 'info');
+            showNotification(`Opening email to ${email}...`, 'info');
             window.location.href = `mailto:${email}?subject=Apply4Me Service Inquiry`;
         }
 
@@ -5667,7 +5750,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'owner') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5685,7 +5768,7 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>👑 Owner Analytics</h1><p style="color:var(--gray-500);">Full system overview and analytics.</p></div>
+                    <div><h1>Owner Analytics</h1><p style="color:var(--gray-500);">Full system overview and analytics.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge owner">Owner</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
@@ -5697,22 +5780,22 @@
                     <div class="dashboard-stat-card"><span class="number">${totalLeads}</span><span class="label">Apply4Me Leads</span></div>
                 </div>
                 <div class="dashboard-card" style="margin-bottom:24px;">
-                    <h3>📊 Users by Role</h3>
+                    <h3>Users by Role</h3>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:12px;">
                         ${Object.entries(roleCounts).map(([role, count]) => `<div style="background:var(--gray-50);padding:16px;border-radius:8px;text-align:center;border:1px solid var(--gray-200);"><div style="font-size:28px;font-weight:800;color:var(--primary);">${count}</div><div style="font-size:13px;color:var(--gray-500);">${getRoleDisplay(role)}</div></div>`).join('')}
                     </div>
                 </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card">
-                        <h3>⚡ System Actions</h3>
+                        <h3>System Actions</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
-                            <button class="btn-primary" onclick="exportAllData()">📊 Export All Data</button>
-                            <button class="btn-secondary" onclick="clearAllData()">🗑️ Clear All Data</button>
-                            <button class="btn-secondary" onclick="showNotification('User management coming soon.', 'info')">👥 Manage Users</button>
+                            <button class="btn-primary" onclick="exportAllData()">Export All Data</button>
+                            <button class="btn-secondary" onclick="clearAllData()">Clear All Data</button>
+                            <button class="btn-secondary" onclick="showNotification('User management coming soon.', 'info')">Manage Users</button>
                         </div>
                     </div>
                     <div class="dashboard-card">
-                        <h3>📈 Recent Activity</h3>
+                        <h3>Recent Activity</h3>
                         <div style="font-size:14px;color:var(--gray-500);">
                             <div style="padding:8px 0;border-bottom:1px solid var(--gray-200);">${totalJobs} jobs posted</div>
                             <div style="padding:8px 0;border-bottom:1px solid var(--gray-200);">${totalUsers} registered users</div>
@@ -5735,14 +5818,14 @@
             a.download = 'primespheres_export_' + new Date().toISOString().slice(0, 10) + '.json';
             a.click();
             URL.revokeObjectURL(url);
-            showNotification('📊 All data exported successfully!', 'success');
+            showNotification('All data exported successfully!', 'success');
         }
 
         function clearAllData() {
-            if (!confirm('⚠️ Are you sure you want to clear ALL data?')) return;
-            if (!confirm('🔴 Really? This will delete all users, jobs, and applications.')) return;
+            if (!confirm('Are you sure you want to clear ALL data?')) return;
+            if (!confirm('Really? This will delete all users, jobs, and applications.')) return;
             getStorage().clear();
-            showNotification('🗑️ All data has been cleared.', 'info');
+            showNotification('All data has been cleared.', 'info');
             setTimeout(() => location.reload(), 1500);
         }
 
@@ -5754,7 +5837,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'manager') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5770,7 +5853,7 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>📊 Manager Analytics</h1><p style="color:var(--gray-500);">Track job performance and manage listings.</p></div>
+                    <div><h1>Manager Analytics</h1><p style="color:var(--gray-500);">Track job performance and manage listings.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge manager">Manager</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
@@ -5780,15 +5863,15 @@
                     <div class="dashboard-stat-card"><span class="number">${allJobs.length}</span><span class="label">Total Jobs</span></div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-                    <div class="dashboard-card"><h3>📂 Jobs by Category</h3>${Object.entries(categoryCounts).length === 0 ? '<div class="empty-state"><p>No categories yet.</p></div>' : Object.entries(categoryCounts).map(([cat, count]) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-200);"><span>${cat}</span><span style="font-weight:600;color:var(--primary);">${count}</span></div>`).join('')}</div>
-                    <div class="dashboard-card"><h3>🏷️ Jobs by Type</h3>${Object.entries(typeCounts).length === 0 ? '<div class="empty-state"><p>No types yet.</p></div>' : Object.entries(typeCounts).map(([type, count]) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-200);"><span>${type}</span><span style="font-weight:600;color:var(--primary);">${count}</span></div>`).join('')}</div>
+                    <div class="dashboard-card"><h3>Jobs by Category</h3>${Object.entries(categoryCounts).length === 0 ? '<div class="empty-state"><p>No categories yet.</p></div>' : Object.entries(categoryCounts).map(([cat, count]) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-200);"><span>${cat}</span><span style="font-weight:600;color:var(--primary);">${count}</span></div>`).join('')}</div>
+                    <div class="dashboard-card"><h3>Jobs by Type</h3>${Object.entries(typeCounts).length === 0 ? '<div class="empty-state"><p>No types yet.</p></div>' : Object.entries(typeCounts).map(([type, count]) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-200);"><span>${type}</span><span style="font-weight:600;color:var(--primary);">${count}</span></div>`).join('')}</div>
                 </div>
                 <div class="dashboard-card">
-                    <h3>⚡ Bulk Actions</h3>
+                    <h3>Bulk Actions</h3>
                     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
-                        <button class="btn-primary btn-sm" onclick="exportAllJobs()">📊 Export All Jobs</button>
-                        <button class="btn-secondary btn-sm" onclick="bulkCloseJobs()">🔒 Close All Expired</button>
-                        <button class="btn-secondary btn-sm" onclick="showNotification('Bulk delete coming soon.', 'info')">🗑️ Bulk Delete</button>
+                        <button class="btn-primary btn-sm" onclick="exportAllJobs()">Export All Jobs</button>
+                        <button class="btn-secondary btn-sm" onclick="bulkCloseJobs()">Close All Expired</button>
+                        <button class="btn-secondary btn-sm" onclick="showNotification('Bulk delete coming soon.', 'info')">Bulk Delete</button>
                     </div>
                 </div>
             `;
@@ -5809,7 +5892,7 @@
             a.download = 'all_jobs_' + new Date().toISOString().slice(0, 10) + '.csv';
             a.click();
             URL.revokeObjectURL(url);
-            showNotification('📊 All jobs exported successfully!', 'success');
+            showNotification('All jobs exported successfully!', 'success');
         }
 
         function bulkCloseJobs() {
@@ -5830,7 +5913,7 @@
                     storage.setItem(key, JSON.stringify(data));
                 }
             });
-            showNotification(`✅ Closed ${closed} expired jobs.`, 'success');
+            showNotification(`Closed ${closed} expired jobs.`, 'success');
             renderManagerAnalytics();
             renderJobBoard();
         }
@@ -5843,7 +5926,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'business-partner') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5857,7 +5940,7 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>🤝 Referral Dashboard</h1><p style="color:var(--gray-500);">Track your referrals and earnings.</p></div>
+                    <div><h1>Referral Dashboard</h1><p style="color:var(--gray-500);">Track your referrals and earnings.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge partner">Partner</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
@@ -5872,7 +5955,7 @@
                     <button class="btn-primary btn-sm" onclick="copyReferralCode()">Copy</button>
                 </div>
                 <div class="dashboard-card">
-                    <h3>📋 Referral History</h3>
+                    <h3>Referral History</h3>
                     ${referrals.length === 0 ? '<div class="empty-state"><p>No referrals yet. Share your code to start earning.</p></div>' :
                         referrals.slice(0, 10).map(ref => `
                             <div class="dash-item">
@@ -5893,7 +5976,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'employer') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -5922,7 +6005,7 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>📥 Applicant Management</h1><p style="color:var(--gray-500);">Manage applicants for your job postings.</p></div>
+                    <div><h1>Applicant Management</h1><p style="color:var(--gray-500);">Manage applicants for your job postings.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge employer">Employer</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
@@ -5933,7 +6016,7 @@
                     <div class="dashboard-stat-card"><span class="number">${hired}</span><span class="label">Hired</span></div>
                 </div>
                 <div class="dashboard-card">
-                    <h3>📋 Jobs with Applicants</h3>
+                    <h3>Jobs with Applicants</h3>
                     ${activeJobs.length === 0 ? '<div class="empty-state"><p>No active jobs with applicants.</p></div>' :
                         activeJobs.map(job => {
                             const jobApplicants = allApplicants.filter(a => a.jobId === job.id);
@@ -5942,11 +6025,11 @@
                     }
                 </div>
                 <div class="dashboard-card" style="margin-top:24px;">
-                    <h3>⚡ Quick Actions</h3>
+                    <h3>Quick Actions</h3>
                     <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                        <button class="btn-primary btn-sm" onclick="showPage('post-job')">📝 Post a Job</button>
-                        <button class="btn-secondary btn-sm" onclick="exportApplicantsCSV()">📊 Export Applicants</button>
-                        <button class="btn-secondary btn-sm" onclick="showNotification('Bulk actions coming soon.', 'info')">📋 Bulk Actions</button>
+                        <button class="btn-primary btn-sm" onclick="showPage('post-job')">Post a Job</button>
+                        <button class="btn-secondary btn-sm" onclick="exportApplicantsCSV()">Export Applicants</button>
+                        <button class="btn-secondary btn-sm" onclick="showNotification('Bulk actions coming soon.', 'info')">Bulk Actions</button>
                     </div>
                 </div>
             `;
@@ -5966,7 +6049,7 @@
             modal.innerHTML = `
                 <div class="modal" style="max-width:700px;">
                     <button class="modal-close" onclick="closeApplicantModal()">&times;</button>
-                    <h2>📋 Applicants for ${job.title}</h2>
+                    <h2>Applicants for ${job.title}</h2>
                     <p style="color:var(--gray-500);margin-bottom:16px;">${job.company} • ${applicants.length} applicants</p>
                     ${applicants.length === 0 ? '<div class="empty-state"><p>No applicants yet.</p></div>' :
                         applicants.map(app => `
@@ -5974,23 +6057,23 @@
                                 <div>
                                     <div class="dash-item-title">${app.name || 'Anonymous'}</div>
                                     <div class="dash-item-sub">${app.email || 'No email'} • ${app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-PH') : 'Recently'}</div>
-                                    ${app.resume ? `<div style="font-size:12px;color:var(--success);">📄 ${app.resume}</div>` : ''}
+                                    ${app.resume ? `<div style="font-size:12px;color:var(--success);">${app.resume}</div>` : ''}
                                     ${app.message ? `<div style="font-size:12px;color:var(--gray-500);margin-top:4px;">${app.message}</div>` : ''}
                                 </div>
                                 <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
                                     <select onchange="updateApplicantStatus('${jobId}','${app.email || app.name}','${app.appliedAt}',this.value)" style="padding:4px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;font-family:inherit;">
-                                        <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-                                        <option value="reviewed" ${app.status === 'reviewed' ? 'selected' : ''}>👁️ Reviewed</option>
-                                        <option value="interview" ${app.status === 'interview' ? 'selected' : ''}>📞 Interview</option>
-                                        <option value="hired" ${app.status === 'hired' ? 'selected' : ''}>✅ Hired</option>
-                                        <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>❌ Rejected</option>
+                                        <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="reviewed" ${app.status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
+                                        <option value="interview" ${app.status === 'interview' ? 'selected' : ''}>Interview</option>
+                                        <option value="hired" ${app.status === 'hired' ? 'selected' : ''}>Hired</option>
+                                        <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Rejected</option>
                                     </select>
                                     <span class="dash-item-status ${app.status}">${app.status}</span>
                                 </div>
                             </div>
                         `).join('')
                     }
-                    <div style="margin-top:16px;display:flex;gap:12px;"><button class="btn-secondary" onclick="closeApplicantModal()">Close</button><button class="btn-primary btn-sm" onclick="exportApplicantsCSV()">📊 Export</button></div>
+                    <div style="margin-top:16px;display:flex;gap:12px;"><button class="btn-secondary" onclick="closeApplicantModal()">Close</button><button class="btn-primary btn-sm" onclick="exportApplicantsCSV()">Export</button></div>
                 </div>
             `;
             document.body.appendChild(modal);
@@ -6012,7 +6095,7 @@
             if (applicant) {
                 applicant.status = status;
                 storage.setItem(key, JSON.stringify(data));
-                showNotification(`✅ Status updated to ${status}`, 'success');
+                showNotification(`Status updated to ${status}`, 'success');
                 viewApplicantsForJob(jobId);
             }
         }
@@ -6035,7 +6118,7 @@
             a.download = 'applicants_' + new Date().toISOString().slice(0, 10) + '.csv';
             a.click();
             URL.revokeObjectURL(url);
-            showNotification('📊 Applicants exported successfully!', 'success');
+            showNotification('Applicants exported successfully!', 'success');
         }
 
         // ============================================================
@@ -6046,7 +6129,7 @@
             if (!container) return;
             if (!currentUser || currentUser.role !== 'employee') {
                 container.innerHTML =
-                    `<div class="access-denied"><span class="lock-icon">🔒</span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
+                    `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
@@ -6061,7 +6144,7 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>📊 Application Tracker</h1><p style="color:var(--gray-500);">Track your job applications and interviews.</p></div>
+                    <div><h1>Application Tracker</h1><p style="color:var(--gray-500);">Track your job applications and interviews.</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge employee">Employee</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
@@ -6072,18 +6155,18 @@
                     <div class="dashboard-stat-card"><span class="number">${rejected}</span><span class="label">Rejected</span></div>
                 </div>
                 <div class="dashboard-card">
-                    <h3>📋 Your Applications</h3>
+                    <h3>Your Applications</h3>
                     ${applications.length === 0 ? '<div class="empty-state"><p>You haven\'t applied to any jobs yet. <a onclick="showPage(\'home\')" style="color:var(--primary);cursor:pointer;">Browse jobs →</a></p></div>' :
                         applications.map(app => {
-                            const statusLabels = { 'pending': '⏳ Pending', 'seen': '👁️ Seen', 'reviewed': '📋 Reviewed', 'interview': '📞 Interview', 'hired': '✅ Hired', 'rejected': '❌ Rejected' };
-                            return `<div class="dash-item"><div><div class="dash-item-title">${app.jobTitle || 'Job'}</div><div class="dash-item-sub">${app.company || 'Company'} • Applied ${new Date(app.appliedAt).toLocaleDateString('en-PH')}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="dash-item-status ${app.status}">${statusLabels[app.status] || app.status}</span>${app.status === 'interview' ? `<button class="btn-primary btn-sm" onclick="scheduleInterview('${app.jobId}')">📅 Schedule</button>` : ''}</div></div>`;
+                            const statusLabels = { 'pending': 'Pending', 'seen': 'Seen', 'reviewed': 'Reviewed', 'interview': 'Interview', 'hired': 'Hired', 'rejected': 'Rejected' };
+                            return `<div class="dash-item"><div><div class="dash-item-title">${app.jobTitle || 'Job'}</div><div class="dash-item-sub">${app.company || 'Company'} • Applied ${new Date(app.appliedAt).toLocaleDateString('en-PH')}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="dash-item-status ${app.status}">${statusLabels[app.status] || app.status}</span>${app.status === 'interview' ? `<button class="btn-primary btn-sm" onclick="scheduleInterview('${app.jobId}')">Schedule</button>` : ''}</div></div>`;
                         }).join('')
                     }
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:24px;">
-                    <div class="dashboard-card" style="text-align:center;"><span style="font-size:28px;display:block;margin-bottom:8px;">🔍</span><h4>Browse Jobs</h4><p style="font-size:13px;color:var(--gray-500);">Find more opportunities</p><button class="btn-secondary btn-sm" onclick="showPage('home')">Browse →</button></div>
-                    <div class="dashboard-card" style="text-align:center;"><span style="font-size:28px;display:block;margin-bottom:8px;">⭐</span><h4>Saved Jobs</h4><p style="font-size:13px;color:var(--gray-500);">Jobs you\'ve saved</p><button class="btn-secondary btn-sm" onclick="showPage('home')">View →</button></div>
-                    <div class="dashboard-card" style="text-align:center;"><span style="font-size:28px;display:block;margin-bottom:8px;">📄</span><h4>My Profile</h4><p style="font-size:13px;color:var(--gray-500);">Update your information</p><button class="btn-secondary btn-sm" onclick="showPage('profile')">Update →</button></div>
+                    <div class="dashboard-card" style="text-align:center;"><span style="display:flex;justify-content:center;margin-bottom:8px;color:var(--primary);"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg></span><h4>Browse Jobs</h4><p style="font-size:13px;color:var(--gray-500);">Find more opportunities</p><button class="btn-secondary btn-sm" onclick="showPage('home')">Browse →</button></div>
+                    <div class="dashboard-card" style="text-align:center;"><span style="display:flex;justify-content:center;margin-bottom:8px;color:var(--primary);"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span><h4>Saved Jobs</h4><p style="font-size:13px;color:var(--gray-500);">Jobs you\'ve saved</p><button class="btn-secondary btn-sm" onclick="showPage('home')">View →</button></div>
+                    <div class="dashboard-card" style="text-align:center;"><span style="display:flex;justify-content:center;margin-bottom:8px;color:var(--primary);"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></span><h4>My Profile</h4><p style="font-size:13px;color:var(--gray-500);">Update your information</p><button class="btn-secondary btn-sm" onclick="showPage('profile')">Update →</button></div>
                 </div>
             `;
         }
@@ -6098,14 +6181,14 @@
             modal.innerHTML = `
                 <div class="modal" style="max-width:500px;">
                     <button class="modal-close" onclick="closeInterviewModal()">&times;</button>
-                    <h2>📅 Schedule Interview</h2>
+                    <h2>Schedule Interview</h2>
                     <p style="color:var(--gray-500);margin-bottom:16px;">For: <strong>${jobTitle}</strong></p>
                     <form onsubmit="saveInterview(event, '${jobId}')">
                         <div class="form-group" style="margin-bottom:16px;"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Interview Date *</label><input type="date" id="interviewDate" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;" required /></div>
                         <div class="form-group" style="margin-bottom:16px;"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Interview Time *</label><input type="time" id="interviewTime" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;" required /></div>
                         <div class="form-group" style="margin-bottom:16px;"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Interview Type</label><select id="interviewType" style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;"><option value="Video Call">Video Call</option><option value="Phone Call">Phone Call</option><option value="In-person">In-person</option></select></div>
                         <div class="form-group" style="margin-bottom:16px;"><label style="font-weight:600;font-size:14px;display:block;margin-bottom:4px;">Notes (Optional)</label><textarea id="interviewNotes" rows="3" placeholder="Any additional notes..." style="width:100%;padding:12px 16px;border:1px solid var(--gray-200);border-radius:8px;font-size:16px;font-family:inherit;"></textarea></div>
-                        <button type="submit" class="btn-primary" style="width:100%;padding:14px;">📅 Schedule Interview</button>
+                        <button type="submit" class="btn-primary" style="width:100%;padding:14px;">Schedule Interview</button>
                     </form>
                 </div>
             `;
@@ -6130,7 +6213,7 @@
             interviews.push({ jobId, date, time, type, notes, scheduledAt: new Date().toISOString() });
             getStorage().setItem('interviews_' + currentUser.email, JSON.stringify(interviews));
             closeInterviewModal();
-            showNotification('✅ Interview scheduled successfully!', 'success');
+            showNotification('Interview scheduled successfully!', 'success');
             renderEmployeeApplicationTracker();
         }
 
@@ -6153,8 +6236,8 @@
             const planDisplay = document.getElementById('apply4meSelectedPlan');
             const planName = document.getElementById('apply4mePlanName');
             if (plan && planDisplay) {
-                const planNames = { 'starter': 'Starter (₱5,350/mo)', 'pro': 'Pro (₱10,850/mo) — Best Value',
-                    'executive': 'Executive (₱21,900/mo)' };
+                const planNames = { 'starter': 'Starter (₱2,999 one-time)', 'pro': 'Pro (₱6,999 one-time) — Best Value',
+                    'executive': 'Executive (₱12,999 one-time)' };
                 planName.textContent = planNames[plan] || 'Pro';
                 planDisplay.style.display = 'block';
                 const planSelect = document.getElementById('apply4mePlan');
@@ -6285,7 +6368,7 @@
             const previewDiv = document.getElementById('parsedDataPreview');
             const contentDiv = document.getElementById('parsedDataContent');
             if (statusDiv) { statusDiv.style.display = 'block';
-                statusDiv.textContent = '🔄 Parsing resume...'; }
+                statusDiv.textContent = 'Parsing resume...'; }
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
@@ -6421,9 +6504,7 @@
 
         renderJobBoard();
         animateCounters();
-        console.log('🚀 Primespheres — Complete system with Resume Builder + Job Detail + Direct Apply!');
-        console.log('📄 New features: Resume Builder, Job Detail Modal, Direct Apply to Company URLs');
-        console.log('🌾 Harvested jobs now show "🌾 Harvested" badge and redirect to company site on Apply.');
+
     </script>
 </body>
 </html>
