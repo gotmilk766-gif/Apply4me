@@ -2780,6 +2780,13 @@
 
         let auth = null;
         let db = null;
+
+        // The primary Owner account (Lloyd Allen Clavo). Its role can never be
+        // changed by anyone through the app — see changeUserRole() and the
+        // matching lock in firestore.rules. This prevents a locked-out admin
+        // scenario and stops any other Owner account from demoting the
+        // founding account.
+        const PROTECTED_OWNER_UID = "0v3eFQ3jwPV871MxFEq5FH1fgil2";
         let firebaseReady = false;
         try {
             firebase.initializeApp(firebaseConfig);
@@ -3038,6 +3045,48 @@
         // ============================================================
         // NAVIGATION UPDATE
         // ============================================================
+        // ============================================================
+        // ELEVATED ROLE ACCESS
+        // ------------------------------------------------------------
+        // Owner can personally use all 7 role dashboards/tools. Manager can
+        // personally use Manager, Employee, Harvester, and Employer.
+        // Everyone else only ever has their own single role. This is about
+        // an admin USING a role's tools under their own account — not
+        // viewing another specific person's private data.
+        // ============================================================
+        function hasRoleAccess(targetRole) {
+            if (!currentUser) return false;
+            if (currentUser.role === targetRole) return true;
+            if (currentUser.role === 'owner') return true;
+            if (currentUser.role === 'manager') {
+                return ['manager', 'employee', 'harvester', 'employer'].includes(targetRole);
+            }
+            return false;
+        }
+
+        function accessibleDashboards(role) {
+            const all = [
+                { label: 'Owner/Manager Dashboard', page: 'manager-dashboard' },
+                { label: 'Business Partner Dashboard', page: 'partner-dashboard' },
+                { label: 'Harvester Dashboard', page: 'harvester-dashboard' },
+                { label: 'Employee Dashboard', page: 'employee-dashboard' },
+                { label: 'Employer Dashboard', page: 'employer-dashboard' },
+                { label: 'Job Seeker Dashboard', page: 'jobseeker-dashboard' }
+            ];
+            if (role === 'owner') return all;
+            if (role === 'manager') {
+                return all.filter(d => ['manager-dashboard', 'employee-dashboard', 'harvester-dashboard', 'employer-dashboard'].includes(d.page));
+            }
+            const dashMap = {
+                'business-partner': 'partner-dashboard',
+                'harvester': 'harvester-dashboard',
+                'employee': 'employee-dashboard',
+                'employer': 'employer-dashboard',
+                'job-seeker': 'jobseeker-dashboard'
+            };
+            return [{ label: getRoleDisplay(role) + ' Dashboard', page: dashMap[role] || 'home' }];
+        }
+
         function updateNavForUser(user) {
             const nav = document.querySelector('.nav-links');
             document.querySelectorAll('.nav-dashboard-link, .nav-logout-link, .user-badge').forEach(el => el.remove());
@@ -3094,22 +3143,28 @@
                 badge.textContent = getRoleDisplay(user.role);
                 nav.appendChild(badge);
 
-                const dashLink = document.createElement('a');
-                dashLink.className = 'nav-dashboard-link';
-                dashLink.style.fontWeight = '600';
-                const role = user.role;
-                const dashMap = {
-                    'owner': 'manager-dashboard',
-                    'manager': 'manager-dashboard',
-                    'business-partner': 'partner-dashboard',
-                    'harvester': 'harvester-dashboard',
-                    'employee': 'employee-dashboard',
-                    'employer': 'employer-dashboard',
-                    'job-seeker': 'jobseeker-dashboard'
-                };
-                dashLink.textContent = 'Dashboard';
-                dashLink.onclick = function() { showPage(dashMap[role] || 'home'); };
-                nav.appendChild(dashLink);
+                const dashboards = accessibleDashboards(user.role);
+                if (dashboards.length > 1) {
+                    const dashSelect = document.createElement('select');
+                    dashSelect.className = 'nav-dashboard-link';
+                    dashSelect.setAttribute('aria-label', 'Switch dashboard');
+                    dashSelect.style.cssText = 'font-weight:600;font-size:15px;font-family:inherit;color:var(--primary);background:transparent;border:1px solid var(--gray-200);border-radius:6px;padding:4px 8px;cursor:pointer;';
+                    dashboards.forEach(function(d) {
+                        const opt = document.createElement('option');
+                        opt.value = d.page;
+                        opt.textContent = d.label;
+                        dashSelect.appendChild(opt);
+                    });
+                    dashSelect.onchange = function() { showPage(this.value); };
+                    nav.appendChild(dashSelect);
+                } else {
+                    const dashLink = document.createElement('a');
+                    dashLink.className = 'nav-dashboard-link';
+                    dashLink.style.fontWeight = '600';
+                    dashLink.textContent = 'Dashboard';
+                    dashLink.onclick = function() { showPage(dashboards[0].page); };
+                    nav.appendChild(dashLink);
+                }
 
                 const logoutLink = document.createElement('a');
                 logoutLink.className = 'nav-logout-link';
@@ -3900,7 +3955,7 @@
         function renderHarvesterDashboard() {
             const container = document.getElementById('harvesterDashboardContent');
             if (!container) return;
-            if (!currentUser || currentUser.role !== 'harvester') {
+            if (!hasRoleAccess('harvester')) {
                 container.innerHTML = `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
@@ -4683,7 +4738,7 @@
         }
 
         async function importScrapedJobs() {
-            if (!currentUser || currentUser.role !== 'harvester') {
+            if (!hasRoleAccess('harvester')) {
                 showNotification('Only Harvesters can import scraped jobs.', 'warning');
                 return;
             }
@@ -4764,7 +4819,7 @@
 
         async function addHarvestedJob(event) {
             event.preventDefault();
-            if (!currentUser || currentUser.role !== 'harvester') { showNotification('Only Harvesters can add harvested jobs.', 'error'); return; }
+            if (!hasRoleAccess('harvester')) { showNotification('Only Harvesters can add harvested jobs.', 'error'); return; }
             const title = document.getElementById('harvestTitle').value.trim();
             const company = document.getElementById('harvestCompany').value.trim();
             const url = document.getElementById('harvestURL').value.trim();
@@ -4827,7 +4882,7 @@
         }
 
         function editHarvestedJob(jobId) {
-            if (!currentUser || currentUser.role !== 'harvester') { showNotification('Only Harvesters can edit jobs.', 'error'); return; }
+            if (!hasRoleAccess('harvester')) { showNotification('Only Harvesters can edit jobs.', 'error'); return; }
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
             const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[]}');
@@ -4916,7 +4971,7 @@
         }
 
         async function deleteHarvestedJob(jobId) {
-            if (!currentUser || currentUser.role !== 'harvester') { showNotification('Only Harvesters can delete jobs.', 'error'); return; }
+            if (!hasRoleAccess('harvester')) { showNotification('Only Harvesters can delete jobs.', 'error'); return; }
             if (!confirm('Delete this harvested job? It will also be removed from the job board.')) return;
             if (!firebaseReady || !db) { showNotification('Not connected to the database.', 'error'); return; }
 
@@ -4937,7 +4992,7 @@
         }
 
         function clearAllHarvested() {
-            if (!currentUser || currentUser.role !== 'harvester') { showNotification('Only Harvesters can clear jobs.', 'error'); return; }
+            if (!hasRoleAccess('harvester')) { showNotification('Only Harvesters can clear jobs.', 'error'); return; }
             if (!confirm('Delete ALL harvested jobs?')) return;
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
@@ -5116,13 +5171,13 @@
         function renderEmployerDashboard() {
             const container = document.getElementById('employerDashboardContent');
             if (!container) return;
-            if (!currentUser || currentUser.role !== 'employer') {
+            if (!hasRoleAccess('employer')) {
                 container.innerHTML =
                     `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
-            const key = currentUser.role + '_data_' + currentUser.email;
+            const key = 'employer_data_' + currentUser.email;
             const storage = getStorage();
             const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"applicants":[],"lastPostDate":null,"postCountToday":0}');
             const jobs = data.jobs || [];
@@ -5181,7 +5236,8 @@
         }
 
         function getRemainingPostsToday() {
-            if (!currentUser || currentUser.role !== 'employer') return 0;
+            if (!hasRoleAccess('employer')) return 0;
+            if (currentUser.role !== 'employer') return 1;
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
             const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"lastPostDate":null,"postCountToday":0}');
@@ -5213,7 +5269,7 @@
         function renderJobSeekerDashboard() {
             const container = document.getElementById('jobseekerDashboardContent');
             if (!container) return;
-            if (!currentUser || currentUser.role !== 'job-seeker') {
+            if (!hasRoleAccess('job-seeker')) {
                 container.innerHTML =
                     `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this dashboard.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
@@ -5779,7 +5835,7 @@
                                     <div><div class="dash-item-title">${u.name || u.email}</div><div class="dash-item-sub">${u.email}</div></div>
                                     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                                         <span class="user-badge ${(u.role || '').replace('-','')}">${getRoleDisplay(u.role)}</span>
-                                        ${isOwner && u.uid !== currentUser.id ? `<button class="btn-secondary btn-sm" onclick="changeUserRoleModal('${u.uid}', '${u.role}', '${(u.name || u.email).replace(/'/g, "\\'")}')">Manage</button>` : ''}
+                                        ${isOwner && u.uid !== currentUser.id && u.uid !== PROTECTED_OWNER_UID ? `<button class="btn-secondary btn-sm" onclick="changeUserRoleModal('${u.uid}', '${u.role}', '${(u.name || u.email).replace(/'/g, "\\'")}')">Manage</button>` : ''}
                                     </div>
                                 </div>`).join('')
                         }
@@ -5897,6 +5953,7 @@
 
         async function changeUserRole(uid) {
             if (!currentUser || currentUser.role !== 'owner') { showNotification('Only the Owner can change user access.', 'error'); return; }
+            if (uid === PROTECTED_OWNER_UID) { showNotification('This account\'s role is permanently locked as Owner.', 'error'); return; }
             const newRole = document.getElementById('changeUserRoleSelect').value;
             if (!firebaseReady || !db) { showNotification('Not connected to the database.', 'error'); return; }
             try {
@@ -6276,7 +6333,7 @@
         function renderPartnerReferralDashboard() {
             const container = document.getElementById('partnerReferralContent');
             if (!container) return;
-            if (!currentUser || currentUser.role !== 'business-partner') {
+            if (!hasRoleAccess('business-partner')) {
                 container.innerHTML =
                     `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
@@ -6326,7 +6383,7 @@
         function renderEmployerApplicantManagement() {
             const container = document.getElementById('employerApplicantContent');
             if (!container) return;
-            if (!currentUser || currentUser.role !== 'employer') {
+            if (!hasRoleAccess('employer')) {
                 container.innerHTML =
                     `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
@@ -6479,7 +6536,7 @@
         function renderEmployeeApplicationTracker() {
             const container = document.getElementById('employeeApplicationTracker');
             if (!container) return;
-            if (!currentUser || currentUser.role !== 'employee') {
+            if (!hasRoleAccess('employee')) {
                 container.innerHTML =
                     `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;

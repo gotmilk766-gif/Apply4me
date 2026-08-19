@@ -37,9 +37,22 @@ service cloud.firestore {
                     // afterward by an Owner via the update rule below.
                     && request.resource.data.role in ['job-seeker', 'employer'];
       allow update: if isSignedIn() && (
-                      request.auth.uid == uid
+                      (
+                        // a user may edit their own profile, but never their
+                        // own `role` — that field can only move via the
+                        // Owner-only branch below
+                        request.auth.uid == uid
+                        && request.resource.data.role == resource.data.role
+                      )
                       ||
-                      (isOwner() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']))
+                      (
+                        isOwner()
+                        // the founding Owner account's role can never be
+                        // changed by anyone, including another Owner — this
+                        // prevents accidental or malicious lockout/demotion
+                        && uid != "0v3eFQ3jwPV871MxFEq5FH1fgil2"
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
+                      )
                     );
       allow delete: if false;
     }
