@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Looks up the REQUESTER's own role from their profile doc. Only ever
+    // called after a cheaper check has already failed, so it's not run on
+    // every read (see the `||` short-circuits below).
+    function requesterRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isOwnerOrManager() {
+      return isSignedIn() && requesterRole() in ['owner', 'manager'];
+    }
+
+    function isOwner() {
+      return isSignedIn() && requesterRole() == 'owner';
+    }
+
+    // USERS: a profile is readable/writable by its own owner. Owner and
+    // Manager accounts can additionally READ every profile (needed for the
+    // dashboard's Users panel and applicant lookups). Only the Owner may
+    // update another user's role, and only the role field — nothing else on
+    // someone else's profile can be changed this way.
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isOwnerOrManager());
+      allow create: if isSignedIn()
+                    && request.auth.uid == uid
+                    && request.resource.data.email == request.auth.token.email;
+      allow update: if isSignedIn() && (
+                      request.auth.uid == uid
+                      ||
+                      (isOwner() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']))
+                    );
+      allow delete: if false;
+    }
+
+    // JOBS: public job board. Anyone (signed in or not) can read active
+    // listings. The original poster can always edit/delete their own job.
+    // Owner and Manager accounts can additionally edit/delete ANY job, for
+    // moderation from the dashboard. Applicant/view counters may still be
+    // incremented by any signed-in user, touching only those two fields.
+    match /jobs/{jobId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+                    && request.resource.data.postedByUid == request.auth.uid
+                    && request.resource.data.postedByRole in
+                       ['owner', 'manager', 'business-partner', 'employer', 'harvester'];
+
+      allow update: if isSignedIn() && (
+                      resource.data.postedByUid == request.auth.uid
+                      ||
+                      isOwnerOrManager()
+                      ||
+                      (request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['applicants', 'views']))
+                    );
+
+      allow delete: if isSignedIn() && (
+                      resource.data.postedByUid == request.auth.uid || isOwnerOrManager()
+                    );
+    }
+
+    // APPLICATIONS: doc id is "{applicantUid}_{jobId}" so a user can only
+    // ever create their own application. Readable by the applicant, the
+    // employer it was sent to, and Owner/Manager accounts (for the
+    // dashboard's Recent Applicants panel).
+    match /applications/{appId} {
+      allow read: if isSignedIn() && (
+                    resource.data.applicantUid == request.auth.uid ||
+                    resource.data.employerUid == request.auth.uid ||
+                    isOwnerOrManager()
+                  );
+      allow create: if isSignedIn()
+                    && request.resource.data.applicantUid == request.auth.uid
+                    && appId == request.auth.uid + '_' + request.resource.data.jobId;
+      // the employer it was sent to, or Owner/Manager, may update status/notes
+      allow update: if isSignedIn() && (
+                      resource.data.employerUid == request.auth.uid || isOwnerOrManager()
+                    );
+      allow delete: if false;
+    }
+  }
+}
