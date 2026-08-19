@@ -2798,6 +2798,45 @@
         }
 
         // ============================================================
+        // JOBS: live Firestore-backed cache
+        // ------------------------------------------------------------
+        // The job board used to be built by looping over every user this
+        // BROWSER happened to know about and reading their localStorage.
+        // That meant a job posted on one device was invisible everywhere
+        // else. Now jobs live in a shared "jobs" collection in Firestore,
+        // and cachedJobs is kept in sync in real time via onSnapshot.
+        // getAllJobs() stays synchronous (just returns the cache) so none
+        // of the existing rendering code below has to change.
+        // ============================================================
+        let cachedJobs = [];
+        let jobsListenerUnsubscribe = null;
+
+        function startJobsListener() {
+            if (!firebaseReady || !db || jobsListenerUnsubscribe) return;
+            jobsListenerUnsubscribe = db.collection('jobs').onSnapshot(function(snapshot) {
+                cachedJobs = snapshot.docs.map(function(doc) {
+                    const data = doc.data();
+                    if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
+                        data.status = 'expired';
+                    }
+                    return Object.assign({}, data, { id: doc.id });
+                }).sort(function(a, b) { return new Date(b.postedAt) - new Date(a.postedAt); });
+
+                renderJobBoard();
+                if (currentUser) {
+                    if (document.getElementById('page-employer-dashboard')?.classList.contains('active')) renderEmployerDashboard();
+                    if (document.getElementById('page-manager-dashboard')?.classList.contains('active')) renderManagerDashboard();
+                    if (document.getElementById('page-partner-dashboard')?.classList.contains('active')) renderPartnerDashboard();
+                    if (document.getElementById('page-harvester-dashboard')?.classList.contains('active')) renderHarvesterDashboard();
+                    if (document.getElementById('page-jobseeker-dashboard')?.classList.contains('active')) renderJobSeekerDashboard();
+                }
+            }, function(err) {
+                console.warn('⚠️ Jobs listener error:', err);
+                showNotification('Could not load live job listings: ' + err.message, 'error');
+            });
+        }
+
+        // ============================================================
         // STORAGE WRAPPER
         // ============================================================
         function getStorage() {
@@ -2858,12 +2897,17 @@
         // ============================================================
         // FIREBASE AUTH STATE LISTENER
         // ============================================================
+        // savedJobs for the signed-in user, mirrored from users/{uid}.savedJobs
+        // so isJobSaved() can stay a synchronous lookup for rendering.
+        let cachedSavedJobs = [];
+
         if (firebaseReady && auth) {
             auth.onAuthStateChanged(function(user) {
                 if (user) {
                     db.collection('users').doc(user.uid).get().then(function(doc) {
                         if (doc.exists) {
                             const profile = doc.data();
+                            cachedSavedJobs = profile.savedJobs || [];
                             setCurrentUser({
                                 id: user.uid,
                                 name: profile.name,
@@ -2877,6 +2921,7 @@
                     });
                 } else {
                     currentUser = null;
+                    cachedSavedJobs = [];
                     updateNavForUser(null);
                 }
             });
@@ -3250,27 +3295,8 @@
         // JOB BOARD FUNCTIONS
         // ============================================================
         function getAllJobs() {
-            const allJobs = [];
-            const users = getUsers();
-            users.forEach(user => {
-                const key = user.role + '_data_' + user.email;
-                const storage = getStorage();
-                const data = JSON.parse(storage.getItem(key) || '{"jobs":[]}');
-                if (data.jobs) {
-                    data.jobs.forEach(job => {
-                        if (job.expiresAt && new Date(job.expiresAt) < new Date()) {
-                            job.status = 'expired';
-                        }
-                        allJobs.push({
-                            ...job,
-                            postedBy: user.name,
-                            postedByEmail: user.email,
-                            postedByRole: user.role
-                        });
-                    });
-                }
-            });
-            return allJobs.sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt));
+            // Backed by the live Firestore cache — see startJobsListener() above.
+            return cachedJobs;
         }
 
         function filterJobsList(jobs) {
@@ -3433,7 +3459,7 @@
         // ============================================================
         // APPLY TO HARVESTED JOB (Redirect to Company URL)
         // ============================================================
-        function applyToHarvestedJob(jobId) {
+        async function applyToHarvestedJob(jobId) {
             if (!currentUser) {
                 showNotification('Please login to apply.', 'warning');
                 showPage('login');
@@ -3459,32 +3485,40 @@
                 return;
             }
 
-            // Record the application in the user's history
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"applications":[]}');
-            if (!data.applications) data.applications = [];
-
-            // Check if already applied
-            if (data.applications.find(a => a.jobId == jobId)) {
-                // Still redirect them
-                showNotification('Redirecting to company website...', 'info');
-                setTimeout(() => {
-                    window.open(jobUrl, '_blank');
-                }, 500);
+            if (!firebaseReady || !db) {
+                showNotification('Not connected to the database.', 'error');
                 return;
             }
 
-            data.applications.push({
-                jobId: jobId,
-                jobTitle: job.title,
-                company: job.company,
-                appliedAt: new Date().toISOString(),
-                status: 'seen',
-                notes: 'Applied via company website: ' + jobUrl
-            });
+            // Deterministic doc id ("{uid}_{jobId}") means each user can apply
+            // to a given job at most once, and it doubles as the duplicate check.
+            const appRef = db.collection('applications').doc(currentUser.id + '_' + jobId);
+            const existing = await appRef.get();
+            if (existing.exists) {
+                // Still redirect them
+                showNotification('Redirecting to company website...', 'info');
+                setTimeout(() => { window.open(jobUrl, '_blank'); }, 500);
+                return;
+            }
 
-            storage.setItem(key, JSON.stringify(data));
+            try {
+                await appRef.set({
+                    jobId: jobId,
+                    jobTitle: job.title,
+                    company: job.company,
+                    applicantUid: currentUser.id,
+                    applicantName: currentUser.name,
+                    applicantEmail: currentUser.email,
+                    employerUid: job.postedByUid || null,
+                    appliedAt: new Date().toISOString(),
+                    status: 'seen',
+                    notes: 'Applied via company website: ' + jobUrl
+                });
+            } catch (err) {
+                showNotification('Could not record application: ' + err.message, 'error');
+                return;
+            }
+
             incrementApplicantCount(jobId);
             incrementJobViews(jobId);
 
@@ -3495,22 +3529,19 @@
                 window.open(jobUrl, '_blank');
             }, 800);
 
-            renderJobBoard();
             renderJobSeekerDashboard();
         }
 
         // ============================================================
-        // SAVED JOBS
+        // SAVED JOBS (mirrored in users/{uid}.savedJobs, cached client-side
+        // in cachedSavedJobs so isJobSaved() can stay synchronous)
         // ============================================================
         function isJobSaved(jobId) {
             if (!currentUser) return false;
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"savedJobs":[]}');
-            return data.savedJobs && data.savedJobs.includes(jobId);
+            return cachedSavedJobs.includes(jobId);
         }
 
-        function toggleSaveJob(jobId) {
+        async function toggleSaveJob(jobId) {
             if (!currentUser) {
                 showNotification('Please login to save jobs.', 'warning');
                 showPage('login');
@@ -3520,19 +3551,26 @@
                 showNotification('Only Job Seekers and Employees can save jobs.', 'warning');
                 return;
             }
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"savedJobs":[]}');
-            if (!data.savedJobs) data.savedJobs = [];
-            const index = data.savedJobs.indexOf(jobId);
-            if (index > -1) {
-                data.savedJobs.splice(index, 1);
-                showNotification('Job removed from saved.', 'info');
-            } else {
-                data.savedJobs.push(jobId);
-                showNotification('Job saved!', 'success');
+            if (!firebaseReady || !db) {
+                showNotification('Not connected to the database.', 'error');
+                return;
             }
-            storage.setItem(key, JSON.stringify(data));
+            const userRef = db.collection('users').doc(currentUser.id);
+            const isSaved = cachedSavedJobs.includes(jobId);
+            try {
+                if (isSaved) {
+                    await userRef.update({ savedJobs: firebase.firestore.FieldValue.arrayRemove(jobId) });
+                    cachedSavedJobs = cachedSavedJobs.filter(id => id !== jobId);
+                    showNotification('Job removed from saved.', 'info');
+                } else {
+                    await userRef.update({ savedJobs: firebase.firestore.FieldValue.arrayUnion(jobId) });
+                    cachedSavedJobs.push(jobId);
+                    showNotification('Job saved!', 'success');
+                }
+            } catch (err) {
+                showNotification('Could not update saved jobs: ' + err.message, 'error');
+                return;
+            }
             renderJobBoard();
             renderJobSeekerDashboard();
         }
@@ -3540,7 +3578,7 @@
         // ============================================================
         // APPLY TO REGULAR JOB (Internal Application)
         // ============================================================
-        function applyToJob(jobId) {
+        async function applyToJob(jobId) {
             if (!currentUser) {
                 showNotification('Please login to apply for this job.', 'warning');
                 showPage('login');
@@ -3564,79 +3602,67 @@
                 return;
             }
 
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"applications":[]}');
-            if (!data.applications) data.applications = [];
-            if (data.applications.find(a => a.jobId == jobId)) {
+            if (!firebaseReady || !db) {
+                showNotification('Not connected to the database.', 'error');
+                return;
+            }
+
+            const appRef = db.collection('applications').doc(currentUser.id + '_' + jobId);
+            const existing = await appRef.get();
+            if (existing.exists) {
                 showNotification('You have already applied to this job.', 'warning');
                 return;
             }
 
-            // For regular jobs, we just track the application
-            data.applications.push({
-                jobId: jobId,
-                jobTitle: job.title,
-                company: job.company,
-                appliedAt: new Date().toISOString(),
-                status: 'pending',
-                notes: ''
-            });
+            try {
+                await appRef.set({
+                    jobId: jobId,
+                    jobTitle: job.title,
+                    company: job.company,
+                    applicantUid: currentUser.id,
+                    applicantName: currentUser.name,
+                    applicantEmail: currentUser.email,
+                    employerUid: job.postedByUid || null,
+                    appliedAt: new Date().toISOString(),
+                    status: 'pending',
+                    notes: ''
+                });
+            } catch (err) {
+                showNotification('Could not submit application: ' + err.message, 'error');
+                return;
+            }
 
-            storage.setItem(key, JSON.stringify(data));
             incrementApplicantCount(jobId);
             incrementJobViews(jobId);
             showNotification('Application submitted successfully!', 'success');
-            renderJobBoard();
             renderJobSeekerDashboard();
         }
 
         function incrementApplicantCount(jobId) {
-            const users = getUsers();
-            users.forEach(user => {
-                const key = user.role + '_data_' + user.email;
-                const storage = getStorage();
-                const data = JSON.parse(storage.getItem(key) || '{"jobs":[]}');
-                if (data.jobs) {
-                    const job = data.jobs.find(j => j.id == jobId);
-                    if (job) {
-                        job.applicants = (job.applicants || 0) + 1;
-                        storage.setItem(key, JSON.stringify(data));
-                    }
-                }
-            });
+            if (!firebaseReady || !db) return;
+            db.collection('jobs').doc(String(jobId)).update({
+                applicants: firebase.firestore.FieldValue.increment(1)
+            }).catch(function(err) { console.warn('⚠️ Could not increment applicants:', err); });
         }
 
         function incrementJobViews(jobId) {
-            const users = getUsers();
-            users.forEach(user => {
-                const key = user.role + '_data_' + user.email;
-                const storage = getStorage();
-                const data = JSON.parse(storage.getItem(key) || '{"jobs":[]}');
-                if (data.jobs) {
-                    const job = data.jobs.find(j => j.id == jobId);
-                    if (job) {
-                        job.views = (job.views || 0) + 1;
-                        storage.setItem(key, JSON.stringify(data));
-                    }
-                }
-            });
+            if (!firebaseReady || !db) return;
+            db.collection('jobs').doc(String(jobId)).update({
+                views: firebase.firestore.FieldValue.increment(1)
+            }).catch(function(err) { console.warn('⚠️ Could not increment views:', err); });
         }
 
         function deleteJob(jobId) {
             if (!confirm('Delete this job posting?')) return;
-            const users = getUsers();
-            users.forEach(user => {
-                const key = user.role + '_data_' + user.email;
-                const storage = getStorage();
-                const data = JSON.parse(storage.getItem(key) || '{"jobs":[]}');
-                if (data.jobs) {
-                    data.jobs = data.jobs.filter(j => j.id != jobId);
-                    storage.setItem(key, JSON.stringify(data));
-                }
+            if (!firebaseReady || !db) {
+                showNotification('Not connected to the database.', 'error');
+                return;
+            }
+            db.collection('jobs').doc(String(jobId)).delete().then(function() {
+                showNotification('Job deleted successfully.', 'info');
+            }).catch(function(err) {
+                showNotification('Could not delete job: ' + err.message, 'error');
             });
-            renderJobBoard();
-            showNotification('Job deleted successfully.', 'info');
         }
 
         function exportJobsCSV() {
@@ -3664,28 +3690,30 @@
         // ============================================================
         // POST JOB HANDLER
         // ============================================================
-        function canPostJobToday() {
+        // Free employers get 1 post/day. The counter lives on the user's own
+        // Firestore profile doc (users/{uid}) — not on the jobs collection —
+        // since it's per-user metadata, not something the job board reads.
+        async function canPostJobToday() {
             if (!currentUser || currentUser.role !== 'employer') {
                 return { allowed: false, message: 'Only employers can post jobs.' };
             }
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"lastPostDate":null,"postCountToday":0}');
+            if (!firebaseReady || !db) {
+                return { allowed: false, message: 'Not connected to the database.' };
+            }
+            const doc = await db.collection('users').doc(currentUser.id).get();
+            const profile = doc.exists ? doc.data() : {};
             const today = new Date().toDateString();
-            const lastPostDate = data.lastPostDate ? new Date(data.lastPostDate).toDateString() : null;
+            const lastPostDate = profile.lastPostDate ? new Date(profile.lastPostDate).toDateString() : null;
             if (lastPostDate !== today) {
-                data.postCountToday = 0;
-                data.lastPostDate = new Date().toISOString();
-                storage.setItem(key, JSON.stringify(data));
                 return { allowed: true, message: 'You can post today.' };
             }
-            if (data.postCountToday >= 1) {
+            if ((profile.postCountToday || 0) >= 1) {
                 return { allowed: false, message: 'You have already posted a job today. Free employers are limited to 1 post per day. Upgrade to post more.' };
             }
             return { allowed: true, message: 'You can post today.' };
         }
 
-        function handlePostJob(event) {
+        async function handlePostJob(event) {
             event.preventDefault();
             if (!currentUser) {
                 showNotification('Please login to post a job.', 'warning');
@@ -3697,7 +3725,7 @@
                 return;
             }
             if (currentUser.role === 'employer') {
-                const result = canPostJobToday();
+                const result = await canPostJobToday();
                 if (!result.allowed) {
                     showNotification('' + result.message, 'warning');
                     return;
@@ -3719,45 +3747,54 @@
                 return;
             }
 
+            if (!firebaseReady || !db) {
+                showNotification('Not connected to the database.', 'error');
+                return;
+            }
+
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + expiryDays);
+            const jobId = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
 
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"lastPostDate":null,"postCountToday":0}');
-            if (!data.jobs) data.jobs = [];
-
-            data.jobs.unshift({
-                id: Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-                title: title,
-                company: company,
-                description: description,
-                jobType: jobType,
-                category: category,
-                tags: tags,
-                salaryMin: salaryMin || null,
-                salaryMax: salaryMax || null,
-                status: 'active',
-                applicants: 0,
-                views: 0,
-                postedAt: new Date().toISOString(),
-                expiresAt: expiresAt.toISOString(),
-                harvested: false,
-                url: ''
-            });
+            try {
+                await db.collection('jobs').doc(jobId).set({
+                    title: title,
+                    company: company,
+                    description: description,
+                    jobType: jobType,
+                    category: category,
+                    tags: tags,
+                    salaryMin: salaryMin || null,
+                    salaryMax: salaryMax || null,
+                    status: 'active',
+                    applicants: 0,
+                    views: 0,
+                    postedAt: new Date().toISOString(),
+                    expiresAt: expiresAt.toISOString(),
+                    harvested: false,
+                    url: '',
+                    postedByUid: currentUser.id,
+                    postedBy: currentUser.name,
+                    postedByEmail: currentUser.email,
+                    postedByRole: currentUser.role
+                });
+            } catch (err) {
+                showNotification('Could not post job: ' + err.message, 'error');
+                return;
+            }
 
             if (currentUser.role === 'employer') {
                 const today = new Date().toDateString();
-                const lastPostDate = data.lastPostDate ? new Date(data.lastPostDate).toDateString() : null;
-                if (lastPostDate !== today) {
-                    data.postCountToday = 1;
-                    data.lastPostDate = new Date().toISOString();
-                } else {
-                    data.postCountToday = (data.postCountToday || 0) + 1;
-                }
+                const doc = await db.collection('users').doc(currentUser.id).get();
+                const profile = doc.exists ? doc.data() : {};
+                const lastPostDate = profile.lastPostDate ? new Date(profile.lastPostDate).toDateString() : null;
+                const newCount = (lastPostDate === today) ? (profile.postCountToday || 0) + 1 : 1;
+                await db.collection('users').doc(currentUser.id).update({
+                    lastPostDate: new Date().toISOString(),
+                    postCountToday: newCount
+                }).catch(function(err) { console.warn('⚠️ Could not update post count:', err); });
             }
 
-            storage.setItem(key, JSON.stringify(data));
             showNotification('Job posted successfully!', 'success');
             document.getElementById('postTitle').value = '';
             document.getElementById('postCompany').value = '';
@@ -3765,11 +3802,8 @@
             document.getElementById('postTags').value = '';
             document.getElementById('postSalaryMin').value = '';
             document.getElementById('postSalaryMax').value = '';
-
-            if (document.querySelector('.page.active')?.id === 'page-home') renderJobBoard();
-            renderEmployerDashboard();
-            renderManagerDashboard();
-            renderPartnerDashboard();
+            // renderJobBoard/renderEmployerDashboard/etc. fire automatically
+            // via the jobs onSnapshot listener once the new doc lands.
         }
 
         // ============================================================
@@ -4602,7 +4636,7 @@
             }
         }
 
-        function importScrapedJobs() {
+        async function importScrapedJobs() {
             if (!currentUser || currentUser.role !== 'harvester') {
                 showNotification('Only Harvesters can import scraped jobs.', 'warning');
                 return;
@@ -4613,12 +4647,17 @@
             const selectedJobs = selectedIndices.map(i => scrapedJobs[i]).filter(j => j);
             if (selectedJobs.length === 0) { showNotification('No jobs selected.', 'warning'); return; }
 
+            if (!firebaseReady || !db) {
+                showNotification('Not connected to the database.', 'error');
+                return;
+            }
+
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
-            const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+            const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[]}');
             if (!userData.harvestedJobs) userData.harvestedJobs = [];
-            if (!userData.jobs) userData.jobs = [];
 
+            const batch = db.batch();
             let imported = 0;
             selectedJobs.forEach(job => {
                 if (job.title.length < 3) return;
@@ -4639,8 +4678,7 @@
                     scrapedAt: job.scrapedAt || new Date().toISOString()
                 };
                 userData.harvestedJobs.unshift(harvestedJob);
-                const boardJob = {
-                    id: harvestedJob.id,
+                batch.set(db.collection('jobs').doc(jobId), {
                     title: harvestedJob.title,
                     company: harvestedJob.company,
                     description: harvestedJob.description || '',
@@ -4655,24 +4693,30 @@
                     postedAt: new Date().toISOString(),
                     expiresAt: (() => { const d = new Date();
                         d.setDate(d.getDate() + 30); return d.toISOString(); })(),
+                    postedByUid: currentUser.id,
                     postedBy: currentUser.name,
                     postedByEmail: currentUser.email,
                     postedByRole: currentUser.role,
                     harvested: true,
                     url: harvestedJob.url
-                };
-                userData.jobs.unshift(boardJob);
+                });
                 imported++;
             });
+
+            try {
+                await batch.commit();
+            } catch (err) {
+                showNotification('Could not publish jobs: ' + err.message, 'error');
+                return;
+            }
             storage.setItem(key, JSON.stringify(userData));
             showNotification(`Successfully imported ${imported} jobs and published to the job board!`, 'success');
             scrapedJobs = [];
             updateScraperUI('idle');
             renderHarvesterDashboard();
-            renderJobBoard();
         }
 
-        function addHarvestedJob(event) {
+        async function addHarvestedJob(event) {
             event.preventDefault();
             if (!currentUser || currentUser.role !== 'harvester') { showNotification('Only Harvesters can add harvested jobs.', 'error'); return; }
             const title = document.getElementById('harvestTitle').value.trim();
@@ -4685,38 +4729,45 @@
             const status = document.getElementById('harvestStatus').value;
             const source = document.getElementById('harvestSource').value.trim();
             if (!title || !company || !url) { showNotification('Please fill in all required fields.', 'error'); return; }
+            if (!firebaseReady || !db) { showNotification('Not connected to the database.', 'error'); return; }
 
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
-            const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+            const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[]}');
             if (!userData.harvestedJobs) userData.harvestedJobs = [];
             const jobId = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
             const harvestedJob = { id: jobId, title, company, url, description, salary, location: location || 'Remote',
                 jobType, status, source, harvestedAt: new Date().toISOString() };
             userData.harvestedJobs.unshift(harvestedJob);
-            const boardJob = {
-                id: harvestedJob.id,
-                title: harvestedJob.title,
-                company: harvestedJob.company,
-                description: harvestedJob.description || '',
-                jobType: harvestedJob.jobType || 'Remote',
-                category: 'Other',
-                tags: '',
-                salaryMin: null,
-                salaryMax: null,
-                status: 'active',
-                applicants: 0,
-                views: 0,
-                postedAt: new Date().toISOString(),
-                expiresAt: (() => { const d = new Date();
-                    d.setDate(d.getDate() + 30); return d.toISOString(); })(),
-                postedBy: currentUser.name,
-                postedByEmail: currentUser.email,
-                postedByRole: currentUser.role,
-                harvested: true,
-                url: harvestedJob.url
-            };
-            userData.jobs.unshift(boardJob);
+
+            try {
+                await db.collection('jobs').doc(jobId).set({
+                    title: harvestedJob.title,
+                    company: harvestedJob.company,
+                    description: harvestedJob.description || '',
+                    jobType: harvestedJob.jobType || 'Remote',
+                    category: 'Other',
+                    tags: '',
+                    salaryMin: null,
+                    salaryMax: null,
+                    status: 'active',
+                    applicants: 0,
+                    views: 0,
+                    postedAt: new Date().toISOString(),
+                    expiresAt: (() => { const d = new Date();
+                        d.setDate(d.getDate() + 30); return d.toISOString(); })(),
+                    postedByUid: currentUser.id,
+                    postedBy: currentUser.name,
+                    postedByEmail: currentUser.email,
+                    postedByRole: currentUser.role,
+                    harvested: true,
+                    url: harvestedJob.url
+                });
+            } catch (err) {
+                showNotification('Could not publish job: ' + err.message, 'error');
+                return;
+            }
+
             storage.setItem(key, JSON.stringify(userData));
             showNotification('Job harvested and published to the job board!', 'success');
             document.getElementById('harvestTitle').value = '';
@@ -4727,7 +4778,6 @@
             document.getElementById('harvestLocation').value = '';
             document.getElementById('harvestSource').value = '';
             renderHarvesterDashboard();
-            renderJobBoard();
         }
 
         function editHarvestedJob(jobId) {
@@ -4774,7 +4824,7 @@
                 document.body.style.overflow = 'auto'; }
         }
 
-        function saveHarvestedJob(event, jobId) {
+        async function saveHarvestedJob(event, jobId) {
             event.preventDefault();
             const title = document.getElementById('editHarvestTitle').value.trim();
             const company = document.getElementById('editHarvestCompany').value.trim();
@@ -4786,10 +4836,11 @@
             const status = document.getElementById('editHarvestStatus').value;
             const source = document.getElementById('editHarvestSource').value.trim();
             if (!title || !company || !url) { showNotification('Please fill in all required fields.', 'error'); return; }
+            if (!firebaseReady || !db) { showNotification('Not connected to the database.', 'error'); return; }
 
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
-            const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+            const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[]}');
             const harvestedJob = userData.harvestedJobs.find(j => j.id == jobId);
             if (!harvestedJob) { showNotification('Job not found.', 'error'); return; }
             harvestedJob.title = title;
@@ -4803,31 +4854,40 @@
             harvestedJob.source = source || harvestedJob.source;
             harvestedJob.updatedAt = new Date().toISOString();
 
-            const boardJob = userData.jobs.find(j => j.id === jobId);
-            if (boardJob) { boardJob.title = title;
-                boardJob.company = company;
-                boardJob.description = description;
-                boardJob.jobType = jobType;
-                boardJob.url = url; }
+            try {
+                await db.collection('jobs').doc(String(jobId)).update({
+                    title: title, company: company, description: description, jobType: jobType, url: url
+                });
+            } catch (err) {
+                showNotification('Could not update job on the board: ' + err.message, 'error');
+                return;
+            }
+
             storage.setItem(key, JSON.stringify(userData));
             closeEditHarvestModal();
             showNotification('Job updated successfully!', 'success');
             renderHarvesterDashboard();
-            renderJobBoard();
         }
 
-        function deleteHarvestedJob(jobId) {
+        async function deleteHarvestedJob(jobId) {
             if (!currentUser || currentUser.role !== 'harvester') { showNotification('Only Harvesters can delete jobs.', 'error'); return; }
             if (!confirm('Delete this harvested job? It will also be removed from the job board.')) return;
+            if (!firebaseReady || !db) { showNotification('Not connected to the database.', 'error'); return; }
+
+            try {
+                await db.collection('jobs').doc(String(jobId)).delete();
+            } catch (err) {
+                showNotification('Could not remove job from the board: ' + err.message, 'error');
+                return;
+            }
+
             const key = currentUser.role + '_data_' + currentUser.email;
             const storage = getStorage();
-            const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[],"jobs":[]}');
+            const userData = JSON.parse(storage.getItem(key) || '{"harvestedJobs":[]}');
             userData.harvestedJobs = userData.harvestedJobs.filter(j => j.id !== jobId);
-            userData.jobs = userData.jobs.filter(j => j.id !== jobId);
             storage.setItem(key, JSON.stringify(userData));
             showNotification('Job deleted.', 'info');
             renderHarvesterDashboard();
-            renderJobBoard();
         }
 
         function clearAllHarvested() {
@@ -6585,6 +6645,7 @@
 
         renderJobBoard();
         animateCounters();
+        startJobsListener();
 
     </script>
 </body>
