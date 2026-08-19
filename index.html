@@ -2884,6 +2884,33 @@
         }
 
         // ============================================================
+        // APPLY4ME LEADS: live Firestore-backed cache
+        // ------------------------------------------------------------
+        // Previously these only lived in this browser's localStorage, so the
+        // Owner could never see a lead submitted from a different device.
+        // Mirrors the shared "apply4meLeads" collection in real time instead.
+        // ============================================================
+        let cachedLeads = [];
+        let leadsListenerUnsubscribe = null;
+
+        function startLeadsListener() {
+            if (!firebaseReady || !db || leadsListenerUnsubscribe) return;
+            if (!currentUser || !['owner', 'manager', 'employee'].includes(currentUser.role)) return;
+            leadsListenerUnsubscribe = db.collection('apply4meLeads').onSnapshot(function(snapshot) {
+                cachedLeads = snapshot.docs.map(function(doc) {
+                    return Object.assign({}, doc.data(), { id: doc.id });
+                }).sort(function(a, b) { return new Date(b.submittedAt) - new Date(a.submittedAt); });
+                if (currentUser) {
+                    if (document.getElementById('page-manager-dashboard')?.classList.contains('active')) renderManagerDashboard();
+                    if (document.getElementById('page-owner-analytics')?.classList.contains('active')) renderOwnerAnalytics();
+                    if (document.getElementById('page-employee-dashboard')?.classList.contains('active')) renderEmployeeDashboard();
+                }
+            }, function(err) {
+                console.warn('⚠️ Leads listener error:', err);
+            });
+        }
+
+        // ============================================================
         // STORAGE WRAPPER
         // ============================================================
         function getStorage() {
@@ -2964,6 +2991,7 @@
                             });
                             startUsersListener();
                             startApplicationsListener();
+                            startLeadsListener();
                         }
                     }).catch(function(err) {
                         console.warn('⚠️ Could not load user profile:', err);
@@ -5829,20 +5857,48 @@
                     </div>
                     <div class="dashboard-card">
                         <h3>Users <span style="font-weight:400;color:var(--gray-500);font-size:13px;">${jobSeekerCount} job seekers • ${employerCount} employers • ${staffCount} staff</span></h3>
-                        ${users.length === 0 ? '<div class="empty-state"><p>No users found.</p></div>' :
-                            users.slice(0, 8).map(u => `
-                                <div class="dash-item">
-                                    <div><div class="dash-item-title">${u.name || u.email}</div><div class="dash-item-sub">${u.email}</div></div>
-                                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                                        <span class="user-badge ${(u.role || '').replace('-','')}">${getRoleDisplay(u.role)}</span>
-                                        ${isOwner && u.uid !== currentUser.id && u.uid !== PROTECTED_OWNER_UID ? `<button class="btn-secondary btn-sm" onclick="changeUserRoleModal('${u.uid}', '${u.role}', '${(u.name || u.email).replace(/'/g, "\\'")}')">Manage</button>` : ''}
-                                    </div>
-                                </div>`).join('')
-                        }
-                        ${users.length > 8 ? `<div style="text-align:center;margin-top:12px;color:var(--gray-500);font-size:13px;">+${users.length - 8} more users</div>` : ''}
+                        <input type="text" id="ownerUserSearch" placeholder="Search by name or email..." value="${ownerUserSearchQuery.replace(/"/g, '&quot;')}" oninput="ownerUserSearchQuery = this.value; renderOwnerUsersList();" style="width:100%;padding:10px 14px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:12px;" />
+                        <div id="ownerUsersListContainer"></div>
                     </div>
                 </div>
             `;
+            renderOwnerUsersList();
+        }
+
+        // Search/expand state for the Owner Dashboard's Users panel. Kept
+        // module-level (not re-read from the DOM) so it survives the panel's
+        // own re-renders without losing what the Owner typed or expanded.
+        let ownerUserSearchQuery = '';
+        let ownerUsersShowAll = false;
+
+        // Renders just the filtered user list into its own container instead
+        // of the whole dashboard, so typing in the search box doesn't wipe
+        // out the input's focus/cursor position on every keystroke.
+        function renderOwnerUsersList() {
+            const container = document.getElementById('ownerUsersListContainer');
+            if (!container || !currentUser) return;
+            const isOwner = currentUser.role === 'owner';
+            const users = cachedAllUsers.length ? cachedAllUsers : getUsers();
+            const query = ownerUserSearchQuery.trim().toLowerCase();
+            const filtered = query
+                ? users.filter(u => (u.name || '').toLowerCase().includes(query) || (u.email || '').toLowerCase().includes(query))
+                : users;
+            const shown = ownerUsersShowAll ? filtered : filtered.slice(0, 8);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><p>${query ? 'No users match your search.' : 'No users found.'}</p></div>`;
+                return;
+            }
+
+            container.innerHTML = shown.map(u => `
+                <div class="dash-item">
+                    <div><div class="dash-item-title">${u.name || u.email}</div><div class="dash-item-sub">${u.email}</div></div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                        <span class="user-badge ${(u.role || '').replace('-','')}">${getRoleDisplay(u.role)}</span>
+                        ${isOwner && u.uid !== currentUser.id && u.uid !== PROTECTED_OWNER_UID ? `<button class="btn-secondary btn-sm" onclick="changeUserRoleModal('${u.uid}', '${u.role}', '${(u.name || u.email).replace(/'/g, "\\'")}')">Manage</button>` : ''}
+                    </div>
+                </div>`).join('')
+                + (filtered.length > 8 ? `<div style="text-align:center;margin-top:12px;"><button class="btn-secondary btn-sm" onclick="ownerUsersShowAll = ${!ownerUsersShowAll}; renderOwnerUsersList();">${ownerUsersShowAll ? 'Show less' : `Show all ${filtered.length}`}</button></div>` : '');
         }
 
         function formatRelativeDate(isoString) {
@@ -6049,7 +6105,7 @@
             const isClockedIn = data.timeIn && !data.timeOut;
             const isClockedOut = data.timeIn && data.timeOut;
 
-            const allLeads = JSON.parse(storage.getItem('apply4me_leads') || '[]');
+            const allLeads = cachedLeads.length ? cachedLeads : JSON.parse(storage.getItem('apply4me_leads') || '[]');
             const apply4meClients = allLeads.map(lead => ({
                 name: lead.name,
                 email: lead.email,
@@ -6107,7 +6163,7 @@
         }
 
         function viewClientProfile(email) {
-            const allLeads = JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
+            const allLeads = cachedLeads.length ? cachedLeads : JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
             const lead = allLeads.find(l => l.email === email);
             if (!lead) { showNotification('Client not found.', 'error'); return; }
             const modal = document.createElement('div');
@@ -6163,13 +6219,17 @@
                 return;
             }
 
-            const users = getUsers();
+            // cachedAllUsers/cachedApplications mirror Firestore in real time
+            // (see startUsersListener/startApplicationsListener) — this is the
+            // same live source of truth used on the main dashboard, so these
+            // counts match reality across every device, not just this browser.
+            const users = cachedAllUsers.length ? cachedAllUsers : getUsers();
             const allJobs = getAllJobs();
-            const allLeads = JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
+            const allLeads = cachedLeads.length ? cachedLeads : JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
             const totalUsers = users.length;
             const totalJobs = allJobs.length;
             const activeJobs = allJobs.filter(j => j.status === 'active').length;
-            const totalApplicants = allJobs.reduce((sum, j) => sum + (j.applicants || 0), 0);
+            const totalApplicants = cachedApplications.length || allJobs.reduce((sum, j) => sum + (j.applicants || 0), 0);
             const totalViews = allJobs.reduce((sum, j) => sum + (j.views || 0), 0);
             const totalLeads = allLeads.length;
             const roleCounts = {};
@@ -6199,8 +6259,8 @@
                         <h3>System Actions</h3>
                         <div style="display:flex;flex-direction:column;gap:12px;">
                             <button class="btn-primary" onclick="exportAllData()">Export All Data</button>
-                            <button class="btn-secondary" onclick="clearAllData()">Clear All Data</button>
-                            <button class="btn-secondary" onclick="showNotification('User management coming soon.', 'info')">Manage Users</button>
+                            <button class="btn-danger" onclick="clearAllJobsAndApplications()">Clear Jobs &amp; Applications</button>
+                            <button class="btn-secondary" onclick="showPage('manager-dashboard')">Manage Users</button>
                         </div>
                     </div>
                     <div class="dashboard-card">
@@ -6217,8 +6277,16 @@
         }
 
         function exportAllData() {
-            const data = { users: getUsers(), jobs: getAllJobs(), leads: JSON.parse(getStorage().getItem(
-                    'apply4me_leads') || '[]'), exportedAt: new Date().toISOString() };
+            // Uses the live Firestore-backed caches, not stale localStorage —
+            // see startUsersListener/startJobsListener/startApplicationsListener.
+            const users = cachedAllUsers.length ? cachedAllUsers : getUsers();
+            const data = {
+                users: users,
+                jobs: getAllJobs(),
+                applications: cachedApplications,
+                leads: cachedLeads.length ? cachedLeads : JSON.parse(getStorage().getItem('apply4me_leads') || '[]'),
+                exportedAt: new Date().toISOString()
+            };
             const json = JSON.stringify(data, null, 2);
             const blob = new Blob([json], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -6230,12 +6298,35 @@
             showNotification('All data exported successfully!', 'success');
         }
 
-        function clearAllData() {
-            if (!confirm('Are you sure you want to clear ALL data?')) return;
-            if (!confirm('Really? This will delete all users, jobs, and applications.')) return;
-            getStorage().clear();
-            showNotification('All data has been cleared.', 'info');
-            setTimeout(() => location.reload(), 1500);
+        // Deletes every job and application document from Firestore. Deliberately
+        // scoped to jobs + applications only — NOT user accounts, since wiping
+        // /users would delete the Owner's own profile (including yours) and lock
+        // everyone out with no way back in. If you ever need to remove specific
+        // user accounts, do that individually via the Users panel.
+        async function clearAllJobsAndApplications() {
+            if (!currentUser || currentUser.role !== 'owner') { showNotification('Only the Owner can do this.', 'error'); return; }
+            if (!firebaseReady || !db) { showNotification('Not connected to the database.', 'error'); return; }
+            if (!confirm('This will permanently delete ALL job postings and ALL applications for every user. User accounts are not affected. Continue?')) return;
+            if (!confirm('Really sure? This cannot be undone.')) return;
+            try {
+                const [jobsSnap, appsSnap] = await Promise.all([
+                    db.collection('jobs').get(),
+                    db.collection('applications').get()
+                ]);
+                const batchArrays = [];
+                let batch = db.batch();
+                let opCount = 0;
+                [...jobsSnap.docs, ...appsSnap.docs].forEach(function(doc) {
+                    batch.delete(doc.ref);
+                    opCount++;
+                    if (opCount === 450) { batchArrays.push(batch); batch = db.batch(); opCount = 0; }
+                });
+                if (opCount > 0) batchArrays.push(batch);
+                for (const b of batchArrays) { await b.commit(); }
+                showNotification('All jobs and applications have been cleared.', 'info');
+            } catch (err) {
+                showNotification('Could not clear data: ' + err.message, 'error');
+            }
         }
 
         // ============================================================
@@ -6304,27 +6395,24 @@
             showNotification('All jobs exported successfully!', 'success');
         }
 
-        function bulkCloseJobs() {
+        async function bulkCloseJobs() {
             if (!confirm('Close all expired jobs?')) return;
-            const users = getUsers();
-            let closed = 0;
-            users.forEach(user => {
-                const key = user.role + '_data_' + user.email;
-                const storage = getStorage();
-                const data = JSON.parse(storage.getItem(key) || '{"jobs":[]}');
-                if (data.jobs) {
-                    data.jobs.forEach(job => {
-                        if (job.expiresAt && new Date(job.expiresAt) < new Date() && job.status === 'active') {
-                            job.status = 'closed';
-                            closed++;
-                        }
-                    });
-                    storage.setItem(key, JSON.stringify(data));
-                }
-            });
-            showNotification(`Closed ${closed} expired jobs.`, 'success');
-            renderManagerAnalytics();
-            renderJobBoard();
+            if (!firebaseReady || !db) { showNotification('Not connected to the database.', 'error'); return; }
+            const now = new Date();
+            const expired = getAllJobs().filter(job =>
+                job.status === 'active' && job.expiresAt && new Date(job.expiresAt) < now
+            );
+            if (expired.length === 0) { showNotification('No expired jobs to close.', 'info'); return; }
+            try {
+                const batch = db.batch();
+                expired.forEach(function(job) {
+                    batch.update(db.collection('jobs').doc(String(job.id)), { status: 'closed' });
+                });
+                await batch.commit();
+                showNotification(`Closed ${expired.length} expired job(s).`, 'success');
+            } catch (err) {
+                showNotification('Could not close expired jobs: ' + err.message, 'error');
+            }
         }
 
         // ============================================================
@@ -6676,7 +6764,7 @@
             if (form) form.reset();
         }
 
-        function submitApply4MeLead(event) {
+        async function submitApply4MeLead(event) {
             event.preventDefault();
             const name = document.getElementById('apply4meName')?.value.trim();
             const email = document.getElementById('apply4meEmail')?.value.trim();
@@ -6703,12 +6791,27 @@
                     ?.selectedIndex]?.text || plan,
                 portfolio: portfolio || null,
                 linkedin: linkedin || null,
+                // Note: only file metadata is stored, not the file itself — this
+                // app doesn't have file storage configured. A real resume upload
+                // would need Firebase Storage wired in separately.
                 resume: { name: resumeFile.name, size: resumeFile.size, type: resumeFile.type },
                 submittedAt: new Date().toISOString()
             };
-            const leads = JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
-            leads.push(leadData);
-            getStorage().setItem('apply4me_leads', JSON.stringify(leads));
+
+            if (firebaseReady && db) {
+                try {
+                    await db.collection('apply4meLeads').add(leadData);
+                } catch (err) {
+                    console.warn('⚠️ Could not save lead to Firestore, falling back to local storage:', err);
+                    const leads = JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
+                    leads.push(leadData);
+                    getStorage().setItem('apply4me_leads', JSON.stringify(leads));
+                }
+            } else {
+                const leads = JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
+                leads.push(leadData);
+                getStorage().setItem('apply4me_leads', JSON.stringify(leads));
+            }
 
             const content = document.getElementById('apply4meModalContent');
             const success = document.getElementById('apply4meSuccessContent');
@@ -6906,6 +7009,7 @@
         startJobsListener();
         startUsersListener();
         startApplicationsListener();
+        startLeadsListener();
 
     </script>
 </body>
