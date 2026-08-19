@@ -30,7 +30,12 @@ service cloud.firestore {
       allow read: if isSignedIn() && (request.auth.uid == uid || isOwnerOrManager());
       allow create: if isSignedIn()
                     && request.auth.uid == uid
-                    && request.resource.data.email == request.auth.token.email;
+                    && request.resource.data.email == request.auth.token.email
+                    // self-registration can only ever create a job-seeker or
+                    // employer account — every other role (owner, manager,
+                    // business-partner, harvester, employee) must be granted
+                    // afterward by an Owner via the update rule below.
+                    && request.resource.data.role in ['job-seeker', 'employer'];
       allow update: if isSignedIn() && (
                       request.auth.uid == uid
                       ||

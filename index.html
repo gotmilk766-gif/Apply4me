@@ -2528,15 +2528,10 @@
                         <div class="form-group"><label>Password <span class="required">*</span></label><input type="password" id="regPassword" placeholder="•••••••• (min 8 characters)" required minlength="8" /><span class="password-hint" style="font-size:12px;color:var(--gray-400);margin-top:4px;display:block;">Must be at least 8 characters</span></div>
                         <span class="role-selector-label">Select your role:</span>
                         <div class="role-selector" id="roleSelector">
-                            <div class="role-option" data-role="owner" onclick="selectRole('owner')"><div class="role-name">Owner</div><div class="role-desc">Full access · Admin</div></div>
-                            <div class="role-option" data-role="manager" onclick="selectRole('manager')"><div class="role-name">Manager</div><div class="role-desc">Manage jobs &amp; applicants</div></div>
-                            <div class="role-option" data-role="business-partner" onclick="selectRole('business-partner')"><div class="role-name">Business Partner</div><div class="role-desc">Post jobs · View applicants</div></div>
-                            <div class="role-option" data-role="harvester" onclick="selectRole('harvester')"><div class="role-name">Harvester</div><div class="role-desc">Harvest jobs only</div></div>
-                            <div class="role-option" data-role="employee" onclick="selectRole('employee')"><div class="role-name">Employee</div><div class="role-desc">Apply4Me access only</div></div>
-                            <div class="role-option" data-role="employer" onclick="selectRole('employer')"><div class="role-name">Employer</div><div class="role-desc">Post jobs · Hire talent</div></div>
                             <div class="role-option" data-role="job-seeker" onclick="selectRole('job-seeker')"><div class="role-name">Job Seeker</div><div class="role-desc">Find jobs · Apply</div></div>
+                            <div class="role-option" data-role="employer" onclick="selectRole('employer')"><div class="role-name">Employer</div><div class="role-desc">Post jobs · Hire talent</div></div>
                         </div>
-                        <input type="hidden" id="regUserType" value="employee" />
+                        <input type="hidden" id="regUserType" value="job-seeker" />
                         <button type="submit" class="btn-primary" id="registerBtn">Create File</button>
                     </form>
                     <p class="auth-switch">Already have an account? <a onclick="showPage('login')">Login here</a></p>
@@ -3153,6 +3148,10 @@
 
             if (!name || !email || !password || !role) {
                 showNotification('Please fill in all fields and select a role.', 'error');
+                return;
+            }
+            if (!['job-seeker', 'employer'].includes(role)) {
+                showNotification('Please select Job Seeker or Employer to create an account. Other roles are assigned by an administrator.', 'error');
                 return;
             }
             if (password.length < 8) {
@@ -5866,7 +5865,7 @@
         }
 
         function changeUserRoleModal(uid, currentRole, name) {
-            const roles = ['job-seeker', 'employee', 'employer', 'partner', 'harvester', 'manager', 'owner'];
+            const roles = ['job-seeker', 'employee', 'employer', 'business-partner', 'harvester', 'manager', 'owner'];
             const modal = document.createElement('div');
             modal.className = 'modal-overlay active';
             modal.id = 'changeUserRoleModal';
