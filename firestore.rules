@@ -24,7 +24,8 @@ service cloud.firestore {
     }
 
     // USERS
-    // Own profile: full self-edit except role.
+    // Own profile: full self-edit except role and email (email stays pinned
+    // to the Auth account it was created with).
     // Owner/Manager: read all (dashboard Users panel).
     // Owner only: change another user's role (and only the role field).
     // Founding Owner UID is permanently locked against role changes.
@@ -39,9 +40,12 @@ service cloud.firestore {
 
       allow update: if isSignedIn() && (
                       (
-                        // Self-edit: may change any field except role
+                        // Self-edit: may change any field except role and email.
+                        // Email is pinned to the Auth token so a user can't
+                        // spoof a different address across the app after signup.
                         request.auth.uid == uid
                         && request.resource.data.role == resource.data.role
+                        && request.resource.data.email == resource.data.email
                       )
                       ||
                       (
@@ -115,6 +119,13 @@ service cloud.firestore {
     }
 
     // APPLICATIONS — deterministic id "{applicantUid}_{jobId}"
+    // employerUid must match the real job's postedByUid (looked up server-side
+    // in the rule, not trusted from the client) so an applicant can't hide an
+    // application from its real employer or hand read-access to someone else.
+    // status may only start as one of the app's own initial values — 'pending'
+    // (direct apply) or 'seen' (redirect-to-company-site apply) — never a
+    // employer-controlled value like 'accepted'/'rejected'. Only the employer /
+    // Owner / Manager update path below may move it further.
     match /applications/{appId} {
       allow read: if isSignedIn() && (
                     resource.data.applicantUid == request.auth.uid ||
@@ -125,8 +136,12 @@ service cloud.firestore {
       allow create: if isSignedIn()
                     && request.resource.data.applicantUid == request.auth.uid
                     && appId == request.auth.uid + '_' + request.resource.data.jobId
+                    && request.resource.data.status in ['pending', 'seen']
+                    && request.resource.data.employerUid ==
+                         get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId))
+                           .data.get('postedByUid', null)
                     && request.resource.data.keys().hasAll([
-                         'jobId', 'applicantUid', 'applicantEmail', 'appliedAt', 'status'
+                         'jobId', 'applicantUid', 'applicantEmail', 'appliedAt', 'status', 'employerUid'
                        ]);
 
       // Employer or Owner/Manager may only touch status / notes
