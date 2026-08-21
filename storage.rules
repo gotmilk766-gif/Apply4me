@@ -1,0 +1,28 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Apply4Me lead resumes — public upload (lead form has no login),
+    // staff-only download. Size/type limited to reduce abuse.
+    match /apply4me-resumes/{fileName} {
+      allow read: if request.auth != null
+                  && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role
+                     in ['owner', 'manager', 'employee'];
+
+      allow create: if request.resource.size < 5 * 1024 * 1024
+                    && request.resource.contentType.matches(
+                         'application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document|text/plain'
+                       );
+
+      allow update: if false;
+      allow delete: if request.auth != null
+                    && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role
+                       == 'owner';
+    }
+
+    // Deny everything else by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -2189,6 +2189,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
 </head>
 <body>
 
@@ -2778,8 +2780,29 @@
             appId: "1:195779179440:web:925b0550a617e606039c75"
         };
 
+        // ----------------------------------------------------------
+        // APP CHECK (reCAPTCHA v3)
+        // ----------------------------------------------------------
+        // 1. Create a reCAPTCHA v3 site key at https://www.google.com/recaptcha/admin
+        //    (add your production domain + localhost for testing).
+        // 2. In Firebase Console → App Check → Register your web app with
+        //    that secret key.
+        // 3. Paste the *site* key (public) below.
+        // 4. After monitoring looks healthy, click Enforce on Firestore,
+        //    Storage, and Auth in the App Check console.
+        //
+        // Leave RECAPTCHA_V3_SITE_KEY empty to skip App Check (dev only).
+        // For local testing with enforcement on, set a debug token:
+        //   self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;  // logs a UUID to console
+        //   then register that UUID under App Check → Manage debug tokens.
+        // ----------------------------------------------------------
+        const RECAPTCHA_V3_SITE_KEY = ''; // e.g. '6Lcxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        const APP_CHECK_DEBUG = false;    // set true on localhost while developing
+
         let auth = null;
         let db = null;
+        let storage = null;
+        let appCheck = null;
 
         // The primary Owner account (Lloyd Allen Clavo). Its role can never be
         // changed by anyone through the app — see changeUserRole() and the
@@ -2790,8 +2813,26 @@
         let firebaseReady = false;
         try {
             firebase.initializeApp(firebaseConfig);
+
+            // App Check must activate before Auth / Firestore / Storage are used
+            // so every request carries a valid attestation token.
+            if (typeof firebase.appCheck === 'function' || firebase.appCheck) {
+                if (APP_CHECK_DEBUG || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                    // Enables debug-provider flow; token UUID is printed once in the console.
+                    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+                }
+                if (RECAPTCHA_V3_SITE_KEY) {
+                    appCheck = firebase.appCheck();
+                    appCheck.activate(RECAPTCHA_V3_SITE_KEY, true /* auto-refresh */);
+                    console.log('✅ App Check activated (reCAPTCHA v3)');
+                } else {
+                    console.warn('⚠️ App Check skipped — set RECAPTCHA_V3_SITE_KEY after registering reCAPTCHA.');
+                }
+            }
+
             auth = firebase.auth();
             db = firebase.firestore();
+            storage = firebase.storage();
             firebaseReady = true;
             console.log('✅ Firebase initialized');
         } catch (e) {
@@ -2850,7 +2891,9 @@
         let usersListenerUnsubscribe = null;
 
         function startUsersListener() {
+            // Only Owner/Manager may list the full users collection (rules enforce this).
             if (!firebaseReady || !db || usersListenerUnsubscribe) return;
+            if (!currentUser || !['owner', 'manager'].includes(currentUser.role)) return;
             usersListenerUnsubscribe = db.collection('users').onSnapshot(function(snapshot) {
                 cachedAllUsers = snapshot.docs.map(function(doc) {
                     return Object.assign({}, doc.data(), { uid: doc.id });
@@ -2863,6 +2906,14 @@
             });
         }
 
+        function stopUsersListener() {
+            if (usersListenerUnsubscribe) {
+                usersListenerUnsubscribe();
+                usersListenerUnsubscribe = null;
+            }
+            cachedAllUsers = [];
+        }
+
         // ============================================================
         // APPLICATIONS: live Firestore-backed cache (for Owner/Manager dashboard)
         // ============================================================
@@ -2870,7 +2921,10 @@
         let applicationsListenerUnsubscribe = null;
 
         function startApplicationsListener() {
+            // Full-collection listen is only permitted for Owner/Manager.
+            // Applicants/employers should query by their own uid if needed later.
             if (!firebaseReady || !db || applicationsListenerUnsubscribe) return;
+            if (!currentUser || !['owner', 'manager'].includes(currentUser.role)) return;
             applicationsListenerUnsubscribe = db.collection('applications').onSnapshot(function(snapshot) {
                 cachedApplications = snapshot.docs.map(function(doc) {
                     return Object.assign({}, doc.data(), { id: doc.id });
@@ -2881,6 +2935,14 @@
             }, function(err) {
                 console.warn('⚠️ Applications listener error:', err);
             });
+        }
+
+        function stopApplicationsListener() {
+            if (applicationsListenerUnsubscribe) {
+                applicationsListenerUnsubscribe();
+                applicationsListenerUnsubscribe = null;
+            }
+            cachedApplications = [];
         }
 
         // ============================================================
@@ -2908,6 +2970,14 @@
             }, function(err) {
                 console.warn('⚠️ Leads listener error:', err);
             });
+        }
+
+        function stopLeadsListener() {
+            if (leadsListenerUnsubscribe) {
+                leadsListenerUnsubscribe();
+                leadsListenerUnsubscribe = null;
+            }
+            cachedLeads = [];
         }
 
         // ============================================================
@@ -2959,10 +3029,16 @@
         }
 
         function logout() {
+            stopUsersListener();
+            stopApplicationsListener();
+            stopLeadsListener();
+            stopEmployerApplicationsListener();
+            stopMyApplicationsListener();
             if (firebaseReady && auth) {
                 auth.signOut();
             }
             currentUser = null;
+            cachedSavedJobs = [];
             updateNavForUser(null);
             showPage('home');
             showNotification('You have been logged out.', 'info');
@@ -2992,11 +3068,18 @@
                             startUsersListener();
                             startApplicationsListener();
                             startLeadsListener();
+                            startEmployerApplicationsListener();
+                            startMyApplicationsListener();
                         }
                     }).catch(function(err) {
                         console.warn('⚠️ Could not load user profile:', err);
                     });
                 } else {
+                    stopUsersListener();
+                    stopApplicationsListener();
+                    stopLeadsListener();
+                    stopEmployerApplicationsListener();
+                    stopMyApplicationsListener();
                     currentUser = null;
                     cachedSavedJobs = [];
                     updateNavForUser(null);
@@ -3461,8 +3544,14 @@
             document.getElementById('noJobsMessage').style.display = 'none';
 
             container.innerHTML = filteredJobs.map(job => {
-                const isOwner = currentUser && currentUser.email === job.postedByEmail;
-                const canDelete = currentUser && ['owner', 'manager', 'employer'].includes(currentUser.role) && isOwner;
+                // Prefer UID (matches Firestore rules). Fall back to email for
+                // any legacy jobs that may lack postedByUid.
+                const isPoster = currentUser && (
+                    (job.postedByUid && currentUser.id === job.postedByUid) ||
+                    (!job.postedByUid && currentUser.email === job.postedByEmail)
+                );
+                const canModerate = currentUser && ['owner', 'manager'].includes(currentUser.role);
+                const canDelete = isPoster || canModerate;
                 const isSaved = currentUser && isJobSaved(job.id);
                 const isHarvested = job.harvested === true;
                 const jobUrl = job.url || '';
@@ -6182,7 +6271,7 @@
                         <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Submitted</p><p style="font-size:13px;color:var(--gray-500);">${new Date(lead.submittedAt).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</p></div>
                         <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Portfolio</p>${lead.portfolio ? `<a href="${lead.portfolio}" target="_blank" style="color:var(--primary);font-weight:600;">View</a>` : '<span style="color:var(--gray-400);">Not provided</span>'}</div>
                         <div><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">LinkedIn</p>${lead.linkedin ? `<a href="${lead.linkedin}" target="_blank" style="color:var(--primary);font-weight:600;">View</a>` : '<span style="color:var(--gray-400);">Not provided</span>'}</div>
-                        <div style="grid-column:1/3;"><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Resume</p>${lead.resume ? `<span style="color:var(--success);font-weight:600;">${lead.resume.name}</span>` : '<span style="color:var(--gray-400);">Not uploaded</span>'}</div>
+                        <div style="grid-column:1/3;"><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Resume</p>${lead.resume ? (lead.resume.url ? `<a href="${lead.resume.url}" target="_blank" rel="noopener" style="color:var(--primary);font-weight:600;">${lead.resume.name || 'Download resume'} ↗</a>` : `<span style="color:var(--success);font-weight:600;">${lead.resume.name || 'Uploaded (no link)'}</span>`) : '<span style="color:var(--gray-400);">Not uploaded</span>'}</div>
                         ${lead.message ? `<div style="grid-column:1/3;"><p style="font-size:13px;color:var(--gray-400);margin-bottom:2px;">Message</p><p style="background:var(--gray-50);padding:12px;border-radius:8px;border:1px solid var(--gray-200);font-size:14px;color:var(--gray-600);">${lead.message}</p></div>` : ''}
                     </div>
                     <div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--gray-200);padding-top:20px;">
@@ -6468,6 +6557,46 @@
         // ============================================================
         // EMPLOYER APPLICANT MANAGEMENT
         // ============================================================
+        // Employer-scoped applications cache (queried by employerUid)
+        let cachedEmployerApplications = [];
+        let employerAppsListenerUnsubscribe = null;
+
+        function startEmployerApplicationsListener() {
+            if (!firebaseReady || !db || employerAppsListenerUnsubscribe) return;
+            if (!currentUser || !['employer', 'owner', 'manager'].includes(currentUser.role)) return;
+            // Owner/manager already have full applications cache; employers query their own.
+            if (['owner', 'manager'].includes(currentUser.role)) return;
+            employerAppsListenerUnsubscribe = db.collection('applications')
+                .where('employerUid', '==', currentUser.id)
+                .onSnapshot(function(snapshot) {
+                    cachedEmployerApplications = snapshot.docs.map(function(doc) {
+                        return Object.assign({}, doc.data(), { id: doc.id });
+                    }).sort(function(a, b) {
+                        return new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0);
+                    });
+                    if (document.getElementById('page-employer-applicants')?.classList.contains('active')) {
+                        renderEmployerApplicantManagement();
+                    }
+                }, function(err) {
+                    console.warn('⚠️ Employer applications listener error:', err);
+                });
+        }
+
+        function stopEmployerApplicationsListener() {
+            if (employerAppsListenerUnsubscribe) {
+                employerAppsListenerUnsubscribe();
+                employerAppsListenerUnsubscribe = null;
+            }
+            cachedEmployerApplications = [];
+        }
+
+        function getEmployerApplications() {
+            if (['owner', 'manager'].includes(currentUser?.role)) {
+                return cachedApplications.filter(a => a.employerUid === currentUser.id);
+            }
+            return cachedEmployerApplications;
+        }
+
         function renderEmployerApplicantManagement() {
             const container = document.getElementById('employerApplicantContent');
             if (!container) return;
@@ -6477,32 +6606,21 @@
                 return;
             }
 
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"applicants":[]}');
-            const jobs = data.jobs || [];
+            startEmployerApplicationsListener();
+
             const allJobs = getAllJobs();
-            const activeJobs = allJobs.filter(j => j.status === 'active');
-            const employerJobIds = jobs.map(j => j.id);
-            const allApplicants = [];
-            allJobs.forEach(job => {
-                if (employerJobIds.includes(job.id)) {
-                    const apps = data.applicants || [];
-                    apps.forEach(app => {
-                        if (app.jobId === job.id) {
-                            allApplicants.push({ ...app, jobTitle: job.title, company: job.company });
-                        }
-                    });
-                }
-            });
-            const pending = allApplicants.filter(a => a.status === 'pending').length;
+            const myJobs = allJobs.filter(j =>
+                j.postedByUid === currentUser.id || j.postedByEmail === currentUser.email
+            );
+            const allApplicants = getEmployerApplications();
+            const pending = allApplicants.filter(a => a.status === 'pending' || a.status === 'seen').length;
             const reviewed = allApplicants.filter(a => a.status === 'reviewed').length;
             const interviewed = allApplicants.filter(a => a.status === 'interview').length;
             const hired = allApplicants.filter(a => a.status === 'hired').length;
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>Applicant Management</h1><p style="color:var(--gray-500);">Manage applicants for your job postings.</p></div>
+                    <div><h1>Applicant Management</h1><p style="color:var(--gray-500);">Manage applicants for your job postings (live from Firestore).</p></div>
                     <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge employer">Employer</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
@@ -6513,11 +6631,11 @@
                     <div class="dashboard-stat-card"><span class="number">${hired}</span><span class="label">Hired</span></div>
                 </div>
                 <div class="dashboard-card">
-                    <h3>Jobs with Applicants</h3>
-                    ${activeJobs.length === 0 ? '<div class="empty-state"><p>No active jobs with applicants.</p></div>' :
-                        activeJobs.map(job => {
-                            const jobApplicants = allApplicants.filter(a => a.jobId === job.id);
-                            return `<div class="dash-item"><div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${jobApplicants.length} applicants</div></div><button class="btn-secondary btn-sm" onclick="viewApplicantsForJob('${job.id}')">View Applicants</button></div>`;
+                    <h3>Your Jobs</h3>
+                    ${myJobs.length === 0 ? '<div class="empty-state"><p>No jobs posted yet. <a onclick="showPage(\'post-job\')" style="color:var(--primary);cursor:pointer;">Post a job →</a></p></div>' :
+                        myJobs.map(job => {
+                            const jobApplicants = allApplicants.filter(a => a.jobId === job.id || String(a.jobId) === String(job.id));
+                            return `<div class="dash-item"><div><div class="dash-item-title">${job.title}</div><div class="dash-item-sub">${job.company} • ${jobApplicants.length} applicants • ${job.status || 'active'}</div></div><button class="btn-secondary btn-sm" onclick="viewApplicantsForJob('${job.id}')">View Applicants</button></div>`;
                         }).join('')
                     }
                 </div>
@@ -6526,19 +6644,17 @@
                     <div style="display:flex;gap:12px;flex-wrap:wrap;">
                         <button class="btn-primary btn-sm" onclick="showPage('post-job')">Post a Job</button>
                         <button class="btn-secondary btn-sm" onclick="exportApplicantsCSV()">Export Applicants</button>
-                        <button class="btn-secondary btn-sm" onclick="showNotification('Bulk actions coming soon.', 'info')">Bulk Actions</button>
                     </div>
                 </div>
             `;
         }
 
         function viewApplicantsForJob(jobId) {
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"applicants":[]}');
-            const applicants = data.applicants ? data.applicants.filter(a => a.jobId === jobId) : [];
-            const job = data.jobs.find(j => j.id === jobId);
+            const job = getAllJobs().find(j => String(j.id) === String(jobId));
             if (!job) { showNotification('Job not found.', 'error'); return; }
+            const applicants = getEmployerApplications().filter(a =>
+                String(a.jobId) === String(jobId)
+            );
 
             const modal = document.createElement('div');
             modal.className = 'modal-overlay active';
@@ -6552,14 +6668,14 @@
                         applicants.map(app => `
                             <div class="dash-item">
                                 <div>
-                                    <div class="dash-item-title">${app.name || 'Anonymous'}</div>
-                                    <div class="dash-item-sub">${app.email || 'No email'} • ${app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-PH') : 'Recently'}</div>
-                                    ${app.resume ? `<div style="font-size:12px;color:var(--success);">${app.resume}</div>` : ''}
-                                    ${app.message ? `<div style="font-size:12px;color:var(--gray-500);margin-top:4px;">${app.message}</div>` : ''}
+                                    <div class="dash-item-title">${app.applicantName || app.name || 'Anonymous'}</div>
+                                    <div class="dash-item-sub">${app.applicantEmail || app.email || 'No email'} • ${app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-PH') : 'Recently'}</div>
+                                    ${app.notes ? `<div style="font-size:12px;color:var(--gray-500);margin-top:4px;">${app.notes}</div>` : ''}
                                 </div>
                                 <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
-                                    <select onchange="updateApplicantStatus('${jobId}','${app.email || app.name}','${app.appliedAt}',this.value)" style="padding:4px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;font-family:inherit;">
+                                    <select onchange="updateApplicantStatus('${app.id}', this.value)" style="padding:4px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;font-family:inherit;">
                                         <option value="pending" ${app.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="seen" ${app.status === 'seen' ? 'selected' : ''}>Seen</option>
                                         <option value="reviewed" ${app.status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
                                         <option value="interview" ${app.status === 'interview' ? 'selected' : ''}>Interview</option>
                                         <option value="hired" ${app.status === 'hired' ? 'selected' : ''}>Hired</option>
@@ -6583,30 +6699,36 @@
                 document.body.style.overflow = 'auto'; }
         }
 
-        function updateApplicantStatus(jobId, applicantId, appliedAt, status) {
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"applicants":[]}');
-            const applicant = data.applicants.find(a => a.jobId === jobId && a.name === applicantId && a.appliedAt ===
-                appliedAt);
-            if (applicant) {
-                applicant.status = status;
-                storage.setItem(key, JSON.stringify(data));
-                showNotification(`Status updated to ${status}`, 'success');
-                viewApplicantsForJob(jobId);
+        async function updateApplicantStatus(appId, status) {
+            if (!firebaseReady || !db) {
+                showNotification('Not connected to the database.', 'error');
+                return;
+            }
+            try {
+                await db.collection('applications').doc(appId).update({ status: status });
+                // Update local cache immediately for snappy UI
+                const caches = [cachedEmployerApplications, cachedApplications, cachedMyApplications];
+                caches.forEach(function(cache) {
+                    const app = cache.find(a => a.id === appId);
+                    if (app) app.status = status;
+                });
+                showNotification('Status updated to ' + status, 'success');
+                const jobId = (cachedEmployerApplications.find(a => a.id === appId)
+                    || cachedApplications.find(a => a.id === appId)
+                    || {}).jobId;
+                if (jobId) viewApplicantsForJob(jobId);
+            } catch (err) {
+                showNotification('Could not update status: ' + err.message, 'error');
             }
         }
 
         function exportApplicantsCSV() {
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"jobs":[],"applicants":[]}');
-            const applicants = data.applicants || [];
+            const applicants = getEmployerApplications();
             if (applicants.length === 0) { showNotification('No applicants to export.', 'warning'); return; }
-            let csv = 'Name,Email,Job Title,Status,Applied Date\n';
+            let csv = 'Name,Email,Job Title,Company,Status,Applied Date\n';
             applicants.forEach(app => {
                 csv +=
-                    `"${app.name || 'Anonymous'}","${app.email || ''}","${app.jobTitle || ''}","${app.status || 'pending'}","${new Date(app.appliedAt).toLocaleDateString('en-PH')}"\n`;
+                    `"${app.applicantName || app.name || 'Anonymous'}","${app.applicantEmail || app.email || ''}","${app.jobTitle || ''}","${app.company || ''}","${app.status || 'pending'}","${app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-PH') : ''}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -6619,21 +6741,52 @@
         }
 
         // ============================================================
-        // EMPLOYEE APPLICATION TRACKER
+        // EMPLOYEE / JOB-SEEKER APPLICATION TRACKER (Firestore-backed)
         // ============================================================
+        let cachedMyApplications = [];
+        let myAppsListenerUnsubscribe = null;
+
+        function startMyApplicationsListener() {
+            if (!firebaseReady || !db || myAppsListenerUnsubscribe) return;
+            if (!currentUser || !['employee', 'job-seeker'].includes(currentUser.role)) return;
+            myAppsListenerUnsubscribe = db.collection('applications')
+                .where('applicantUid', '==', currentUser.id)
+                .onSnapshot(function(snapshot) {
+                    cachedMyApplications = snapshot.docs.map(function(doc) {
+                        return Object.assign({}, doc.data(), { id: doc.id });
+                    }).sort(function(a, b) {
+                        return new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0);
+                    });
+                    if (document.getElementById('page-employee-tracker')?.classList.contains('active')) {
+                        renderEmployeeApplicationTracker();
+                    }
+                    if (document.getElementById('page-jobseeker-dashboard')?.classList.contains('active')) {
+                        if (typeof renderJobSeekerDashboard === 'function') renderJobSeekerDashboard();
+                    }
+                }, function(err) {
+                    console.warn('⚠️ My applications listener error:', err);
+                });
+        }
+
+        function stopMyApplicationsListener() {
+            if (myAppsListenerUnsubscribe) {
+                myAppsListenerUnsubscribe();
+                myAppsListenerUnsubscribe = null;
+            }
+            cachedMyApplications = [];
+        }
+
         function renderEmployeeApplicationTracker() {
             const container = document.getElementById('employeeApplicationTracker');
             if (!container) return;
-            if (!hasRoleAccess('employee')) {
+            if (!hasRoleAccess('employee') && currentUser?.role !== 'job-seeker') {
                 container.innerHTML =
                     `<div class="access-denied"><span class="lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h2>Access Denied</h2><p>You do not have permission to view this page.</p><button class="btn-primary" onclick="showPage('home')">Return Home</button></div>`;
                 return;
             }
 
-            const key = currentUser.role + '_data_' + currentUser.email;
-            const storage = getStorage();
-            const data = JSON.parse(storage.getItem(key) || '{"applications":[]}');
-            const applications = data.applications || [];
+            startMyApplicationsListener();
+            const applications = cachedMyApplications;
             const pending = applications.filter(a => a.status === 'pending' || a.status === 'seen').length;
             const interviews = applications.filter(a => a.status === 'interview').length;
             const hired = applications.filter(a => a.status === 'hired').length;
@@ -6641,8 +6794,8 @@
 
             container.innerHTML = `
                 <div class="dashboard-header">
-                    <div><h1>Application Tracker</h1><p style="color:var(--gray-500);">Track your job applications and interviews.</p></div>
-                    <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge employee">Employee</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
+                    <div><h1>Application Tracker</h1><p style="color:var(--gray-500);">Track your job applications (live from Firestore).</p></div>
+                    <div class="user-info"><div class="avatar">${currentUser.name.charAt(0)}</div><div><strong>${currentUser.name}</strong><span class="user-badge ${currentUser.role}">${getRoleDisplay(currentUser.role)}</span></div><button class="btn-secondary btn-sm" onclick="logout()">Logout</button></div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;">
                     <div class="dashboard-stat-card"><span class="number">${applications.length}</span><span class="label">Total Applied</span></div>
@@ -6656,7 +6809,7 @@
                     ${applications.length === 0 ? '<div class="empty-state"><p>You haven\'t applied to any jobs yet. <a onclick="showPage(\'home\')" style="color:var(--primary);cursor:pointer;">Browse jobs →</a></p></div>' :
                         applications.map(app => {
                             const statusLabels = { 'pending': 'Pending', 'seen': 'Seen', 'reviewed': 'Reviewed', 'interview': 'Interview', 'hired': 'Hired', 'rejected': 'Rejected' };
-                            return `<div class="dash-item"><div><div class="dash-item-title">${app.jobTitle || 'Job'}</div><div class="dash-item-sub">${app.company || 'Company'} • Applied ${new Date(app.appliedAt).toLocaleDateString('en-PH')}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="dash-item-status ${app.status}">${statusLabels[app.status] || app.status}</span>${app.status === 'interview' ? `<button class="btn-primary btn-sm" onclick="scheduleInterview('${app.jobId}')">Schedule</button>` : ''}</div></div>`;
+                            return `<div class="dash-item"><div><div class="dash-item-title">${app.jobTitle || 'Job'}</div><div class="dash-item-sub">${app.company || 'Company'} • Applied ${app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-PH') : 'Recently'}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="dash-item-status ${app.status}">${statusLabels[app.status] || app.status}</span>${app.status === 'interview' ? `<button class="btn-primary btn-sm" onclick="scheduleInterview('${app.jobId}')">Schedule</button>` : ''}</div></div>`;
                         }).join('')
                     }
                 </div>
@@ -6779,45 +6932,81 @@
             if (!name || !email || !role) { showNotification('Please fill in all required fields.', 'error'); return; }
             if (!email.includes('@')) { showNotification('Please enter a valid email address.', 'error'); return; }
             if (!resumeFile) { showNotification('Please upload your resume.', 'error'); return; }
+            if (resumeFile.size > 5 * 1024 * 1024) {
+                showNotification('Resume must be under 5MB.', 'error');
+                return;
+            }
+
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Uploading...';
+            }
+
+            let resumeMeta = {
+                name: resumeFile.name,
+                size: resumeFile.size,
+                type: resumeFile.type,
+                url: null,
+                storagePath: null
+            };
+
+            // Upload resume to Firebase Storage when available
+            if (firebaseReady && storage) {
+                try {
+                    const safeName = resumeFile.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
+                    const storagePath = 'apply4me-resumes/' + Date.now() + '_' + safeName;
+                    const ref = storage.ref(storagePath);
+                    const snapshot = await ref.put(resumeFile, {
+                        contentType: resumeFile.type || 'application/octet-stream'
+                    });
+                    const downloadUrl = await snapshot.ref.getDownloadURL();
+                    resumeMeta.url = downloadUrl;
+                    resumeMeta.storagePath = storagePath;
+                } catch (uploadErr) {
+                    console.warn('⚠️ Resume upload failed, saving metadata only:', uploadErr);
+                    showNotification('Resume file could not be uploaded; submitting contact details only.', 'warning');
+                }
+            }
 
             const leadData = {
                 name,
                 email,
-                phone,
+                phone: phone || null,
                 role,
-                message,
-                plan,
+                message: message || null,
+                plan: plan || null,
                 planName: document.getElementById('apply4mePlan')?.options[document.getElementById('apply4mePlan')
                     ?.selectedIndex]?.text || plan,
                 portfolio: portfolio || null,
                 linkedin: linkedin || null,
-                // Note: only file metadata is stored, not the file itself — this
-                // app doesn't have file storage configured. A real resume upload
-                // would need Firebase Storage wired in separately.
-                resume: { name: resumeFile.name, size: resumeFile.size, type: resumeFile.type },
+                resume: resumeMeta,
                 submittedAt: new Date().toISOString()
             };
 
-            if (firebaseReady && db) {
-                try {
+            try {
+                if (firebaseReady && db) {
                     await db.collection('apply4meLeads').add(leadData);
-                } catch (err) {
-                    console.warn('⚠️ Could not save lead to Firestore, falling back to local storage:', err);
+                } else {
                     const leads = JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
                     leads.push(leadData);
                     getStorage().setItem('apply4me_leads', JSON.stringify(leads));
                 }
-            } else {
-                const leads = JSON.parse(getStorage().getItem('apply4me_leads') || '[]');
-                leads.push(leadData);
-                getStorage().setItem('apply4me_leads', JSON.stringify(leads));
-            }
 
-            const content = document.getElementById('apply4meModalContent');
-            const success = document.getElementById('apply4meSuccessContent');
-            if (content) content.style.display = 'none';
-            if (success) success.style.display = 'block';
-            showNotification('Consultation request sent! We will reach out within 24 hours.', 'success');
+                const content = document.getElementById('apply4meModalContent');
+                const success = document.getElementById('apply4meSuccessContent');
+                if (content) content.style.display = 'none';
+                if (success) success.style.display = 'block';
+                showNotification('Consultation request sent! We will reach out within 24 hours.', 'success');
+            } catch (err) {
+                console.warn('⚠️ Could not save lead:', err);
+                showNotification('Could not submit request: ' + err.message, 'error');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Request Free Consultation';
+                }
+            }
         }
 
         // ============================================================
@@ -7006,10 +7195,10 @@
 
         renderJobBoard();
         animateCounters();
+        // Public job board only. Privileged listeners (users / applications /
+        // leads) are started from onAuthStateChanged once the user's role is
+        // known — they would fail permission checks for guests and non-staff.
         startJobsListener();
-        startUsersListener();
-        startApplicationsListener();
-        startLeadsListener();
 
     </script>
 </body>
