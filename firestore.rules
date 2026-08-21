@@ -2,177 +2,53 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
+    function isOwner(studioId) {
+      return request.auth != null && request.auth.uid == studioId;
     }
 
-    // Safe role lookup: returns null if the profile doc is missing so rules
-    // fail closed instead of throwing during evaluation.
-    function requesterRole() {
-      return isSignedIn()
-             && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-             ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-             : null;
+    function isMember(studioId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/studios/$(studioId)/members/$(request.auth.uid));
     }
 
-    function isOwnerOrManager() {
-      return isSignedIn() && requesterRole() in ['owner', 'manager'];
+    match /studios/{studioId} {
+      allow read, write: if isOwner(studioId) || isMember(studioId);
+
+      match /members/{memberId} {
+        allow read: if isOwner(studioId) || isMember(studioId);
+        // Owner can add/remove anyone. A staff account can additionally
+        // create ONLY their own membership doc, and only when they hold a
+        // valid invite pointing at this exact studio — this is what lets
+        // ensureMembership() self-register a newly-invited staff member on
+        // their first login. Nobody but the owner can update/delete a
+        // membership doc (so staff can't change roles or remove others).
+        allow create: if isOwner(studioId) || (
+          request.auth != null &&
+          request.auth.uid == memberId &&
+          request.auth.token.email != null &&
+          exists(/databases/$(database)/documents/studioInvites/$(request.auth.token.email.lower())) &&
+          get(/databases/$(database)/documents/studioInvites/$(request.auth.token.email.lower())).data.studioId == studioId
+        );
+        allow update, delete: if isOwner(studioId);
+      }
+
+      match /orders/{orderId} {
+        allow read, write: if isOwner(studioId) || isMember(studioId);
+      }
+
+      match /payments/{paymentId} {
+        allow read, write: if isOwner(studioId) || isMember(studioId);
+      }
     }
 
-    function isOwner() {
-      return isSignedIn() && requesterRole() == 'owner';
+    // Invite lookup table, keyed by lowercase email.
+    match /studioInvites/{email} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.resource.data.studioId == request.auth.uid;
     }
 
-    // USERS
-    // Own profile: full self-edit except role and email (email stays pinned
-    // to the Auth account it was created with).
-    // Owner/Manager: read all (dashboard Users panel).
-    // Owner only: change another user's role (and only the role field).
-    // Founding Owner UID is permanently locked against role changes.
-    match /users/{uid} {
-      allow read: if isSignedIn() && (request.auth.uid == uid || isOwnerOrManager());
-
-      allow create: if isSignedIn()
-                    && request.auth.uid == uid
-                    && request.resource.data.email == request.auth.token.email
-                    && request.resource.data.role in ['job-seeker', 'employer']
-                    && request.resource.data.keys().hasAll(['name', 'email', 'role']);
-
-      allow update: if isSignedIn() && (
-                      (
-                        // Self-edit: may change any field except role and email.
-                        // Email is pinned to the Auth token so a user can't
-                        // spoof a different address across the app after signup.
-                        request.auth.uid == uid
-                        && request.resource.data.role == resource.data.role
-                        && request.resource.data.email == resource.data.email
-                      )
-                      ||
-                      (
-                        // Owner-only role promotion/demotion
-                        isOwner()
-                        && uid != "0v3eFQ3jwPV871MxFEq5FH1fgil2"
-                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
-                        && request.resource.data.role in [
-                             'job-seeker', 'employer', 'owner', 'manager',
-                             'business-partner', 'harvester', 'employee'
-                           ]
-                      )
-                    );
-
-      allow delete: if false;
-    }
-
-    // JOBS — public read. Create restricted by role.
-    // Poster or Owner/Manager may fully edit/delete.
-    // Any signed-in user may only increment applicants / views (by exactly 1).
-    match /jobs/{jobId} {
-      allow read: if true;
-
-      allow create: if isSignedIn()
-                    && request.resource.data.postedByUid == request.auth.uid
-                    && request.resource.data.postedByRole in
-                       ['owner', 'manager', 'business-partner', 'employer', 'harvester']
-                    && request.resource.data.title is string
-                    && request.resource.data.title.size() > 0
-                    && request.resource.data.title.size() <= 200
-                    && request.resource.data.company is string
-                    && request.resource.data.company.size() > 0
-                    && request.resource.data.company.size() <= 120
-                    && request.resource.data.keys().hasAll([
-                         'title', 'company', 'postedByUid', 'postedByRole', 'status'
-                       ]);
-
-      allow update: if isSignedIn() && (
-                      // Full edit by original poster
-                      (
-                        resource.data.postedByUid == request.auth.uid
-                        // Poster may not reassign ownership or role stamp
-                        && request.resource.data.postedByUid == resource.data.postedByUid
-                        && request.resource.data.postedByRole == resource.data.postedByRole
-                      )
-                      ||
-                      // Full moderation by Owner / Manager
-                      isOwnerOrManager()
-                      ||
-                      // Counter-only updates: must be exact +1 on one or both
-                      // fields. Missing counters on legacy docs are treated as 0.
-                      (
-                        request.resource.data.diff(resource.data).affectedKeys()
-                          .hasOnly(['applicants', 'views'])
-                        && (
-                             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['applicants'])
-                             || request.resource.data.applicants
-                                  == (resource.data.get('applicants', 0) + 1)
-                           )
-                        && (
-                             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['views'])
-                             || request.resource.data.views
-                                  == (resource.data.get('views', 0) + 1)
-                           )
-                      )
-                    );
-
-      allow delete: if isSignedIn() && (
-                      resource.data.postedByUid == request.auth.uid || isOwnerOrManager()
-                    );
-    }
-
-    // APPLICATIONS — deterministic id "{applicantUid}_{jobId}"
-    // employerUid must match the real job's postedByUid (looked up server-side
-    // in the rule, not trusted from the client) so an applicant can't hide an
-    // application from its real employer or hand read-access to someone else.
-    // status may only start as one of the app's own initial values — 'pending'
-    // (direct apply) or 'seen' (redirect-to-company-site apply) — never a
-    // employer-controlled value like 'accepted'/'rejected'. Only the employer /
-    // Owner / Manager update path below may move it further.
-    match /applications/{appId} {
-      allow read: if isSignedIn() && (
-                    resource.data.applicantUid == request.auth.uid ||
-                    resource.data.employerUid == request.auth.uid ||
-                    isOwnerOrManager()
-                  );
-
-      allow create: if isSignedIn()
-                    && request.resource.data.applicantUid == request.auth.uid
-                    && appId == request.auth.uid + '_' + request.resource.data.jobId
-                    && request.resource.data.status in ['pending', 'seen']
-                    && request.resource.data.employerUid ==
-                         get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId))
-                           .data.get('postedByUid', null)
-                    && request.resource.data.keys().hasAll([
-                         'jobId', 'applicantUid', 'applicantEmail', 'appliedAt', 'status', 'employerUid'
-                       ]);
-
-      // Employer or Owner/Manager may only touch status / notes
-      allow update: if isSignedIn()
-                    && (resource.data.employerUid == request.auth.uid || isOwnerOrManager())
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['status', 'notes']);
-
-      allow delete: if isSignedIn() && isOwner();
-    }
-
-    // APPLY4ME LEADS — public create (lead-gen form), staff read only
-    match /apply4meLeads/{leadId} {
-      allow read: if isSignedIn() && requesterRole() in ['owner', 'manager', 'employee'];
-
-      allow create: if request.resource.data.name is string
-                    && request.resource.data.email is string
-                    && request.resource.data.name.size() > 0
-                    && request.resource.data.name.size() <= 120
-                    && request.resource.data.email.size() > 3
-                    && request.resource.data.email.size() <= 254
-                    && request.resource.data.email.matches('.*@.*\\..*')
-                    && (!('phone' in request.resource.data)
-                        || (request.resource.data.phone is string
-                            && request.resource.data.phone.size() <= 30))
-                    && (!('message' in request.resource.data)
-                        || (request.resource.data.message is string
-                            && request.resource.data.message.size() <= 2000));
-
-      allow update: if false;
-      allow delete: if isSignedIn() && isOwner();
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
